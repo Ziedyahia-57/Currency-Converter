@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter </title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.0.0/css/flag-icons.min.css" />
+    <link rel="shortcut icon" href="icon.ico" type="image/x-icon">
+    <script src="numToWord.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap"
+        rel="stylesheet">
+
+</head>
+
+<body>
+    <div class="popup-container">
+        <div class="header">
+            <img src="icon.png" alt="Logo">
+            <span>Currency Converter (v 1.0)</span>
+        </div>
+
+        <div id="currency-container">
+        </div>
+
+        <div class="container">
+            <div class="text-field"><i class="num-to-text" id="num-to-text">ABC...</i></div>
+            <div class="add-currency">
+                <label class="switch">
+                    <input type="checkbox" id="convert-on-select">
+                    <span class="slider"></span>
+                </label><label class="convert-select" for="convert-on-select">Convert On Select</label>
+                <button id="add-currency-btn"><svg xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 449 513"><!--Font Awesome Free 7.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+                        <path
+                            d="M257 81c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 145L49 225c-17.7 0-32 14.3-32 32s14.3 32 32 32l145 0 0 145c0 17.7 14.3 32 32 32s32-14.3 32-32l0-145 145 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-145 0 0-145z" />
+                    </svg></button>
+                <div id="currency-dropdown" class="hidden"></div>
+            </div>
+            <div class="last-update"></div>
+        </div>
+
+        <div id="currency-tab" class="currency-tab hidden">
+            <h3 class="title">
+                <div class="hide-tab" id="hide-tab"><svg xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 321 513"><!--Font Awesome Free 7.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+                        <path
+                            d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z" />
+                    </svg></div>
+                Select a Currency
+            </h3>
+            <div id="currency-list" class="currency-list"></div>
+        </div>
+
+
+        <script src="script.js"></script>
+    </div>
+</body>
+
+</html>
+
+<!--🔵 Dev Log -->
+<!-- 2. Create a basic layout for the currency converter app -->
+<!-- 3. Convert currency on input -->
+<!-- 4. Add currency list -->
+<!-- 5. show "remove currency btn" if ${currencies} >3 -->
+<!-- 6. Add keyboard support -->
+<!-- 7. Add country flags -->
+<!-- 8. Add text convert -->
+<!-- 9. if "add" list empty hide button -->
+<!-- 10. drag/drop currencies -->
+<!-- 11. save user's currency choices in order -->
+<!-- 12. save currency rate + last updated -->
+<!-- 13. save/load checkbox state-->
+
+<!--🟠To Do-->
+<!-- 14. convert on select -->
