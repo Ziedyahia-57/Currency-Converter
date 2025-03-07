@@ -1,4 +1,5 @@
-const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
+// const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
+const API_KEY = "e8eab13facc49788d961a68"; // Replace with your API key
 
 const currencyTab = document.getElementById("currency-tab");
 const currencyContainer = document.getElementById("currency-container");
@@ -299,17 +300,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         } else {
             // Load saved exchange rates if offline
             console.log("App is offline. Loading saved exchange rates...");
-            const savedData = loadExchangeRates();
-            if (savedData) {
-                exchangeRates = savedData.rates;
-                updateLastUpdateElement(false, savedData.lastUpdated);
-            } else {
-                console.error("No saved exchange rates found.");
-                updateLastUpdateElement(false);
-            }
+            loadData();
         }
     }
-
+    function loadData() {
+        const savedData = loadExchangeRates();
+        if (savedData) {
+            exchangeRates = savedData.rates;
+            updateLastUpdateElement(false, savedData.lastUpdated);
+        } else {
+            console.error("No saved exchange rates found.");
+            updateLastUpdateElement(false);
+        }
+    }
     // Initialize the app
     await initializeExchangeRates();
 
@@ -561,11 +564,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateCurrencyValues(parseFloat(rawValue) || 0, event.target.dataset.currency);
     });
 
-    currencyContainer.addEventListener("focus", (event) => {
-        if (event.target.tagName === "INPUT") {
-            event.target.select(); // Select content on focus
-        }
-    });
+    // currencyContainer.addEventListener("focus", (event) => {
+    //     if (event.target.tagName === "INPUT") {
+    //         event.target.select(); //🔴 Select content on focus
+    //     }
+    // });
 
     addCurrencyBtn.addEventListener("click", async () => {
         currencyList.innerHTML = "";
@@ -614,14 +617,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     currencyContainer.addEventListener("dragstart", (event) => {
         if (event.target.classList.contains("currency-input")) {
             draggedItem = event.target;
-            event.target.style.opacity = "1"; // Visual feedback
-            // event.target.style.background = "dfdfdf8a"; // Visual feedback
-            event.target.style.background = "rgba(253, 253, 253, 0.25)"; // Visual feedback
-            event.target.style.opacity = "0.5"; // Visual feedback
+
+            draggedItem.style.background = "var(--drag-background)"; // Visual feedback
+            draggedItem.style.opacity = "0.5"; // Visual feedback
         }
     });
 
-    // Drag over event
+    // Drag over possible target
     currencyContainer.addEventListener("dragover", (event) => {
         event.preventDefault(); // Allow dropping
 
@@ -629,51 +631,49 @@ document.addEventListener("DOMContentLoaded", async () => {
         const targetItem = event.target.closest(".currency-input");
 
         if (targetItem) {
-            // targetItem.style.border = "2px solid orange"; // Visual feedback
-            targetItem.style.background = "rgba(63, 63, 63, 0.8)"; // Visual feedback
+            targetItem.style.background = "var(--drag-background)"; // Visual feedback
+            targetItem.style.border = "1px solid var(--drag-border)"; // Visual feedback
         }
     });
 
-    // Drag leave event
+    // Drag leave possible target
     currencyContainer.addEventListener("dragleave", (event) => {
         // Check if the cursor is leaving the .currency-input container
         if (
-            event.target.classList.contains("currency-input") &&
-            !event.target.contains(event.relatedTarget) // Ensure the cursor is leaving the container, not just moving to a child
+            event.target.classList.contains("currency-input")
+            && !event.target.contains(event.relatedTarget) // Ensure the cursor is leaving the container, not just moving to a child
         ) {
-            event.target.style.background = "#1f1e23"; // Reset background
-            event.target.style.border = "#2b2a30 solid 1px"; // Reset border
-            // event.target.style.borderBottom = "1px solid #dfdfdf8a"; // Reset bottom border
             event.target.style.opacity = "1"; // Visual feedback
+            event.target.style.background = "var(--gray)"; // Reset background
+            event.target.style.border = "var(--border-dark) solid 1px"; // Reset border
         }
     });
 
-    // Drop event
+    // Drop on target event
     currencyContainer.addEventListener("drop", (event) => {
         event.preventDefault();
 
         // Find the nearest .currency-input element
         const targetItem = event.target.closest(".currency-input");
 
-        if (targetItem && draggedItem !== targetItem) {
+        if (draggedItem !== targetItem) {
             // Remove visual feedback
-            targetItem.style.border = "#2b2a30 solid 1px"; // Reset border
-            targetItem.style.background = "#1f1e23"; // Reset background
-            // targetItem.style.borderBottom = "1px solid #dfdfdf8a"; // Reset bottom border
             event.target.style.opacity = "1"; // Reset opacity
+            targetItem.style.background = "var(--gray)"; // Reset background
+            targetItem.style.border = "var(--border-dark) solid 1px"; // Reset border
 
 
             // Reorder the elements
             const container = currencyContainer;
-            const items = Array.from(container.children);
+            const items = Array.from(container.children);// All children of the container
 
             const draggedIndex = items.indexOf(draggedItem);
             const targetIndex = items.indexOf(targetItem);
 
             if (draggedIndex < targetIndex) {
-                container.insertBefore(draggedItem, targetItem.nextSibling);
+                container.insertBefore(draggedItem, targetItem.nextSibling);// Insert after the target
             } else {
-                container.insertBefore(draggedItem, targetItem);
+                container.insertBefore(draggedItem, targetItem);// Insert before the target
             }
 
             saveCurrencyOrder(); // Save the updated order
@@ -682,7 +682,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Reset styles for the dragged item
         if (draggedItem) {
             draggedItem.style.opacity = "1"; // Reset opacity
-            draggedItem.style.background = "#1f1e23"; // Reset background
+            draggedItem.style.background = "var(--gray)"; // Reset background
+            draggedItem.style.border = "var(--border-dark) solid 1px"; // Reset border
         }
     });
 
@@ -692,12 +693,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Reset styles for the dragged item
             event.target.style.opacity = "1"; // Reset opacity
             event.target.style.background = "white"; // Reset background
+            event.target.style.border = "var(--border-dark) solid 1px"; // Reset border
+
 
             // Reset styles for all currency inputs
             document.querySelectorAll(".currency-input").forEach(item => {
-                item.style.border = "#2b2a30 solid 1px"; // Reset border
-                item.style.background = "#1f1e23"; // Reset background
-                // item.style.borderBottom = "1px solid #dfdfdf8a"; // Reset bottom border
+                item.style.opacity = "1"; // Reset opacity
+                item.style.background = "var(--gray)"; // Reset background
+                item.style.border = "var(--border-dark) solid 1px"; // Reset border
             });
         }
     });
@@ -869,5 +872,30 @@ document.addEventListener("DOMContentLoaded", () => {
     checkbox.addEventListener("change", () => {
         localStorage.setItem(CHECKBOX_STATE_KEY, checkbox.checked); // Save boolean as string
         console.log("Checkbox state saved to localStorage:", checkbox.checked);
+    });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const darkModeBtn = document.getElementById("dark-mode-btn");
+    const root = document.documentElement;
+
+    // Load user preference from localStorage
+    const savedMode = localStorage.getItem("darkMode");
+    if (savedMode === "dark") {
+        root.classList.add("dark-mode");
+        darkModeBtn.classList.add("active");
+    }
+
+    // Toggle dark mode
+    darkModeBtn.addEventListener("click", () => {
+        root.classList.toggle("dark-mode");
+        darkModeBtn.classList.toggle("active");
+
+        // Save user preference to localStorage
+        if (root.classList.contains("dark-mode")) {
+            localStorage.setItem("darkMode", "dark");
+        } else {
+            localStorage.setItem("darkMode", "light");
+        }
     });
 });
