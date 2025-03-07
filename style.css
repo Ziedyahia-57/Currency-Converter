@@ -32,7 +32,6 @@ body {
 
 .popup-container {
     font-family: Roboto flex;
-    /**/
     color: var(--font-color) !important;
     width: 380px;
     overflow: hidden;
@@ -44,7 +43,6 @@ body {
 .header {
     display: flex;
     align-items: center;
-    background: var(--primary-color);
     color: white;
     padding: 10px 0;
     font-weight: bold;
@@ -52,31 +50,21 @@ body {
     justify-content: center;
     height: 50px;
     width: 100%;
-    border: 2px solid var(--primary-color);
-    /**/
     background: linear-gradient(#00530a, #00c816);
     border: none;
 }
 
 .header img {
-    width: 40px;
-    margin-right: 8px;
-
-    /**/
     width: 28px;
     margin-right: 16px;
 }
 
 #currency-container {
-    width: 381px;
     min-height: 132px;
     height: fit-content;
     max-height: 288px;
     overflow-y: auto;
     overflow-x: hidden;
-    background: #fbfbfb;
-
-    /**/
     background: var(--light-gray);
     align-items: center;
     display: flex;
@@ -95,28 +83,17 @@ label {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 10px;
-    /* background: white; */
-    /**/
-    border-bottom: #dfdfdf8a solid 1px;
     height: 33px;
     -webkit-user-select: none;
-    /* Safari */
     -moz-user-select: none;
-    /* Firefox */
     -ms-user-select: none;
-    /* IE10+/Edge */
     user-select: none;
-    /* Standard */
     transition: transform 0.2s linear, background 0.2s linear;
-
-    /**/
     border: var(--border-dark) solid 1px;
     border-radius: 8px;
     margin: 5px 14px 5px 5px;
     background: var(--gray);
     padding: 0;
-    /* overflow: hidden; */
 }
 
 .currency-input:hover {
@@ -128,48 +105,33 @@ label {
     padding: 5px;
     font-size: 16px;
     text-align: left;
-    border: #eaeaea solid 1px;
-    color: #606060;
-    border-radius: 5px;
     margin-left: auto;
     margin-right: 16px;
-
-    /**/
     background: transparent;
     border: none;
     color: #a8a8a8;
 }
 
 .currency-input input:focus-visible {
-    border: 1px solid var(--primary-color);
     outline: none;
-    /**/
     border: none;
 }
 
 .currency-input button {
     text-align: center;
-    background: rgba(219, 219, 219, 0.64);
     color: white;
-    border: none;
+    border: var(--border-dark) solid 1px;
     border-radius: 50%;
     font-size: 17px;
     font-weight: bold;
     height: 24px;
     width: 24px;
-    fill: white;
-    /**/
     margin: 4px;
     fill: var(--fill-color);
-    border: var(--border-dark) solid 1px;
     background: var(--light-gray);
 }
 
 .currency-input button:hover {
-    /* background: rgba(255, 33, 33, 0.64);
-    transition: background ease-in-out .2s;*/
-
-    /**/
     background: #fb0c04;
     fill: white;
     transition: background ease-in-out .2s, fill ease-in-out .2s;
@@ -181,9 +143,6 @@ label {
     display: flex;
     padding: 5px;
     fill: white;
-    border-bottom: #ccc solid 1px;
-    border-top: #ccc solid 1px;
-    /**/
     border-bottom: var(--border-dark) solid 1px;
     border-top: var(--border-dark) solid 1px;
 }
@@ -198,19 +157,15 @@ label {
 #support-dev-btn,
 #rate-us-btn,
 #dark-mode-btn {
-    background: #ffdb89;
-    border: none;
     cursor: pointer;
     height: 24px;
     width: 24px;
+    border: var(--border-dark) solid 1px;
     border-radius: 50%;
     justify-content: center;
     display: flex;
     margin-right: 5px;
     align-self: center;
-
-    /**/
-    border: var(--border-dark) solid 1px;
     background: var(--light-gray);
     fill: var(--fill-color);
 }
@@ -248,13 +203,10 @@ label {
     top: 0;
     right: -300px;
     width: 380px;
-    background: white;
     box-shadow: -3px 0 10px rgba(0, 0, 0, 0.2);
     transition: left 0.3s ease-in-out;
-    background: white;
     height: 100%;
     overflow: hidden;
-    /**/
     background: var(--light-gray);
     border-bottom: var(--border-dark) solid 1px;
 }
@@ -279,29 +231,14 @@ label {
 .currency-option {
     padding: 10px;
     cursor: pointer;
-    border-bottom: 1px solid #ccc;
     -webkit-user-select: none;
-    /* Safari */
     -moz-user-select: none;
-    /* Firefox */
     -ms-user-select: none;
-    /* IE10+/Edge */
     user-select: none;
-    /* Standard */
-
-    /**/
     border-bottom: var(--border-dark) solid 1px;
-
 }
 
 .currency-active {
-    background-color: #f0c77a;
-    /* Match hover effect */
-    /* color: #ffffff; */
-    /* Ensure contrast */
-
-    /**/
-    /* background-color: #575757; */
     background-color: var(--gray);
 }
 
@@ -316,23 +253,14 @@ label {
 .title {
     padding: 0 20px;
     margin: 0;
-    background: var(--primary-color);
-    color: white;
-    border: 2px solid var(--primary-color);
     display: flex;
     height: 70px;
     align-items: center;
     overflow: hidden;
-    position: relative;
     -webkit-user-select: none;
-    /* Safari */
     -moz-user-select: none;
-    /* Firefox */
     -ms-user-select: none;
-    /* IE10+/Edge */
     user-select: none;
-    /* Standard */
-    /**/
     color: var(--font-color);
     border: 2px solid var(--border-dark);
     background: var(--light-gray);
@@ -365,11 +293,8 @@ label {
 }
 
 .container {
-    background: white;
     height: fit-content;
-    box-shadow: 0 0 24px 0px #d0d0d082;
     width: 100%;
-    /**/
     position: relative;
     background: var(--gray);
     box-shadow: 0 0 24px 0px var(--shadow);
@@ -433,10 +358,8 @@ label {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
     transition: 0.2s;
     border-radius: 16px;
-    /**/
     background-color: var(--dark-gray);
     outline: 1px solid var(--border-dark);
 }
@@ -464,7 +387,6 @@ input:checked+.slider::before {
     transform: translateX(16px);
 }
 
-/**/
 .currency-info {
     display: flex;
     width: 80px;
