@@ -1,5 +1,4 @@
 // const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
-const API_KEY = "e8eab13facc49788d961a68"; // Replace with your API key
 
 const currencyTab = document.getElementById("currency-tab");
 const currencyContainer = document.getElementById("currency-container");
@@ -180,31 +179,51 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currencies = [];
     let exchangeRates = {};
 
-    // Function to check if the app is truly online
-    async function checkNetworkConnection() {
-        try {
-            // Use a lightweight request to check connectivity
-            const response = await fetch("https://httpbin.org/get", { method: "HEAD", cache: "no-cache" });
-            return response.ok; // True if the request succeeds
-        } catch (error) {
-            console.error("Network check failed:", error);
-            return false; // False if the request fails
-        }
-    }
+    // Function to check if the app is truly online //🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+    // async function checkNetworkConnection() {
+    //     try {
+    //         // Use a lightweight request to check connectivity
+    //         const response = await fetch("https://httpbin.org/get", { method: "HEAD", cache: "no-cache" });
+    //         return response.ok; // True if the request succeeds
+    //     } catch (error) {
+    //         console.error("Network check failed:", error);
+    //         return false; // False if the request fails
+    //     }
+    // }
 
-    // Function to fetch exchange rates with CORS proxy
+
+
     async function fetchExchangeRates(base = "USD") {
         try {
-            // Use a CORS proxy to bypass CORS restrictions
+            //Use a CORS proxy to bypass CORS restrictions
             const proxyUrl = "https://api.allorigins.win/raw?url=";
             const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
             const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
             const data = await response.json();
-            if (data.result === "error") throw new Error(data["error-type"]);
+
+            // Check if the API returned an error (e.g., inactive account)
+            if (data.result === "error") {
+                throw new Error(data["error-type"] || "API error");
+            }
+
+            // Return the exchange rates if everything is OK
             return data.conversion_rates;
         } catch (error) {
             console.error("Error fetching exchange rates:", error);
-            return null;
+
+            // If the error is due to an inactive account, log it and throw a specific error
+            if (error.message === "inactive-account") {
+                console.error("API account is inactive. Falling back to cached data.");
+                throw new Error("inactive-account");
+            }
+
+            // For other errors, re-throw them
+            throw error;
         }
     }
 
@@ -241,7 +260,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // Function to update currency values
     function updateCurrencyValues(baseValue = 0, baseCurrency = "USD") {
         if (!exchangeRates) {
             console.error("No exchange rates available for conversion.");
@@ -280,73 +298,115 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Initialize exchange rates
     async function initializeExchangeRates() {
-        let isOnline = false;
-
         try {
-            isOnline = await checkNetworkConnection(); // Use the fallback mechanism
-        } catch (error) {
-            console.error("Network check failed:", error);
-            isOnline = navigator.onLine; // Fall back to navigator.onLine
-        }
-
-        if (isOnline) {
-            // Fetch fresh exchange rates if online
-            console.log("App is online. Fetching latest exchange rates...");
+            console.log("Attempting to fetch latest exchange rates...");
             exchangeRates = await fetchExchangeRates("USD");
+
             if (exchangeRates) {
+                // Save the new rates and update the UI
                 saveExchangeRates(exchangeRates);
                 updateLastUpdateElement(true);
+            } else {
+                // If the API returns no data, fall back to saved rates
+                console.log("No data received from API. Loading saved exchange rates...");
+                loadData();
             }
-        } else {
-            // Load saved exchange rates if offline
-            console.log("App is offline. Loading saved exchange rates...");
+        } catch (error) {
+            // If the API request fails (e.g., inactive account or network error), load saved rates
+            console.error("Failed to fetch exchange rates:", error);
+
+            if (error.message === "inactive-account") {
+                console.log("API account is inactive. Loading saved exchange rates...");
+            } else {
+                console.log("Loading saved exchange rates due to an error...");
+            }
+
             loadData();
         }
     }
+
+    // function loadData() {
+    //     const savedData = loadExchangeRates();
+    //     if (savedData) {
+    //         exchangeRates = savedData.rates;
+    //         updateLastUpdateElement(false, savedData.lastUpdated);
+    //     } else {
+    //         console.error("No saved exchange rates found.");
+    //         updateLastUpdateElement(false);
+    //     }
+    // }
+
     function loadData() {
         const savedData = loadExchangeRates();
         if (savedData) {
             exchangeRates = savedData.rates;
             updateLastUpdateElement(false, savedData.lastUpdated);
+
+            // Update the UI with the cached exchange rates
+            updateCurrencyValues(1, "USD"); // Default to 1 USD as the base value
+            console.log("Exchange rates loaded from localStorage:", exchangeRates);
         } else {
             console.error("No saved exchange rates found.");
             updateLastUpdateElement(false);
         }
     }
+
     // Initialize the app
     await initializeExchangeRates();
+
+    async function initializeApp() {
+        // Load cached exchange rates
+        await initializeExchangeRates();
+
+        // Try to load saved currencies
+        const loadedSuccessfully = loadCurrencyOrder();
+
+        // Only load defaults if nothing was loaded from localStorage
+        if (!loadedSuccessfully) {
+            console.log("No saved currencies found, loading defaults");
+            addCurrency("USD");
+            addCurrency("EUR");
+        }
+
+        // Set all input values to 0.00
+        document.querySelectorAll(".currency-input input").forEach(input => {
+            input.value = "0.00";
+        });
+
+        // Check currency count and update button visibility
+        checkCurrencyCount();
+        updateAddButtonVisibility();
+    }
+
+    // Initialize the app
+    initializeApp();
+
 
     // Add event listeners for online/offline status
     window.addEventListener("online", async () => {
         console.log("App is online. Fetching latest exchange rates...");
-        let isOnline = false;
-
         try {
-            isOnline = await checkNetworkConnection(); // Use the fallback mechanism
-        } catch (error) {
-            console.error("Network check failed:", error);
-            isOnline = navigator.onLine; // Fall back to navigator.onLine
-        }
-
-        if (isOnline) {
             exchangeRates = await fetchExchangeRates("USD");
             if (exchangeRates) {
                 saveExchangeRates(exchangeRates);
                 updateLastUpdateElement(true);
             }
+        } catch (error) {
+            console.error("Failed to fetch exchange rates:", error);
+
+            if (error.message === "inactive-account") {
+                console.log("API account is inactive. Loading saved exchange rates...");
+            } else {
+                console.log("Loading saved exchange rates due to an error...");
+            }
+
+            loadData();
         }
     });
 
     window.addEventListener("offline", () => {
         console.log("App is offline. Loading saved exchange rates...");
-        const savedData = loadExchangeRates();
-        if (savedData) {
-            exchangeRates = savedData.rates;
-            updateLastUpdateElement(false, savedData.lastUpdated);
-        } else {
-            console.error("No saved exchange rates found.");
-            updateLastUpdateElement(false);
-        }
+        loadData();
     });
 
     // Add event listener for input changes
@@ -470,7 +530,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         currencyTab.classList.remove("hidden");
     }
 
-    // Modified addCurrency function
     function addCurrency(currency, shouldSave = true) {
         if (currencies.includes(currency)) return;
 
@@ -484,8 +543,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         currencyDiv.innerHTML = `
             <div class="currency-info">
-            <div class="flag"><span class="fi fi-${countryCode}"></span></div>
-            <label>${currency}</label>
+                <div class="flag"><span class="fi fi-${countryCode}"></span></div>
+                <label>${currency}</label>
             </div>
             <input type="text" data-currency="${currency}" value="0.00" data-previous-value="0">
             <button class="remove-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
@@ -855,6 +914,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             wrapper.remove();
         }
     });
+
+
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -898,4 +959,5 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.setItem("darkMode", "light");
         }
     });
+
 });
