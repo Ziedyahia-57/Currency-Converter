@@ -231,7 +231,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     function saveExchangeRates(rates) {
         if (rates) {
             localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(rates));
-            localStorage.setItem(LAST_UPDATED_KEY, new Date().toLocaleString());
+
+            // Format the date as dd/mm/yyyy
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, "0"); // Ensure two digits for day
+            const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+            const year = now.getFullYear();
+            const formattedDate = `${day}/${month}/${year}`;
+
+            localStorage.setItem(LAST_UPDATED_KEY, formattedDate);
             console.log("Exchange rates saved to localStorage.");
         }
     }
@@ -243,18 +251,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (savedRates && lastUpdated) {
             exchangeRates = JSON.parse(savedRates);
+
+            // Ensure the date is in dd/mm/yyyy format
+            const dateParts = lastUpdated.split(/[/-]/); // Split by '/' or '-'
+            let formattedDate = lastUpdated;
+
+            if (dateParts.length === 3) {
+                // Reformat to dd/mm/yyyy
+                const [day, month, year] = dateParts.map(part => part.padStart(2, "0")); // Ensure two digits
+                formattedDate = `${day}/${month}/${year}`;
+            }
+
             console.log("Exchange rates loaded from localStorage:", exchangeRates);
-            return { rates: exchangeRates, lastUpdated };
+            return { rates: exchangeRates, lastUpdated: formattedDate };
         }
         return null;
     }
+
+
 
     // Function to update the .last-update element
     function updateLastUpdateElement(isOnline, lastUpdated = null) {
         if (isOnline) {
             lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically <br> updated once per day.`;
         } else if (lastUpdated) {
-            lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br> Last Updated Date: <span class="date">${lastUpdated}</div>`;
+            lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
         } else {
             lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - No saved exchange rates found.`;
         }
