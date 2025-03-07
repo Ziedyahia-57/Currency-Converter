@@ -669,7 +669,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         closeCurrencyTab();
     });
 
-    // Drag and drop functionality
     let draggedItem = null;
 
     // Drag start event
@@ -677,91 +676,81 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (event.target.classList.contains("currency-input")) {
             draggedItem = event.target;
 
-            draggedItem.style.background = "var(--drag-background)"; // Visual feedback
-            draggedItem.style.opacity = "0.5"; // Visual feedback
+            // Visual feedback for the dragged item
+            draggedItem.style.background = "var(--drag-background)";
+            draggedItem.style.opacity = "0.5";
         }
     });
 
-    // Drag over possible target
+    // Drag over event
     currencyContainer.addEventListener("dragover", (event) => {
         event.preventDefault(); // Allow dropping
 
         // Find the nearest .currency-input element
         const targetItem = event.target.closest(".currency-input");
 
-        if (targetItem) {
-            targetItem.style.background = "var(--drag-background)"; // Visual feedback
-            targetItem.style.border = "1px solid var(--drag-border)"; // Visual feedback
+        if (targetItem && targetItem !== draggedItem) {
+            // Visual feedback for the target item
+            targetItem.style.background = "var(--drag-background)";
+            targetItem.style.border = "1px solid var(--drag-border)";
         }
-    });
 
-    // Drag leave possible target
-    currencyContainer.addEventListener("dragleave", (event) => {
-        // Check if the cursor is leaving the .currency-input container
-        if (
-            event.target.classList.contains("currency-input")
-            && !event.target.contains(event.relatedTarget) // Ensure the cursor is leaving the container, not just moving to a child
-        ) {
-            event.target.style.opacity = "1"; // Visual feedback
-            event.target.style.background = "var(--gray)"; // Reset background
-            event.target.style.border = "var(--border-dark) solid 1px"; // Reset border
-        }
-    });
-
-    // Drop on target event
-    currencyContainer.addEventListener("drop", (event) => {
-        event.preventDefault();
-
-        // Find the nearest .currency-input element
-        const targetItem = event.target.closest(".currency-input");
-
-        if (draggedItem !== targetItem) {
-            // Remove visual feedback
-            event.target.style.opacity = "1"; // Reset opacity
-            targetItem.style.background = "var(--gray)"; // Reset background
-            targetItem.style.border = "var(--border-dark) solid 1px"; // Reset border
-
-
-            // Reorder the elements
-            const container = currencyContainer;
-            const items = Array.from(container.children);// All children of the container
-
-            const draggedIndex = items.indexOf(draggedItem);
-            const targetIndex = items.indexOf(targetItem);
-
-            if (draggedIndex < targetIndex) {
-                container.insertBefore(draggedItem, targetItem.nextSibling);// Insert after the target
-            } else {
-                container.insertBefore(draggedItem, targetItem);// Insert before the target
+        // Reset styles for all other items
+        document.querySelectorAll(".currency-input").forEach(item => {
+            if (item !== targetItem && item !== draggedItem) {
+                item.style.background = "var(--gray)";
+                item.style.border = "var(--border-dark) solid 1px";
             }
-
-            saveCurrencyOrder(); // Save the updated order
-        }
-
-        // Reset styles for the dragged item
-        if (draggedItem) {
-            draggedItem.style.opacity = "1"; // Reset opacity
-            draggedItem.style.background = "var(--gray)"; // Reset background
-            draggedItem.style.border = "var(--border-dark) solid 1px"; // Reset border
-        }
+        });
     });
 
     // Drag end event
     currencyContainer.addEventListener("dragend", (event) => {
         if (event.target.classList.contains("currency-input")) {
             // Reset styles for the dragged item
-            event.target.style.opacity = "1"; // Reset opacity
-            event.target.style.background = "white"; // Reset background
-            event.target.style.border = "var(--border-dark) solid 1px"; // Reset border
-
+            draggedItem.style.background = "var(--gray)";
+            draggedItem.style.opacity = "1";
+            draggedItem.style.border = "var(--border-dark) solid 1px";
 
             // Reset styles for all currency inputs
             document.querySelectorAll(".currency-input").forEach(item => {
-                item.style.opacity = "1"; // Reset opacity
-                item.style.background = "var(--gray)"; // Reset background
-                item.style.border = "var(--border-dark) solid 1px"; // Reset border
+                item.style.background = "var(--gray)";
+                item.style.border = "var(--border-dark) solid 1px";
             });
+
+            draggedItem = null; // Reset the dragged item
         }
+    });
+
+    // Drop event
+    currencyContainer.addEventListener("drop", (event) => {
+        event.preventDefault();
+
+        // Find the nearest .currency-input element
+        const targetItem = event.target.closest(".currency-input");
+
+        if (draggedItem && targetItem && draggedItem !== targetItem) {
+            // Reorder the elements
+            const container = currencyContainer;
+            const items = Array.from(container.children); // All children of the container
+
+            const draggedIndex = items.indexOf(draggedItem);
+            const targetIndex = items.indexOf(targetItem);
+
+            if (draggedIndex < targetIndex) {
+                container.insertBefore(draggedItem, targetItem.nextSibling); // Insert after the target
+            } else {
+                container.insertBefore(draggedItem, targetItem); // Insert before the target
+            }
+
+            saveCurrencyOrder(); // Save the updated order
+        }
+
+        // Reset styles for all items
+        document.querySelectorAll(".currency-input").forEach(item => {
+            item.style.background = "var(--gray)";
+            item.style.border = "var(--border-dark) solid 1px";
+        });
     });
 
     // Keyboard navigation for currency selection
