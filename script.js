@@ -1,10 +1,12 @@
 // const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
+const API_KEY = 0; // Replace with your API key
 
 const currencyTab = document.getElementById("currency-tab");
 const currencyContainer = document.getElementById("currency-container");
 const addCurrencyBtn = document.getElementById("add-currency-btn");
 const currencyList = document.getElementById("currency-list");
 const hideTab = document.getElementById("hide-tab");
+let errorLogged = false; // Global flag to track error logging
 
 const currencyToCountry = {
     AED: "ae", // United Arab Emirates
@@ -195,7 +197,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function fetchExchangeRates(base = "USD") {
         try {
-            //Use a CORS proxy to bypass CORS restrictions
             const proxyUrl = "https://api.allorigins.win/raw?url=";
             const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
             const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
@@ -206,23 +207,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const data = await response.json();
 
-            // Check if the API returned an error (e.g., inactive account)
             if (data.result === "error") {
                 throw new Error(data["error-type"] || "API error");
             }
 
-            // Return the exchange rates if everything is OK
+            // Reset the error flag on successful fetch
+            errorLogged = false;
+
             return data.conversion_rates;
         } catch (error) {
-            console.error("Error fetching exchange rates:", error);
-
-            // If the error is due to an inactive account, log it and throw a specific error
-            if (error.message === "inactive-account") {
-                console.error("API account is inactive. Falling back to cached data.");
-                throw new Error("inactive-account");
+            // Log the error only if it hasn't been logged before
+            if (!errorLogged) {
+                console.error("Error fetching exchange rates:", error);
+                errorLogged = true; // Set the flag to prevent further logging
             }
 
-            // For other errors, re-throw them
             throw error;
         }
     }
@@ -265,9 +264,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.log("Exchange rates loaded from localStorage:", exchangeRates);
             return { rates: exchangeRates, lastUpdated: formattedDate };
         }
+
+        // Log the error only if it hasn't been logged before
+        if (!errorLogged) {
+            console.error("No saved exchange rates found.");
+            errorLogged = true; // Set the flag to prevent further logging
+        }
+
         return null;
     }
-
 
 
     // Function to update the .last-update element
@@ -327,21 +332,27 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // Save the new rates and update the UI
                 saveExchangeRates(exchangeRates);
                 updateLastUpdateElement(true);
+
+                // Reset the error flag on successful initialization
+                errorLogged = false;
             } else {
-                // If the API returns no data, fall back to saved rates
+                // Log the error only if it hasn't been logged before
+                if (!errorLogged) {
+                    console.error("Error fetching exchange rates:", error);
+                    errorLogged = true; // Set the flag to prevent further logging
+                }
+
                 console.log("No data received from API. Loading saved exchange rates...");
                 loadData();
             }
         } catch (error) {
-            // If the API request fails (e.g., inactive account or network error), load saved rates
-            console.error("Failed to fetch exchange rates:", error);
-
-            if (error.message === "inactive-account") {
-                console.log("API account is inactive. Loading saved exchange rates...");
-            } else {
-                console.log("Loading saved exchange rates due to an error...");
+            // Log the error only if it hasn't been logged before
+            if (!errorLogged) {
+                console.error("Failed to fetch exchange rates:", error);
+                errorLogged = true; // Set the flag to prevent further logging
             }
 
+            console.log("Loading saved exchange rates...");
             loadData();
         }
     }
