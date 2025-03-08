@@ -120,7 +120,7 @@ label {
 .currency-input button {
     text-align: center;
     color: white;
-    border: var(--border-dark) solid 1px;
+    border: none;
     border-radius: 50%;
     font-size: 17px;
     font-weight: bold;
@@ -128,13 +128,12 @@ label {
     width: 24px;
     margin: 4px;
     fill: var(--fill-color);
-    background: var(--light-gray);
+    background: transparent;
 }
 
 .currency-input button:hover {
-    background: #fb0c04;
-    fill: white;
-    transition: background ease-in-out .2s, fill ease-in-out .2s;
+    fill: #fb0c04;
+    transition: fill ease-in-out .2s, fill ease-in-out .2s;
 }
 
 /* Add Currency */
@@ -166,7 +165,7 @@ label {
     display: flex;
     margin-right: 5px;
     align-self: center;
-    background: var(--light-gray);
+    background: transparent;
     fill: var(--fill-color);
 }
 
