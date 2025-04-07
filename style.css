@@ -12,6 +12,7 @@
     --shadow: #a6a6a682;
     --drag-border: #adacaccc;
     --drag-background: #d6d6d6cc;
+    --font-color2: #4f4f4f;
 }
 
 /* Dark mode colors */
@@ -23,6 +24,7 @@
     --shadow: #31313182;
     --drag-border: #535353cc;
     --drag-background: #3f3f3fcc;
+    --font-color2: #ececec;
 }
 
 body {
@@ -36,8 +38,10 @@ body {
     width: 380px;
     overflow: hidden;
     height: auto;
+    min-height: 410px;
     position: relative;
 }
+
 
 /* Header */
 .header {
@@ -62,6 +66,7 @@ body {
 #currency-container {
     min-height: 132px;
     height: fit-content;
+    min-height: 238px;
     max-height: 288px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -94,6 +99,7 @@ label {
     margin: 5px 14px 5px 5px;
     background: var(--gray);
     padding: 0;
+    width: 320px;
 }
 
 .currency-input:hover {
@@ -105,8 +111,8 @@ label {
     padding: 5px;
     font-size: 16px;
     text-align: left;
-    margin-left: auto;
-    margin-right: 16px;
+    margin-left: 0;
+    margin-right: auto;
     background: transparent;
     border: none;
     color: #a8a8a8;
@@ -208,6 +214,7 @@ label {
     overflow: hidden;
     background: var(--light-gray);
     border-bottom: var(--border-dark) solid 1px;
+    z-index: 3;
 }
 
 .currency-tab.show {
@@ -260,7 +267,7 @@ label {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    color: var(--font-color);
+    color: var(--font-color2);
     border: 2px solid var(--border-dark);
     background: var(--light-gray);
     position: sticky;
@@ -271,7 +278,7 @@ label {
 .hide-tab {
     width: 16px;
     height: 1px;
-    fill: var(--font-color);
+    fill: var(--font-color2);
     margin: 0px 16px 24px 0px;
     cursor: pointer;
 }
@@ -399,4 +406,154 @@ input:checked+.slider::before {
 
 #dark-mode-btn.active {
     border: 2px solid var(--primary-color);
+}
+
+.donation-tab {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    background: var(--light-gray);
+    width: 380px;
+    height: 100%;
+}
+
+.donation-icon {
+    margin: 15px auto;
+    font-size: 35px;
+    text-align: center;
+}
+
+.desc-title {
+    text-align: center;
+    font-weight: 800;
+    color: var(--font-color2);
+    font-size: 14px;
+}
+
+.desc-text {
+    color: var(--font-color2);
+    width: 355px;
+    text-align: center;
+    margin: 12px auto;
+    font-size: 12px;
+}
+
+.donation-choice {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    margin: 20px 5px;
+}
+
+/* CSS */
+.button-64 {
+    align-items: center;
+    background: var(--border-dark);
+    border: 0;
+    border-radius: 8px;
+    box-sizing: border-box;
+    color: var(--font-color2);
+    display: flex;
+    font-size: 14px;
+    justify-content: center;
+    line-height: 1em;
+    max-width: 100%;
+    min-width: 140px;
+    padding: 3px;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.button-64:active,
+.button-64:hover {
+    outline: 0;
+    background: var(--primary-color);
+    color: white;
+    transition: 0.3s;
+}
+
+.button-64 span {
+    background-color: var(--border-dark);
+    padding: 6px 8px;
+    border-radius: 6px;
+    width: 100%;
+    height: 100%;
+    transition: 0.3s;
+}
+
+.button-64:hover span {
+    background: none;
+}
+
+.italic-text {
+    font-style: italic;
+}
+
+.secret {
+    color: #ff0000;
+    /* Or any color you prefer */
+    font-style: italic;
+    font-weight: normal;
+    font-size: 0.9em;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Add this to your CSS */
+#support-dev-btn svg {
+    z-index: 2;
+}
+
+#support-dev-btn {
+    position: relative;
+    overflow: hidden;
+    /* Ensures proper centering of the ripple */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#support-dev-btn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    z-index: 1;
+    border: 1px solid var(--primary-color);
+    /* Green outline */
+    opacity: 0;
+    border-radius: 100%;
+    transform: translate(-50%, -50%) scale(1);
+    /* Proper centering */
+    transform-origin: center;
+    /* Remove fill property as it's not applicable here */
+}
+
+#support-dev-btn::after {
+    animation: ripple 3s ease-out infinite;
+}
+
+@keyframes ripple {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(10);
+        opacity: 0.25;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(20);
+        opacity: 0;
+    }
 }
