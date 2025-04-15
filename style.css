@@ -538,7 +538,7 @@ a {
 }
 
 #support-dev-btn::after {
-    animation: ripple 3s ease-out infinite;
+    animation: ripple 5s ease-out infinite;
 }
 
 @keyframes ripple {

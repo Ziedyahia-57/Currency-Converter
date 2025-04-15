@@ -186,20 +186,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currencies = [];
     let exchangeRates = {};
 
-    // Function to check if the app is truly online //🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
-    // async function checkNetworkConnection() {
-    //     try {
-    //         // Use a lightweight request to check connectivity
-    //         const response = await fetch("https://httpbin.org/get", { method: "HEAD", cache: "no-cache" });
-    //         return response.ok; // True if the request succeeds
-    //     } catch (error) {
-    //         console.error("Network check failed:", error);
-    //         return false; // False if the request fails
-    //     }
-    // }
-
-
-
     async function fetchExchangeRates(base = "USD") {
         try {
             const proxyUrl = "https://api.allorigins.win/raw?url=";
@@ -362,16 +348,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // function loadData() {
-    //     const savedData = loadExchangeRates();
-    //     if (savedData) {
-    //         exchangeRates = savedData.rates;
-    //         updateLastUpdateElement(false, savedData.lastUpdated);
-    //     } else {
-    //         console.error("No saved exchange rates found.");
-    //         updateLastUpdateElement(false);
-    //     }
-    // }
 
     function loadData() {
         const savedData = loadExchangeRates();
@@ -649,12 +625,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         event.target.value = formatNumberWithCommas(rawValue);
         updateCurrencyValues(parseFloat(rawValue) || 0, event.target.dataset.currency);
     });
-
-    // currencyContainer.addEventListener("focus", (event) => {
-    //     if (event.target.tagName === "INPUT") {
-    //         event.target.select(); //🔴 Select content on focus
-    //     }
-    // });
 
     supportDevBtn.addEventListener("click", () => {
         openDonationTab();
@@ -1023,7 +993,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // messages.js
 const donationContent = {
     initialMessage: {
-        greeting: "You just made my day!",
+        greeting: "A Small Donation Goes a Long Way",
         message: `Hi there! I'm Ziedyahia57, a CS grad building free tools like this to make life easier. If this extension helps, consider supporting with a coffee. Every bit helps me build more!`,
         footer: "No worries if not - your presence here already makes me smile! Keep being awesome. 🌟",
         emoji: "☕"
