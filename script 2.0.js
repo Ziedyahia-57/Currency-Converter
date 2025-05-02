@@ -1,8 +1,6 @@
 import { currencyToCountry } from "./currencyToCountry.js";
 import { donationContent } from "./messages.js";
 
-const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
-// const API_KEY = 0; // Replace with your API key
 
 // When donation tab is opened:
 const currencyTab = document.getElementById("currency-tab");
@@ -28,7 +26,7 @@ let exchangeRates = {};
 //⚪ fetch exchange rates function (start)
 async function fetchExchangeRates(base = "USD") {
   console.log("(1)Fetching exchange rates...");
-  const proxyUrl = "https://api.allorigins.win/raw?url=";
+  const proxyUrl = "https://cors-anywhere.herokuapp.com/";
   const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
   const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
 
