@@ -23,32 +23,43 @@ let exchangeRates = {};
 //🔵++++++++++++++++++++++++++++ ASYNC FUNCTIONS ++++++++++++++++++++++++++++
 //🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //⚪ fetch exchange rates function (start)
-async function fetchExchangeRates(base = "USD") {
+async function fetchExchangeRates() {
   console.log("(1)Fetching exchange rates...");
-  const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-  const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
-  const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
+  const CACHE_KEY = 'currencyData';
+  const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours cache
 
-  const response = await fetch(
-    `https://ziedyahia-57.github.io/currency-converter/data.json`,
-    {
-      headers: {
-        "X-Requested-With": "XMLHttpRequest", // Some proxies require this
-      },
-    }
-  );
-  if (!response.ok) {
-    throw new Error(`API error! Status: ${response.status}`);
+  // 1. Try GitHub Pages JSON first
+  try {
+    const response = await fetch('https://ziedyahia-57.github.io/Currency-Converter/data.json');
+    if (!response.ok) throw new Error('Network response was not ok');
+    
+    const data = await response.json();
+    
+    // Cache with timestamp
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      data: data.conversion_rates,
+      timestamp: Date.now()
+    }));
+    
+    return data.conversion_rates;
+  } catch (error) {
+    console.log('GitHub fetch failed, trying cache...', error);
   }
 
-  // 2. Fallback to cached data if online fetch fails
+  // 2. Fallback to cache
   const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
-
-  // Check if cache exists and is less than 24 hours old
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    console.log("Using cached data");
+  if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
     return cached.data;
   }
+
+  // 3. Final fallback
+  return {
+    USD: 1.0,
+    EUR: 0.93,
+    GBP: 0.79,
+    JPY: 151.30
+  };
+}
 
   // 3. Ultimate fallback (hardcoded rates)
   console.log("Using hardcoded fallback rates");
