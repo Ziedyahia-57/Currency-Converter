@@ -1,7 +1,6 @@
 import { currencyToCountry } from "./currencyToCountry.js";
 import { donationContent } from "./messages.js";
 
-
 // When donation tab is opened:
 const currencyTab = document.getElementById("currency-tab");
 const currencyContainer = document.getElementById("currency-container");
@@ -30,11 +29,14 @@ async function fetchExchangeRates(base = "USD") {
   const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
   const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
 
-  const response = await fetch(finalUrl, {
-    headers: {
-      "X-Requested-With": "XMLHttpRequest", // Some proxies require this
-    },
-  });
+  const response = await fetch(
+    `https://ziedyahia-57.github.io/currency-converter/data/rates.json`,
+    {
+      headers: {
+        "X-Requested-With": "XMLHttpRequest", // Some proxies require this
+      },
+    }
+  );
   if (!response.ok) {
     throw new Error(`API error! Status: ${response.status}`);
   }
