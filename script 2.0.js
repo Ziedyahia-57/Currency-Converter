@@ -176,11 +176,12 @@ async function initializeExchangeRates() {
 //🟠 [initializeExchangeRates, loadCurrencyOrder, addCurrency, checkCurrencyCount, updateAddButtonVisibility, initializeDonationContent]
 async function initializeApp() {
   console.log("Initializing app...");
-  // Load network status immediately
-  updateLastUpdateElement(
-    navigator.onLine,
-    localStorage.getItem(LAST_UPDATED_KEY)
-  );
+
+  // 1. FIRST load the date synchronously
+  const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+
+  // 2. THEN show UI with the date
+  updateLastUpdateElement(navigator.onLine, lastUpdated);
 
   // Set up real-time listeners
   window.addEventListener("online", () =>
@@ -689,9 +690,12 @@ function addCurrency(currency, shouldSave = true) {
 // }
 function saveExchangeRates(rates) {
   if (rates) {
-    const now = new Date().toISOString(); // Store as ISO string
-    localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(rates));
+    // Store date FIRST
+    const now = new Date().toISOString(); // ISO format avoids parsing issues
     localStorage.setItem(LAST_UPDATED_KEY, now);
+
+    // Then store rates
+    localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(rates));
   }
 }
 //>>>>>>>>> save exchange rates + last updated date (end)
@@ -752,25 +756,48 @@ function loadData() {
 //>>>>>>>>> Last update state function (start)
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated) {
-  const formattedDate = lastUpdated
-    ? new Date(lastUpdated).toLocaleString()
-    : "Not available";
+  let dateText = "Loading..."; // Default state
 
-  if (isOnline) {
-    lastUpdateElement.innerHTML = `
-      <span class="green">● Online</span> - Exchange rates are automatically 
-      <br>updated once per month. Last Updated: <span class="date">${formattedDate}</span>
-    `;
-  } else {
-    lastUpdateElement.innerHTML = `
-      <span class="red">● Offline</span> - ${
-        lastUpdated
-          ? `Using cached rates. Last Updated: <span class="date">${formattedDate}</span>`
-          : "No saved exchange rates found."
-      }
-    `;
+  if (lastUpdated) {
+    try {
+      dateText = new Date(lastUpdated).toLocaleString();
+    } catch {
+      dateText = "Recently"; // Fallback if date parsing fails
+    }
   }
+
+  lastUpdateElement.innerHTML = `
+    <span class="${isOnline ? "green" : "red"}">● ${
+    isOnline ? "Online" : "Offline"
+  }</span>
+    - ${
+      isOnline
+        ? "Exchange rates are automatically updated <br>once per month."
+        : "Using cached data.<br>"
+    }
+    Last Updated: <span class="date">${dateText}</span>
+  `;
 }
+// function updateLastUpdateElement(isOnline, lastUpdated) {
+//   const formattedDate = lastUpdated
+//     ? new Date(lastUpdated).toLocaleString()
+//     : "Not available";
+
+//   if (isOnline) {
+//     lastUpdateElement.innerHTML = `
+//       <span class="green">● Online</span> - Exchange rates are automatically
+//       <br> once per month. Last Updated: <span class="date">${formattedDate}</span>
+//     `;
+//   } else {
+//     lastUpdateElement.innerHTML = `
+//       <span class="red">● Offline</span> - ${
+//         lastUpdated
+//           ? `Using cached rates. <br> Last Updated: <span class="date">${formattedDate}</span>`
+//           : "No saved exchange rates found."
+//       }
+//     `;
+//   }
+// }
 //>>>>>>>>> Last update state function (end)
 
 //
