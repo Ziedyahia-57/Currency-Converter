@@ -30,7 +30,7 @@ async function fetchExchangeRates(base = "USD") {
   const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
 
   const response = await fetch(
-    `https://ziedyahia-57.github.io/currency-converter/data/rates.json`,
+    `https://ziedyahia-57.github.io/currency-converter/data.json`,
     {
       headers: {
         "X-Requested-With": "XMLHttpRequest", // Some proxies require this
