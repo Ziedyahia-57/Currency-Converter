@@ -11,18 +11,15 @@
   "host_permissions": [
     "https://v6.exchangerate-api.com/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "icons": {
     "148": "icon.png"
   },
   "action": {
     "default_popup": "index.html",
     "default_icon": "icon.png"
-  },
-  "background": {
-    "scripts": [
-      "background.js"
-    ],
-    "persistent": false
   },
   "content_scripts": [
     {

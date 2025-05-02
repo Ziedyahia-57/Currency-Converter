@@ -1,31 +1,34 @@
-const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
+import { PROXY_URL, API_URL, CURRENCY_DATA_KEY, LAST_UPDATED_KEY, DOM } from "./config.js";
+import { currencyToCountry } from "./currencyData.js";
+
+// const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
 // const API_KEY = 0; // Replace with your API key
 
+
+const elements = {
+    currencyTab: document.getElementById(DOM.currencyTab),
+    currencyContainer: document.getElementById(DOM.currencyContainer),
+    addCurrencyBtn: document.getElementById(DOM.addCurrencyBtn),
+    currencyList: document.getElementById(DOM.currencyList),
+    hideTab: document.getElementById(DOM.hideTab),
+    hideDonationTab: document.getElementById(DOM.hideDonationTab),
+    donationTab: document.getElementById(DOM.donationTab),
+    supportDevBtn: document.getElementById(DOM.supportDevBtn),
+    lastUpdateElement: document.getElementById(DOM.lastUpdateElement),
+
+};
+
 // When donation tab is opened:
-const currencyTab = document.getElementById("currency-tab");
-const currencyContainer = document.getElementById("currency-container");
-const addCurrencyBtn = document.getElementById("add-currency-btn");
-const currencyList = document.getElementById("currency-list");
-const hideTab = document.getElementById("hide-tab");
-const hideDonationTab = document.getElementById("hide-donation-tab");
-const donationTab = document.getElementById("donation-tab");
-const supportDevBtn = document.getElementById("support-dev-btn");
+
 let errorLogged = false; // Global flag to track error logging
 
-
 document.addEventListener("DOMContentLoaded", async () => {
-    const lastUpdateElement = document.querySelector(".last-update");
-    const CURRENCY_DATA_KEY = "currencyData";
-    const LAST_UPDATED_KEY = "lastUpdated";
-
     let currencies = [];
     let exchangeRates = {};
 
-    async function fetchExchangeRates(base = "USD") {
+    async function fetchExchangeRates() {
         try {
-            const proxyUrl = "https://api.allorigins.win/raw?url=";
-            const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
-            const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
+            const response = await fetch(PROXY_URL + encodeURIComponent(API_URL));
 
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -104,11 +107,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Function to update the .last-update element
     function updateLastUpdateElement(isOnline, lastUpdated = null) {
         if (isOnline) {
-            lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically <br> updated once per month.`;
+            elements.lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically <br> updated once per day.`;
         } else if (lastUpdated) {
-            lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
+            elements.lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
         } else {
-            lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - No saved exchange rates found.`;
+            elements.lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - No saved exchange rates found.`;
         }
     }
 
@@ -308,7 +311,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Improved save function
     function saveCurrencyOrder() {
-        const currencyOrder = Array.from(currencyContainer.children)
+        const currencyOrder = Array.from(elements.currencyContainer.children)
             .filter(item => item.classList.contains("currency-input"))
             .map(item => item.querySelector("input").dataset.currency);
 
@@ -328,7 +331,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 console.log("Loading saved currency order:", savedOrder);
 
                 // Clear existing currencies
-                currencyContainer.innerHTML = "";
+                elements.currencyContainer.innerHTML = "";
                 currencies = [];
 
                 // Add each currency in the saved order
@@ -362,9 +365,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function updateAddButtonVisibility() {
         if (currencies.length === Object.keys(exchangeRates || {}).length) {
-            addCurrencyBtn.style.display = "none"; // Hide the button
+            elements.addCurrencyBtn.style.display = "none"; // Hide the button
         } else {
-            addCurrencyBtn.style.display = "flex"; // Show the button
+            elements.addCurrencyBtn.style.display = "flex"; // Show the button
         }
     }
 
@@ -388,7 +391,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <button class="remove-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
         `;
 
-        currencyContainer.appendChild(currencyDiv);
+        elements.currencyContainer.appendChild(currencyDiv);
 
         const inputField = currencyDiv.querySelector("input");
 
@@ -445,7 +448,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Set up event listeners
-    currencyTab.addEventListener("click", (event) => {
+    elements.currencyTab.addEventListener("click", (event) => {
         if (!(event.target instanceof HTMLInputElement)) return;
         if (!event.target.value) return;
 
@@ -461,12 +464,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateCurrencyValues(parseFloat(rawValue) || 0, event.target.dataset.currency);
     });
 
-    supportDevBtn.addEventListener("click", () => {
+    elements.supportDevBtn.addEventListener("click", () => {
         openDonationTab();
     });
 
-    addCurrencyBtn.addEventListener("click", async () => {
-        currencyList.innerHTML = "";
+    elements.addCurrencyBtn.addEventListener("click", async () => {
+        elements.currencyList.innerHTML = "";
 
         if (!exchangeRates) {
             exchangeRates = await fetchExchangeRates("USD");
@@ -494,24 +497,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                     closeCurrencyTab();
                 });
 
-                currencyList.appendChild(option);
+                elements.currencyList.appendChild(option);
             }
         });
 
         openCurrencyTab();
     });
 
-    hideTab.addEventListener("click", () => {
+    elements.hideTab.addEventListener("click", () => {
         closeCurrencyTab();
     });
-    hideDonationTab.addEventListener("click", () => {
+    elements.hideDonationTab.addEventListener("click", () => {
         closeDonationTab();
     });
 
     let draggedItem = null;
 
     // Drag start event
-    currencyContainer.addEventListener("dragstart", (event) => {
+    elements.currencyContainer.addEventListener("dragstart", (event) => {
         if (event.target.classList.contains("currency-input")) {
             draggedItem = event.target;
 
@@ -522,7 +525,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // Drag over event
-    currencyContainer.addEventListener("dragover", (event) => {
+    elements.currencyContainer.addEventListener("dragover", (event) => {
         event.preventDefault(); // Allow dropping
 
         // Find the nearest .currency-input element
@@ -544,7 +547,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // Drag end event
-    currencyContainer.addEventListener("dragend", (event) => {
+    elements.currencyContainer.addEventListener("dragend", (event) => {
         if (event.target.classList.contains("currency-input")) {
             // Reset styles for the dragged item
             draggedItem.style.background = "var(--gray)";
@@ -562,15 +565,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // Drop event
-    currencyContainer.addEventListener("drop", (event) => {
+    elements.currencyContainer.addEventListener("drop", (event) => {
         event.preventDefault();
 
         // Find the nearest .currency-input element
         const targetItem = event.target.closest(".currency-input");
 
         if (draggedItem && targetItem && draggedItem !== targetItem) {
-            // Reorder the elements
-            const container = currencyContainer;
+            // Reorder the DOM
+            const container = elements.currencyContainer;
             const items = Array.from(container.children); // All children of the container
 
             const draggedIndex = items.indexOf(draggedItem);
@@ -599,17 +602,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     let highlightedCurrency = null;
 
     document.addEventListener("keydown", (event) => {
-        if (!donationTab.classList.contains("hidden")) {
+        if (!elements.donationTab.classList.contains("hidden")) {
             if (event.key === "Escape") {
                 event.preventDefault();
                 closeDonationTab();
             }
         }
-        if (!currencyTab.classList.contains("hidden")) {
-            if (!currencyList) return;
+        if (!elements.currencyTab.classList.contains("hidden")) {
+            if (!elements.currencyList) return;
 
             const pressedKey = event.key.toUpperCase();
-            const currencyItems = Array.from(currencyList.children);
+            const currencyItems = Array.from(elements.currencyList.children);
 
             if (/^[A-Z]$/.test(pressedKey)) {
                 if (currentLetter !== pressedKey) {
@@ -632,7 +635,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (!highlightedCurrency) {
                     updateHighlight(currencyItems[0]);
                 } else {
-                    let nextItem = highlightedCurrency.nextElementSibling;
+                    let nextItem = highlightedCurrency.nextDOMibling;
                     if (nextItem) updateHighlight(nextItem);
                 }
             } else if (event.key === "ArrowUp") {
@@ -642,7 +645,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (!highlightedCurrency) {
                     updateHighlight(currencyItems[currencyItems.length - 1]);
                 } else {
-                    let prevItem = highlightedCurrency.previousElementSibling;
+                    let prevItem = highlightedCurrency.previousDOMibling;
                     if (prevItem) updateHighlight(prevItem);
                 }
             } else if (event.key === "Enter") {
@@ -680,7 +683,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    currencyList.addEventListener("mouseover", (event) => {
+    elements.currencyList.addEventListener("mouseover", (event) => {
         if (event.target.classList.contains("currency-option")) {
             removeHighlight();
             event.target.classList.add("currency-active");
@@ -691,7 +694,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Numbers to words
     const numToTextElement = document.getElementById("num-to-text");
     if (numToTextElement) {
-        currencyContainer.addEventListener("input", (event) => {
+        elements.currencyContainer.addEventListener("input", (event) => {
             if (event.target.tagName === "INPUT") {
                 const inputField = event.target;
                 const rawValue = inputField.value.replace(/,/g, ''); // Remove commas
@@ -753,23 +756,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function closeDonationTab() {
-    donationTab.classList.remove("show");
-    donationTab.classList.add("hidden");
+    elements.donationTab.classList.remove("show");
+    elements.donationTab.classList.add("hidden");
 }
 
 function openDonationTab() {
-    donationTab.classList.add("show");
-    donationTab.classList.remove("hidden");
+    elements.donationTab.classList.add("show");
+    elements.donationTab.classList.remove("hidden");
 }
 
 function closeCurrencyTab() {
-    currencyTab.classList.remove("show");
-    currencyTab.classList.add("hidden");
+    elements.currencyTab.classList.remove("show");
+    elements.currencyTab.classList.add("hidden");
 }
 
 function openCurrencyTab() {
-    currencyTab.classList.add("show");
-    currencyTab.classList.remove("hidden");
+    elements.currencyTab.classList.add("show");
+    elements.currencyTab.classList.remove("hidden");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1464,7 +1467,7 @@ class DonationTracker {
 }
 
 // Add this to reset the tracker when the donation tab is closed
-hideDonationTab.addEventListener("click", () => {
+elements.hideDonationTab.addEventListener("click", () => {
     // donationTracker.reset();
     closeDonationTab();
 });

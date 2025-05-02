@@ -1,0 +1,27 @@
+name: Update Exchange Rates Monthly
+
+on:
+  schedule:
+    - cron: "0 0 1 * *" # Runs at midnight on the 1st of each month (UTC)
+  workflow_dispatch: # Allows manual runs from the GitHub UI
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Fetch exchange rates
+        run: |
+          curl -H "apikey: ${{ secrets.API_KEY }}" \
+               "https://api.example.com/latest" > data.json
+
+      - name: Commit and push updated data
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data.json
+          git commit -m "Monthly exchange rate update" || echo "No changes to commit"
+          git push
