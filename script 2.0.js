@@ -4,6 +4,9 @@ import { donationContent } from "./messages.js";
 const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
 // const API_KEY = 0; // Replace with your API key
 
+const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
+// const API_KEY = 0; // Replace with your API key
+
 // When donation tab is opened:
 const currencyTab = document.getElementById("currency-tab");
 const currencyContainer = document.getElementById("currency-container");
@@ -28,6 +31,37 @@ let exchangeRates = {};
 //⚪ fetch exchange rates function (start)
 async function fetchExchangeRates(base = "USD") {
   console.log("(1)Fetching exchange rates...");
+  try {
+    const proxyUrl = "https://api.allorigins.win/raw?url=";
+    const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
+    const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
+
+    // const response = await fetch(finalUrl);
+    const response = await fetch(
+      "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
+        Date.now()
+    );
+    if (!response.ok) {
+      throw new Error(`API error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    // Cache the data
+    localStorage.setItem(
+      CURRENCY_DATA_KEY,
+      JSON.stringify({
+        data: data.conversion_rates,
+        timestamp: Date.now(),
+      })
+    );
+    return data.conversion_rates;
+  } catch (error) {
+    if (data.result !== "success") {
+      throw new Error(`Data parse error: ${data["error-type"]}`);
+    }
+    console.log("Using cached data after error:", error);
+    const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
+    return cached?.data || { USD: 1.0, EUR: 0.93, GBP: 0.79 }; // Fallback
+  }
   try {
     const proxyUrl = "https://api.allorigins.win/raw?url=";
     const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
