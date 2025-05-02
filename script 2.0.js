@@ -32,7 +32,11 @@ async function fetchExchangeRates(base = "USD") {
   const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
   const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
 
-  const response = await fetch(finalUrl);
+  const response = await fetch(finalUrl, {
+    headers: {
+      "X-Requested-With": "XMLHttpRequest", // Some proxies require this
+    },
+  });
   if (!response.ok) {
     throw new Error(`API error! Status: ${response.status}`);
   }
