@@ -26,9 +26,9 @@ let exchangeRates = {};
 async function fetchExchangeRates(base = "USD") {
   console.log("(1)Fetching exchange rates...");
   try {
-    const proxyUrl = "https://api.allorigins.win/raw?url=";
-    const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
-    const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
+    // const proxyUrl = "https://api.allorigins.win/raw?url=";
+    // const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
+    // const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
 
     // const response = await fetch(finalUrl);
     const response = await fetch(
@@ -49,9 +49,9 @@ async function fetchExchangeRates(base = "USD") {
     );
     return data.conversion_rates;
   } catch (error) {
-    if (data.result !== "success") {
-      throw new Error(`Data parse error: ${data["error-type"]}`);
-    }
+    // if (data.result !== "success") {
+    //   throw new Error(`Data parse error: ${data["error-type"]}`);
+    // }
     console.log("Using cached data after error:", error);
     const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
     return cached?.data || { USD: 1.0, EUR: 0.93, GBP: 0.79 }; // Fallback
