@@ -176,6 +176,19 @@ async function initializeExchangeRates() {
 //🟠 [initializeExchangeRates, loadCurrencyOrder, addCurrency, checkCurrencyCount, updateAddButtonVisibility, initializeDonationContent]
 async function initializeApp() {
   console.log("Initializing app...");
+  // Load network status immediately
+  updateLastUpdateElement(
+    navigator.onLine,
+    localStorage.getItem(LAST_UPDATED_KEY)
+  );
+
+  // Set up real-time listeners
+  window.addEventListener("online", () =>
+    updateLastUpdateElement(true, localStorage.getItem(LAST_UPDATED_KEY))
+  );
+  window.addEventListener("offline", () =>
+    updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY))
+  );
 
   // Load cached exchange rates
   const ratesLoaded = await initializeExchangeRates();
