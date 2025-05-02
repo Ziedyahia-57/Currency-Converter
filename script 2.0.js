@@ -41,12 +41,23 @@ async function fetchExchangeRates(base = "USD") {
     throw new Error(`API error! Status: ${response.status}`);
   }
 
-  const data = await response.json();
-  if (data.result !== "success") {
-    throw new Error(`Data parse error: ${data["error-type"]}`);
+  // 2. Fallback to cached data if online fetch fails
+  const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+
+  // Check if cache exists and is less than 24 hours old
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log("Using cached data");
+    return cached.data;
   }
 
-  return data.conversion_rates;
+  // 3. Ultimate fallback (hardcoded rates)
+  console.log("Using hardcoded fallback rates");
+  return {
+    USD: 1.0,
+    EUR: 0.93,
+    GBP: 0.79,
+    JPY: 151.3,
+  };
 }
 // * @param {string} base - The base currency (e.g., "USD").
 // * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
