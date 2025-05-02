@@ -732,12 +732,20 @@ function loadData() {
 //>>>>>>>>> Last update state function (start)
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated) {
+  const now = new Date().toLocaleString();
   if (isOnline) {
-    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically updated once per day. <br>Last Updated Date: <span class="date">${lastUpdated}</span> `;
-  } else if (lastUpdated) {
-    lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br>Last Updated Date: <span class="date">${lastUpdated}</span>`;
+    lastUpdateElement.innerHTML = `
+      <span class="green">● Online</span> - Exchange rates are automatically 
+      <br>updated once per day. Last Updated: <span class="date">${lastUpdated}</span>
+    `;
   } else {
-    lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - No saved exchange rates found.`;
+    lastUpdateElement.innerHTML = `
+      <span class="red">● Offline</span> - ${
+        lastUpdated
+          ? `Using cached rates. Last Updated: <span class="date">${lastUpdated}</span>`
+          : "No saved exchange rates found."
+      }
+    `;
   }
 }
 //>>>>>>>>> Last update state function (end)
@@ -1119,6 +1127,22 @@ function initializeInputStyles() {
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 document.addEventListener("DOMContentLoaded", async () => {
   await updateExchangeRates(); // Load exchange rates first
+  // Initial check
+  updateLastUpdateElement(
+    navigator.onLine,
+    localStorage.getItem(LAST_UPDATED_KEY)
+  );
+
+  // Listen for network changes
+  window.addEventListener("online", () => {
+    updateLastUpdateElement(true, localStorage.getItem(LAST_UPDATED_KEY));
+    console.log("You are now online");
+  });
+
+  window.addEventListener("offline", () => {
+    updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
+    console.log("You are now offline");
+  });
 
   // Load user preference from localStorage
   loadDarkMode();
