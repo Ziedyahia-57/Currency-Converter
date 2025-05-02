@@ -659,19 +659,26 @@ function addCurrency(currency, shouldSave = true) {
 //⚪++++++++++++++++++++++++++++ EXCHANGE RATE / DATE FUNCTIONS ++++++++++++++++++++++++++++
 //>>>>>>>>> save exchange rates + last updated date (start)
 // Function to save exchange rates and last updated date to localStorage
+// function saveExchangeRates(rates) {
+//   if (rates) {
+//     // Format the date as dd/mm/yyyy
+//     const now = new Date();
+//     const day = String(now.getDate()).padStart(2, "0"); // Ensure two digits for day
+//     const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+//     const year = now.getFullYear();
+//     const formattedDate = `${day}/${month}/${year}`;
+
+//     localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(rates));
+//     localStorage.setItem(LAST_UPDATED_KEY, formattedDate);
+//     console.log("Saving to localStorage:", CURRENCY_DATA_KEY, rates);
+//     console.log("Exchange rates saved to localStorage.");
+//   }
+// }
 function saveExchangeRates(rates) {
   if (rates) {
-    // Format the date as dd/mm/yyyy
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, "0"); // Ensure two digits for day
-    const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
-    const year = now.getFullYear();
-    const formattedDate = `${day}/${month}/${year}`;
-
+    const now = new Date().toISOString(); // Store as ISO string
     localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(rates));
-    localStorage.setItem(LAST_UPDATED_KEY, formattedDate);
-    console.log("Saving to localStorage:", CURRENCY_DATA_KEY, rates);
-    console.log("Exchange rates saved to localStorage.");
+    localStorage.setItem(LAST_UPDATED_KEY, now);
   }
 }
 //>>>>>>>>> save exchange rates + last updated date (end)
@@ -732,17 +739,20 @@ function loadData() {
 //>>>>>>>>> Last update state function (start)
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated) {
-  const now = new Date().toLocaleString();
+  const formattedDate = lastUpdated
+    ? new Date(lastUpdated).toLocaleString()
+    : "Not available";
+
   if (isOnline) {
     lastUpdateElement.innerHTML = `
       <span class="green">● Online</span> - Exchange rates are automatically 
-      <br>updated once per day. Last Updated: <span class="date">${lastUpdated}</span>
+      <br>updated once per month. Last Updated: <span class="date">${formattedDate}</span>
     `;
   } else {
     lastUpdateElement.innerHTML = `
       <span class="red">● Offline</span> - ${
         lastUpdated
-          ? `Using cached rates. Last Updated: <span class="date">${lastUpdated}</span>`
+          ? `Using cached rates. Last Updated: <span class="date">${formattedDate}</span>`
           : "No saved exchange rates found."
       }
     `;
