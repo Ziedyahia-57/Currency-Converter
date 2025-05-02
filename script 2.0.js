@@ -1,6 +1,9 @@
 import { currencyToCountry } from "./currencyToCountry.js";
 import { donationContent } from "./messages.js";
 
+const API_KEY = "e8eab13facc49788d961a68e"; // Replace with your API key
+// const API_KEY = 0; // Replace with your API key
+
 // When donation tab is opened:
 const currencyTab = document.getElementById("currency-tab");
 const currencyContainer = document.getElementById("currency-container");
@@ -25,35 +28,37 @@ let exchangeRates = {};
 //⚪ fetch exchange rates function (start)
 async function fetchExchangeRates(base = "USD") {
   console.log("(1)Fetching exchange rates...");
-  // const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-  // const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
-  // const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
-  const response = await fetch(
-    "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
-      Date.now()
-  );
+  try {
+    const proxyUrl = "https://api.allorigins.win/raw?url=";
+    const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
+    const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
 
-  if (!response.ok) {
-    throw new Error(`API error! Status: ${response.status}`);
+    // const response = await fetch(finalUrl);
+    const response = await fetch(
+      "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
+        Date.now()
+    );
+    if (!response.ok) {
+      throw new Error(`API error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    // Cache the data
+    localStorage.setItem(
+      CURRENCY_DATA_KEY,
+      JSON.stringify({
+        data: data.conversion_rates,
+        timestamp: Date.now(),
+      })
+    );
+    return data.conversion_rates;
+  } catch (error) {
+    if (data.result !== "success") {
+      throw new Error(`Data parse error: ${data["error-type"]}`);
+    }
+    console.log("Using cached data after error:", error);
+    const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
+    return cached?.data || { USD: 1.0, EUR: 0.93, GBP: 0.79 }; // Fallback
   }
-
-  // 2. Fallback to cached data if online fetch fails
-  const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
-
-  // Check if cache exists and is less than 24 hours old
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    console.log("Using cached data");
-    return cached.data;
-  }
-
-  // 3. Ultimate fallback (hardcoded rates)
-  console.log("Using hardcoded fallback rates");
-  return {
-    USD: 1.0,
-    EUR: 0.93,
-    GBP: 0.79,
-    JPY: 151.3,
-  };
 }
 // * @param {string} base - The base currency (e.g., "USD").
 // * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
@@ -701,8 +706,7 @@ function loadData() {
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated = null) {
   if (isOnline) {
-    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically updated once per month. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
-    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically updated once per month. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
+    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically <br> updated once per month.`;
   } else if (lastUpdated) {
     lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
   } else {
