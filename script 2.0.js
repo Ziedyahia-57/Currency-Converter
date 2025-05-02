@@ -25,18 +25,14 @@ let exchangeRates = {};
 //⚪ fetch exchange rates function (start)
 async function fetchExchangeRates(base = "USD") {
   console.log("(1)Fetching exchange rates...");
-  const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-  const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
-  const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
-
+  // const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+  // const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
+  // const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
   const response = await fetch(
-    `https://ziedyahia-57.github.io/currency-converter/data.json`,
-    {
-      headers: {
-        "X-Requested-With": "XMLHttpRequest", // Some proxies require this
-      },
-    }
+    "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
+      Date.now()
   );
+
   if (!response.ok) {
     throw new Error(`API error! Status: ${response.status}`);
   }
@@ -705,7 +701,7 @@ function loadData() {
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated = null) {
   if (isOnline) {
-    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically <br> updated once per month.`;
+    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically updated once per month. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
   } else if (lastUpdated) {
     lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
   } else {
