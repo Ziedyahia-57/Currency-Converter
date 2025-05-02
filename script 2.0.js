@@ -23,56 +23,46 @@ let exchangeRates = {};
 //🔵++++++++++++++++++++++++++++ ASYNC FUNCTIONS ++++++++++++++++++++++++++++
 //🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //⚪ fetch exchange rates function (start)
-async function fetchExchangeRates(base = "USD") {
-  console.log("(1)Fetching exchange rates...");
+async function fetchExchangeRates() {
+  const CACHE_KEY = 'currencyData';
+  const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+  // 1. First try to fetch fresh data from GitHub Pages
+  try {
+    const response = await fetch('https://ziedyahia-57.github.io/Currency-Converter/data.json?t=' + Date.now());
+    
+    if (!response.ok) throw new Error('Network response was not ok');
+    
+    const freshData = await response.json();
+    
+    // Save to localStorage with timestamp
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      data: freshData.conversion_rates,
+      timestamp: Date.now()
+    }));
+    
+    return freshData.conversion_rates;
+  } catch (error) {
+    console.log('Online fetch failed, trying cache...', error);
+  }
+
+  // 2. Fallback to cached data if online fetch fails
+  const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
   
-  // 1. First try to fetch from GitHub Pages (updated monthly by Actions)
-  try {
-    const githubPagesResponse = await fetch(
-      `https://ziedyahia-57.github.io/currency-converter/data/rates.json`
-    );
-    
-    if (githubPagesResponse.ok) {
-      const data = await githubPagesResponse.json();
-      console.log("Successfully fetched rates from GitHub Pages");
-      
-      // Cache the rates in localStorage for offline use
-      localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(data.conversion_rates));
-      return data.conversion_rates;
-    }
-  } catch (githubError) {
-    console.warn("GitHub Pages fetch failed, trying proxy fallback:", githubError);
+  // Check if cache exists and is less than 24 hours old
+  if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+    console.log('Using cached data');
+    return cached.data;
   }
 
-  // 2. Fallback: Use proxy if GitHub Pages fails
-  try {
-    const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-    const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
-    const finalUrl = proxyUrl + apiUrl; // No encodeURIComponent needed
-
-    const proxyResponse = await fetch(finalUrl, {
-      headers: { "X-Requested-With": "XMLHttpRequest" }
-    });
-
-    if (!proxyResponse.ok) throw new Error(`Proxy error! Status: ${proxyResponse.status}`);
-
-    const proxyData = await proxyResponse.json();
-    if (proxyData.result !== "success") {
-      throw new Error(`API error: ${proxyData["error-type"]}`);
-    }
-
-    // Cache the fresh rates
-    localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(proxyData.conversion_rates));
-    return proxyData.conversion_rates;
-
-  } catch (proxyError) {
-    console.error("Proxy fetch failed:", proxyError);
-    
-    // 3. Final fallback: Use localStorage if everything else fails
-    const cachedRates = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY)) || {};
-    console.warn("Using cached rates from localStorage");
-    return cachedRates;
-  }
+  // 3. Ultimate fallback (hardcoded rates)
+  console.log('Using hardcoded fallback rates');
+  return {
+    "USD": 1.0,
+    "EUR": 0.93,
+    "GBP": 0.79,
+    "JPY": 151.30
+  };
 }
 // * @param {string} base - The base currency (e.g., "USD").
 // * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
