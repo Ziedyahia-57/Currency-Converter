@@ -30,8 +30,9 @@ async function fetchExchangeRates() {
 
   // 1. Try GitHub Pages JSON first
   try {
-    const response = await fetch('https://ziedyahia-57.github.io/Currency-Converter/data.json');
-    if (!response.ok) throw new Error('Network response was not ok');
+    const response = await fetch('https://ziedyahia-57.github.io/Currency-Converter/data.json?t=' + Date.now());
+    
+    if (!response.ok) throw new Error('Failed to fetch rates');
     
     const data = await response.json();
     
@@ -49,25 +50,17 @@ async function fetchExchangeRates() {
   // 2. Fallback to cache
   const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
   if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+    console.log('Using cached data');
     return cached.data;
   }
 
-  // 3. Final fallback
+  // 3. Ultimate fallback (hardcoded rates)
+  console.log('Using hardcoded fallback rates');
   return {
     USD: 1.0,
     EUR: 0.93,
     GBP: 0.79,
     JPY: 151.30
-  };
-}
-
-  // 3. Ultimate fallback (hardcoded rates)
-  console.log("Using hardcoded fallback rates");
-  return {
-    USD: 1.0,
-    EUR: 0.93,
-    GBP: 0.79,
-    JPY: 151.3,
   };
 }
 // * @param {string} base - The base currency (e.g., "USD").
@@ -77,12 +70,11 @@ async function fetchExchangeRates() {
 
 //⚪ get exchange rates function (start)
 let cachedRates = null;
-async function getExchangeRates(base = "USD") {
+async function getExchangeRates() {
   if (cachedRates) {
     return cachedRates;
   }
-
-  cachedRates = await fetchExchangeRates(base);
+  cachedRates = await fetchExchangeRates();
   return cachedRates;
 }
 // * @param {string} base - The base currency (e.g., "USD").
