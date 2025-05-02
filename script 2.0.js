@@ -23,27 +23,41 @@ let exchangeRates = {};
 //🔵++++++++++++++++++++++++++++ ASYNC FUNCTIONS ++++++++++++++++++++++++++++
 //🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //⚪ fetch exchange rates function (start)
-async function fetchExchangeRates() {
-  const CACHE_KEY = 'currencyData';
-  const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hour cache
+async function fetchExchangeRates(base = "USD") {
+  console.log("(1)Fetching exchange rates...");
+  // const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+  // const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
+  // const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
 
-  try {
-    // 1. Try fetching from GitHub Pages
-    const response = await fetch('https://ziedyahia-57.github.io/Currency-Converter/data.json?t=' + Date.now());
-    const data = await response.json();
-    
-    // Cache the data
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      data: data.conversion_rates,
-      timestamp: Date.now()
-    }));
-    
-    return data.conversion_rates;
-  } catch (error) {
-    console.log('Using cached data after error:', error);
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
-    return cached?.data || { USD: 1.0, EUR: 0.93, GBP: 0.79 }; // Fallback
+  const response = await fetch(
+    `https://ziedyahia-57.github.io/currency-converter/data.json`,
+    {
+      headers: {
+        "X-Requested-With": "XMLHttpRequest", // Some proxies require this
+      },
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`API error! Status: ${response.status}`);
   }
+
+  // 2. Fallback to cached data if online fetch fails
+  const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+
+  // Check if cache exists and is less than 24 hours old
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log("Using cached data");
+    return cached.data;
+  }
+
+  // 3. Ultimate fallback (hardcoded rates)
+  console.log("Using hardcoded fallback rates");
+  return {
+    USD: 1.0,
+    EUR: 0.93,
+    GBP: 0.79,
+    JPY: 151.3,
+  };
 }
 // * @param {string} base - The base currency (e.g., "USD").
 // * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
@@ -52,11 +66,12 @@ async function fetchExchangeRates() {
 
 //⚪ get exchange rates function (start)
 let cachedRates = null;
-async function getExchangeRates() {
+async function getExchangeRates(base = "USD") {
   if (cachedRates) {
     return cachedRates;
   }
-  cachedRates = await fetchExchangeRates();
+
+  cachedRates = await fetchExchangeRates(base);
   return cachedRates;
 }
 // * @param {string} base - The base currency (e.g., "USD").
@@ -690,7 +705,7 @@ function loadData() {
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated = null) {
   if (isOnline) {
-    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically <br> updated once per month.`;
+    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically updated once per month. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
   } else if (lastUpdated) {
     lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
   } else {
