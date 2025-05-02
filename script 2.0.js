@@ -702,6 +702,7 @@ function loadData() {
 function updateLastUpdateElement(isOnline, lastUpdated = null) {
   if (isOnline) {
     lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically updated once per month. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
+    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically updated once per month. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
   } else if (lastUpdated) {
     lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
   } else {
