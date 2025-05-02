@@ -24,19 +24,15 @@ let exchangeRates = {};
 //🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //⚪ fetch exchange rates function (start)
 async function fetchExchangeRates() {
-  console.log("(1)Fetching exchange rates...");
   const CACHE_KEY = 'currencyData';
-  const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours cache
+  const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hour cache
 
-  // 1. Try GitHub Pages JSON first
   try {
+    // 1. Try fetching from GitHub Pages
     const response = await fetch('https://ziedyahia-57.github.io/Currency-Converter/data.json?t=' + Date.now());
-    
-    if (!response.ok) throw new Error('Failed to fetch rates');
-    
     const data = await response.json();
     
-    // Cache with timestamp
+    // Cache the data
     localStorage.setItem(CACHE_KEY, JSON.stringify({
       data: data.conversion_rates,
       timestamp: Date.now()
@@ -44,24 +40,10 @@ async function fetchExchangeRates() {
     
     return data.conversion_rates;
   } catch (error) {
-    console.log('GitHub fetch failed, trying cache...', error);
+    console.log('Using cached data after error:', error);
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+    return cached?.data || { USD: 1.0, EUR: 0.93, GBP: 0.79 }; // Fallback
   }
-
-  // 2. Fallback to cache
-  const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
-  if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
-    console.log('Using cached data');
-    return cached.data;
-  }
-
-  // 3. Ultimate fallback (hardcoded rates)
-  console.log('Using hardcoded fallback rates');
-  return {
-    USD: 1.0,
-    EUR: 0.93,
-    GBP: 0.79,
-    JPY: 151.30
-  };
 }
 // * @param {string} base - The base currency (e.g., "USD").
 // * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
