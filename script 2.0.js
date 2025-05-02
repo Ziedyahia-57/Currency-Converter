@@ -678,10 +678,9 @@ function saveExchangeRates(rates) {
 
 //>>>>>>>>> load exchange rates + last updated date (start)
 // Function to load exchange rates and last updated date from localStorage
+const savedRates = localStorage.getItem(CURRENCY_DATA_KEY);
+const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
 function loadExchangeRates() {
-  const savedRates = localStorage.getItem(CURRENCY_DATA_KEY);
-  const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
-
   if (savedRates && lastUpdated) {
     exchangeRates = JSON.parse(savedRates);
 
@@ -734,9 +733,9 @@ function loadData() {
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated) {
   if (isOnline) {
-    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically <br> updated once per month. Last Updated Date: <span class="date">${lastUpdated}</span> `;
+    lastUpdateElement.innerHTML = `<span class="green">● Online</span> - Exchange rates are automatically updated once per day. <br>Last Updated Date: <span class="date">${lastUpdated}</span> `;
   } else if (lastUpdated) {
-    lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br> Last Updated Date: <span class="date">${lastUpdated}</span>`;
+    lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - Exchange rates may be outdated. <br>Last Updated Date: <span class="date">${lastUpdated}</span>`;
   } else {
     lastUpdateElement.innerHTML = `<span class="red">● Offline</span> - No saved exchange rates found.`;
   }
