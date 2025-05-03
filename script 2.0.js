@@ -690,11 +690,8 @@ function addCurrency(currency, shouldSave = true) {
 // }
 function saveExchangeRates(rates) {
   if (rates) {
-    // Store date FIRST
     const now = new Date().toISOString(); // ISO format avoids parsing issues
     localStorage.setItem(LAST_UPDATED_KEY, now);
-
-    // Then store rates
     localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(rates));
   }
 }
@@ -756,20 +753,39 @@ function loadData() {
 //>>>>>>>>> Last update state function (start)
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated) {
-  let dateText = "Loading..."; // Default state
+  setTimeout(() => {
+    const actualOnlineStatus = navigator.onLine;
+    let dateText = "Loading..."; // Default state
 
-  if (lastUpdated) {
-    try {
-      dateText = new Date(lastUpdated).toLocaleString();
-    } catch {
-      dateText = "Recently"; // Fallback if date parsing fails
+    if (lastUpdated) {
+      try {
+        // dateText = new Date(lastUpdated).toLocaleString();
+        const date = new Date(lastUpdated);
+
+        // Day (DD), Month (MM), Year (YYYY)
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+        const year = date.getFullYear();
+
+        // Hours (12-hour format) + AM/PM
+        let hours = date.getHours();
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12; // Convert 0 to 12 (12 AM)
+        const formattedHours = String(hours).padStart(2, "0");
+
+        // Minutes (MM)
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+
+        dateText = `${day}/${month}/${year} ${formattedHours}:${minutes} ${ampm}`;
+      } catch {
+        dateText = "Error"; // Fallback if date parsing fails
+      }
     }
-  }
 
-  lastUpdateElement.innerHTML = `
+    lastUpdateElement.innerHTML = `
     <span class="${isOnline ? "green" : "red"}">● ${
-    isOnline ? "Online" : "Offline"
-  }</span>
+      isOnline ? "Online" : "Offline"
+    }</span>
     - ${
       isOnline
         ? "Exchange rates are automatically updated <br>once per month."
@@ -777,6 +793,7 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
     }
     Last Updated: <span class="date">${dateText}</span>
   `;
+  }, 100);
 }
 // function updateLastUpdateElement(isOnline, lastUpdated) {
 //   const formattedDate = lastUpdated
@@ -1176,22 +1193,26 @@ function initializeInputStyles() {
 //🟣++++++++++++++++++++++++++++ APPLICATION ++++++++++++++++++++++++++++
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 document.addEventListener("DOMContentLoaded", async () => {
-  await updateExchangeRates(); // Load exchange rates first
-  // Initial check
-  updateLastUpdateElement(
-    navigator.onLine,
-    localStorage.getItem(LAST_UPDATED_KEY)
-  );
+  // await updateExchangeRates(); // Load exchange rates first
+  // // Initial check
+  // updateLastUpdateElement(
+  //   navigator.onLine,
+  //   localStorage.getItem(LAST_UPDATED_KEY)
+  // );
+
+  // Initial check with proper online status
+  const isOnline = navigator.onLine;
+  const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+
+  updateLastUpdateElement(isOnline, lastUpdated);
 
   // Listen for network changes
   window.addEventListener("online", () => {
     updateLastUpdateElement(true, localStorage.getItem(LAST_UPDATED_KEY));
-    console.log("You are now online");
   });
 
   window.addEventListener("offline", () => {
     updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
-    console.log("You are now offline");
   });
 
   // Load user preference from localStorage
