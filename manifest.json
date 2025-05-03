@@ -3,35 +3,23 @@
   "name": "Currency Converter",
   "version": "1.0",
   "description": "Convert currencies dynamically and on text selection",
-  "permissions": [
-    "activeTab",
-    "contextMenus",
-    "storage"
-  ],
-  "host_permissions": [
-    "https://v6.exchangerate-api.com/*"
-  ],
+  "permissions": ["activeTab", "contextMenus", "storage"],
+  "host_permissions": ["https://v6.exchangerate-api.com/*"],
   "background": {
     "service_worker": "background.js"
   },
   "icons": {
-    "148": "icon.png"
+    "148": "./icons/icon (alpha).png"
   },
   "action": {
     "default_popup": "index.html",
-    "default_icon": "icon.png"
+    "default_icon": "./icons/icon (alpha).png"
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "script.js"
-      ],
-      "css": [
-        "style.css"
-      ]
+      "matches": ["<all_urls>"],
+      "js": ["script.js"],
+      "css": ["style.css"]
     }
   ]
 }
