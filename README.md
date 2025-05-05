@@ -23,7 +23,7 @@ This browser extension allows you to convert any chosen currency to multiple oth
 ***To Be Added (BETA):***
 * **🪙 Pop-up Convert on Select:** Instantly convert selected text from any webpage with a simple click.
 
-***⚠️ Want to add a feature? DMs are open!***
+***⚠️ Want to add a feature? contact: ziedyahia20102012@gmail.com***
 
 # Installation
 1. Clone this repository: git clone https://github.com/Ziedyahia-57/Currency-Converter.git.
