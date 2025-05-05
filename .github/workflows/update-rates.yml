@@ -2,7 +2,7 @@ name: Update Currency Rates
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # 1st of each month at 00:00 UTC
+    - cron: '0 14 * * *'  # 1st of each month at 00:00 UTC
   workflow_dispatch:
 
 jobs:
