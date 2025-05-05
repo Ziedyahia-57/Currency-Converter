@@ -52,4 +52,6 @@ This software is provided "as is", without warranty of any kind.
 Contributions to this project are welcome. Feel free to open issues and submit pull requests.
 
 # Authors
-- Ziedyahia-57 https://github.com/Ziedyahia-57 https://www.linkedin.com/in/zied-yahia/
+- Ziedyahia-57 https://github.com/Ziedyahia-57
+[![image](https://github.com/user-attachments/assets/b5ea876b-956e-42a1-b0f5-a1660d3b881f)
+](https://www.linkedin.com/in/zied-yahia/)
