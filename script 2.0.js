@@ -22,70 +22,40 @@ let exchangeRates = {};
 //🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //🔵++++++++++++++++++++++++++++ ASYNC FUNCTIONS ++++++++++++++++++++++++++++
 //🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//⚪ fetch exchange rates function (start)
-async function fetchExchangeRates(base = "USD") {
-  console.log("(1)Fetching exchange rates...");
+//⚪✅ fetch exchange rates function (start)
+async function fetchExchangeRates() {
   try {
-    // const proxyUrl = "https://api.allorigins.win/raw?url=";
-    // const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
-    // const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
-
-    // const response = await fetch(finalUrl);
-    const response = await fetch(
+    const url =
       "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
-        Date.now()
-    );
-    if (!response.ok) {
-      throw new Error(`API error! Status: ${response.status}`);
+      Date.now();
+    const response = await fetch(url);
+
+    if (!response || !response.ok) {
+      console.error("(1) ❌ Fetch failed with status:", response?.status);
+      throw new Error(`API error! Status: ${response?.status}`);
     }
+
     const data = await response.json();
-    // Cache the data
-    localStorage.setItem(
-      CURRENCY_DATA_KEY,
-      JSON.stringify({
-        data: data.conversion_rates,
-        timestamp: Date.now(),
-      })
-    );
+
+    if (!data?.conversion_rates) {
+      console.error("(1) ❌ Fetched JSON missing 'conversion_rates'.");
+      throw new Error("Invalid API structure.");
+    }
+
+    saveExchangeRates(data.conversion_rates);
+    console.log("(1) ✅ Exchange rates fetched and saved.");
     return data.conversion_rates;
   } catch (error) {
-    // if (data.result !== "success") {
-    //   throw new Error(`Data parse error: ${data["error-type"]}`);
-    // }
-    console.log("Using cached data after error:", error);
+    console.warn("(1) ❌ Fetch failed. Attempting to load cached data...");
     const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
-    return cached?.data || { USD: 1.0, EUR: 0.93, GBP: 0.79 }; // Fallback
-  }
-  try {
-    const proxyUrl = "https://api.allorigins.win/raw?url=";
-    const apiUrl = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`;
-    const finalUrl = proxyUrl + encodeURIComponent(apiUrl);
 
-    // const response = await fetch(finalUrl);
-    const response = await fetch(
-      "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
-        Date.now()
-    );
-    if (!response.ok) {
-      throw new Error(`API error! Status: ${response.status}`);
+    if (cached?.data) {
+      console.log("(1) ✅ Loaded exchange rates from cache.");
+      return cached.data;
     }
-    const data = await response.json();
-    // Cache the data
-    localStorage.setItem(
-      CURRENCY_DATA_KEY,
-      JSON.stringify({
-        data: data.conversion_rates,
-        timestamp: Date.now(),
-      })
-    );
-    return data.conversion_rates;
-  } catch (error) {
-    if (data.result !== "success") {
-      throw new Error(`Data parse error: ${data["error-type"]}`);
-    }
-    console.log("Using cached data after error:", error);
-    const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
-    return cached?.data || { USD: 1.0, EUR: 0.93, GBP: 0.79 }; // Fallback
+
+    console.error("(1) ❌ No cached data found. Cannot proceed.");
+    throw new Error("Failed to fetch exchange rates and no cached data found.");
   }
 }
 // * @param {string} base - The base currency (e.g., "USD").
@@ -93,13 +63,12 @@ async function fetchExchangeRates(base = "USD") {
 // * @throws {Error} - Throws an error if the API request fails or if the response is not valid.
 //⚪ fetch exchange rates function (end)
 
-//⚪ get exchange rates function (start)
+//🔴 get exchange rates function (start)
 let cachedRates = null;
 async function getExchangeRates(base = "USD") {
   if (cachedRates) {
     return cachedRates;
   }
-
   cachedRates = await fetchExchangeRates(base);
   return cachedRates;
 }
@@ -177,6 +146,12 @@ async function initializeExchangeRates() {
 async function initializeApp() {
   console.log("Initializing app...");
 
+  // Get the actual online status
+  const isOnline = navigator.onLine;
+
+  // Update UI with correct online status and last updated time
+  updateLastUpdateElement(isOnline);
+
   // 1. FIRST load the date synchronously
   const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
 
@@ -184,9 +159,13 @@ async function initializeApp() {
   updateLastUpdateElement(navigator.onLine, lastUpdated);
 
   // Set up real-time listeners
-  window.addEventListener("online", () =>
-    updateLastUpdateElement(true, localStorage.getItem(LAST_UPDATED_KEY))
-  );
+  window.addEventListener("online", () => {
+    updateLastUpdateElement(true);
+    // Try to fetch new data when coming online
+    initializeExchangeRates().then(() => {
+      updateCurrencyValues();
+    });
+  });
   window.addEventListener("offline", () =>
     updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY))
   );
@@ -220,7 +199,7 @@ async function initializeApp() {
 //⚪initialize app function (end)
 
 //⚪update exchange rates function (start)
-//🟠 [fetchExchangeRates, updateCurrencyValues]
+//🟠 [fetchExchangeRates(getExchangeRates), updateCurrencyValues]
 async function updateExchangeRates() {
   exchangeRates = await getExchangeRates("USD");
   updateCurrencyValues();
@@ -753,47 +732,50 @@ function loadData() {
 //>>>>>>>>> Last update state function (start)
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated) {
-  setTimeout(() => {
-    const actualOnlineStatus = navigator.onLine;
-    let dateText = "Loading..."; // Default state
+  let dateText = "Loading"; // Default state
+  let timeText = "..."; // Default state
 
-    if (lastUpdated) {
-      try {
-        // dateText = new Date(lastUpdated).toLocaleString();
-        const date = new Date(lastUpdated);
+  if (!lastUpdated) {
+    lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+  }
+  if (lastUpdated) {
+    try {
+      // dateText = new Date(lastUpdated).toLocaleString();
+      const date = new Date(lastUpdated);
 
-        // Day (DD), Month (MM), Year (YYYY)
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
-        const year = date.getFullYear();
+      // Day (DD), Month (MM), Year (YYYY)
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+      const year = date.getFullYear();
 
-        // Hours (12-hour format) + AM/PM
-        let hours = date.getHours();
-        const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12 || 12; // Convert 0 to 12 (12 AM)
-        const formattedHours = String(hours).padStart(2, "0");
+      // Hours (12-hour format) + AM/PM
+      let hours = date.getHours();
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12; // Convert 0 to 12 (12 AM)
+      const formattedHours = String(hours).padStart(2, "0");
 
-        // Minutes (MM)
-        const minutes = String(date.getMinutes()).padStart(2, "0");
+      // Minutes (MM)
+      const minutes = String(date.getMinutes()).padStart(2, "0");
 
-        dateText = `${day}/${month}/${year} ${formattedHours}:${minutes} ${ampm}`;
-      } catch {
-        dateText = "Error"; // Fallback if date parsing fails
-      }
+      dateText = `${day}/${month}/${year}`;
+      timeText = `${formattedHours}:${minutes} ${ampm}`;
+    } catch {
+      dateText = "Error"; // Fallback if date parsing fails
+      timeText = "!"; // Fallback if date parsing fails
     }
+  }
 
-    lastUpdateElement.innerHTML = `
+  lastUpdateElement.innerHTML = `
     <span class="${isOnline ? "green" : "red"}">● ${
-      isOnline ? "Online" : "Offline"
-    }</span>
+    isOnline ? "Online" : "Offline"
+  }</span>
     - ${
       isOnline
         ? "Exchange rates are automatically updated <br>once per month."
         : "Using cached data.<br>"
     }
-    Last Updated: <span class="date">${dateText}</span>
+    Last Updated: <span class="date">${dateText}</span> <span class="date">${timeText}</span>
   `;
-  }, 100);
 }
 // function updateLastUpdateElement(isOnline, lastUpdated) {
 //   const formattedDate = lastUpdated
@@ -1252,6 +1234,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 addCurrencyBtn.addEventListener("click", async () => {
   currencyList.innerHTML = "";
   openCurrencyTab();
+
+  // Try to get fresh rates if online, otherwise use cached
+  if (navigator.onLine) {
+    try {
+      exchangeRates = await getExchangeRates("USD");
+    } catch (error) {
+      console.log("Using cached rates after online fetch error:", error);
+    }
+  }
 
   if (!exchangeRates) {
     exchangeRates = await getExchangeRates("USD");
