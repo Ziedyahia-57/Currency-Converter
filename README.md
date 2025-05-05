@@ -14,6 +14,7 @@ This browser extension allows you to convert any chosen currency to multiple oth
 * **⌨️ Keyboard Navigation:** Fully accessible with keyboard shortcuts and tab navigation.
   * Fully navigable via keyboard (Tab, Arrow keys, Enter).
   * Jump quickly to currency names by pressing the first letter of the currency (e.g. pressing U jumps to UAH).
+
 * **🧲 Drag & Drop Organization:** Easily reorder your target currencies by dragging them into your preferred order.
 * **🌙 Dark Mode Support:** Automatically matches your system theme or toggle it manually.
 * **🔒 Private & Secure:** Your data stays on your device; no tracking or analytics.
