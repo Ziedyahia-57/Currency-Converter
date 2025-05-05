@@ -53,5 +53,4 @@ Contributions to this project are welcome. Feel free to open issues and submit p
 
 # Authors
 - Ziedyahia-57
-[Github](https://github.com/Ziedyahia-57) [![linkedin](https://github.com/user-attachments/assets/659f6b94-a022-4b50-b486-a396c966c1a2)
-](https://www.linkedin.com/in/zied-yahia/)
+[Github](https://github.com/Ziedyahia-57) [linkedin](https://www.linkedin.com/in/zied-yahia/)
