@@ -1,5 +1,5 @@
-import { currencyToCountry } from "./currencyToCountry.js";
-import { donationContent } from "./messages.js";
+import { currencyToCountry } from "./js/currencyToCountry.js";
+import { donationContent } from "./js/messages.js";
 
 // When donation tab is opened:
 const currencyTab = document.getElementById("currency-tab");
@@ -122,7 +122,7 @@ async function initializeExchangeRates() {
 
   // let fetchedRates;
   try {
-    cachedRates = await getExchangeRates("USD");
+    cachedRates = await fetchExchangeRates("USD");
   } catch (error) {
     if (!errorLogged) {
       console.error("(2)Failed to fetch exchange rates:", error);
@@ -199,9 +199,9 @@ async function initializeApp() {
 //⚪initialize app function (end)
 
 //⚪update exchange rates function (start)
-//🟠 [fetchExchangeRates(getExchangeRates), updateCurrencyValues]
+//🟠 [fetchExchangeRates(fetchExchangeRates), updateCurrencyValues]
 async function updateExchangeRates() {
-  exchangeRates = await getExchangeRates("USD");
+  exchangeRates = await fetchExchangeRates("USD");
   updateCurrencyValues();
 }
 //⚪update exchange rates function (end)
@@ -932,7 +932,7 @@ function saveDarkMode() {
 window.addEventListener("online", async () => {
   console.log("App is online. Fetching latest exchange rates...");
   try {
-    exchangeRates = await getExchangeRates("USD");
+    exchangeRates = await fetchExchangeRates("USD");
     if (exchangeRates) {
       saveExchangeRates(exchangeRates);
       updateLastUpdateElement(true);
@@ -1238,14 +1238,14 @@ addCurrencyBtn.addEventListener("click", async () => {
   // Try to get fresh rates if online, otherwise use cached
   if (navigator.onLine) {
     try {
-      exchangeRates = await getExchangeRates("USD");
+      exchangeRates = await fetchExchangeRates("USD");
     } catch (error) {
       console.log("Using cached rates after online fetch error:", error);
     }
   }
 
   if (!exchangeRates) {
-    exchangeRates = await getExchangeRates("USD");
+    exchangeRates = await fetchExchangeRates("USD");
   }
 
   // Sort currencies alphabetically
