@@ -732,8 +732,8 @@ function loadData() {
 //>>>>>>>>> Last update state function (start)
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated) {
-  let dateText = "Loading"; // Default state
-  let timeText = "..."; // Default state
+  let dateText = `¯\_(ツ)_/¯`; // Default state
+  let timeText = "."; // Default state
 
   if (!lastUpdated) {
     lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
