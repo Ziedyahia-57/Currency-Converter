@@ -19,8 +19,7 @@ This browser extension allows you to convert any chosen currency to multiple oth
 * **🔒 Private & Secure:** Your data stays on your device; no tracking or analytics.
 * **📡 Offline Support:** Converts using the cached exchange rates when you're offline or disconnected.
 
-
-To Be Added (BETA):
+***To Be Added (BETA):***
 * **🪙 Pop-up Convert on Select:** Instantly convert selected text from any webpage with a simple click.
 
 ***⚠️ Want to add a feature? DMs are open!***
