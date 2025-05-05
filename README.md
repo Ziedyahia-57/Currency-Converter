@@ -1,5 +1,6 @@
 # Currency Converter (ALPHA)
 A browser extension for currency conversion
+
 ![{6865054F-FBB4-4162-A15F-ECBC619552F5}](https://github.com/user-attachments/assets/17afb924-163b-487d-9c8a-4730c67d6436)
 
 # Description
