@@ -25,6 +25,7 @@ let exchangeRates = {};
 //⚪✅ fetch exchange rates function (start)
 async function fetchExchangeRates() {
   try {
+    //Data connection
     const url =
       "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
       Date.now();
@@ -74,10 +75,10 @@ async function getExchangeRates(base = "USD") {
 }
 // * @param {string} base - The base currency (e.g., "USD").
 // * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
-//⚪ get exchange rates function (end)
+//🔴 get exchange rates function (end)
 
 //⚪initialize exchange rates function (start)
-//🟠 [fetchExchangeRates, saveExchangeRates, updateLastUpdateElement, loadData]
+//🟠[fetchExchangeRates, saveExchangeRates, updateLastUpdateElement, loadData]
 const DAYS_BETWEEN_UPDATES = 2; // Update daily (adjust as needed)
 
 async function initializeExchangeRates() {
@@ -85,36 +86,6 @@ async function initializeExchangeRates() {
 
   const savedRates = localStorage.getItem("CURRENCY_DATA_KEY");
   const lastUpdated = localStorage.getItem("lastUpdated");
-
-  let shouldUseCache = false;
-
-  // Check if saved rates exist and are recent enough
-  if (savedRates && lastUpdated) {
-    const lastUpdateDate = new Date(lastUpdated);
-    const daysSinceUpdate =
-      (Date.now() - lastUpdateDate.getTime()) / (1000 * 60 * 60 * 24);
-
-    shouldUseCache = daysSinceUpdate < DAYS_BETWEEN_UPDATES;
-    console.log(
-      "(2)Days since last update:",
-      daysSinceUpdate,
-      "update every:",
-      DAYS_BETWEEN_UPDATES,
-      "should use cache:",
-      shouldUseCache
-    ); // Debugging log
-
-    if (shouldUseCache) {
-      console.log(
-        "(2)Using cached exchange rates (last updated:",
-        lastUpdateDate.toLocaleString(),
-        ")"
-      );
-      updateLastUpdateElement(false); // Indicate cached data
-      cachedRates = JSON.parse(savedRates);
-      return true; // Skip API fetch
-    }
-  }
 
   // If no valid cache, fetch fresh data
   console.log("(2)Fetching latest exchange rates from API...");
@@ -126,7 +97,6 @@ async function initializeExchangeRates() {
   } catch (error) {
     if (!errorLogged) {
       console.error("(2)Failed to fetch exchange rates:", error);
-      errorLogged = true;
     }
   }
   if (cachedRates) {
@@ -1175,7 +1145,7 @@ function initializeInputStyles() {
 //🟣++++++++++++++++++++++++++++ APPLICATION ++++++++++++++++++++++++++++
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 document.addEventListener("DOMContentLoaded", async () => {
-  // await updateExchangeRates(); // Load exchange rates first
+  await updateExchangeRates(); // Load exchange rates first
   // // Initial check
   // updateLastUpdateElement(
   //   navigator.onLine,
