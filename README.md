@@ -31,25 +31,13 @@ This browser extension allows you to convert any chosen currency to multiple oth
 3. Enable "Developer mode" by toggling the switch at the top right corner.
 4. Click on "Load unpacked" and select the cloned repository folder.
 
-# Licence
-Copyright © 2025 Zied Yahia
-
-This software is provided for personal and non-commercial use only.
-
-✔️ You are free to:
-- Use, copy, and modify the software for personal or educational purposes.
-- Share the software freely, as long as this license and attribution remain intact.
-
-❌ You are NOT permitted to:
-- Sell, license, or distribute this software for commercial purposes.
-- Modify and redistribute this software in a way that removes credit to the original author.
-- Use this software as part of a commercial product or service.
-
-This software is provided "as is", without warranty of any kind.
-
 # Contributions
 Contributions to this project are welcome. Feel free to open issues and submit pull requests.
 
 # Authors
 - Ziedyahia-57
 [Github](https://github.com/Ziedyahia-57) [LinkedIn](https://www.linkedin.com/in/zied-yahia/)
+
+# Credits
+Special thanks to the creator of [flag-icons (MIT)](https://github.com/lipis/flag-icons), [lipis](https://github.com/lipis)!
+Thank you ❤️
