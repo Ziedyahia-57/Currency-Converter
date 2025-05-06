@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-ae" viewBox="0 0 640 480">
+  <defs>
+    <linearGradient id="gradient-1">
+      <stop offset="0" style="stop-color: rgb(0, 64, 128);"/>
+      <stop offset="1" style="stop-color: rgb(0, 119, 182);"/>
+    </linearGradient>
+  </defs>
+  <g transform="matrix(0.11731, 0, 0, 0.11731, 80.02681, -0.000458)">
+    <path fill-rule="nonzero" d="M 4030.06 2540.77 C 3756.82 3636.78 2646.74 4303.79 1550.6 4030.48 C 454.92 3757.24 -212.09 2647.09 61.27 1551.17 C 334.39 455.04 1444.47 -212.02 2540.27 61.22 C 3636.33 334.46 4303.3 1444.73 4030.03 2540.79 L 4030.05 2540.77 L 4030.06 2540.77 Z" style="fill: url(&quot;#gradient-1&quot;); transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0, 1, -1, 0, -0.000169, 0.000018)"/>
+    <text style="fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 2689.5px; white-space: pre;" x="400.784" y="2875.47">Dr</text>
+    <text style="fill: rgb(219, 226, 230); font-family: Arial, sans-serif; font-size: 2767.8px; white-space: pre;" transform="matrix(0.961017, 0, 0, 0.973442, 70.458397, 75.229187)" x="454.265" y="2880.94">Dr</text>
+  </g>
+</svg>

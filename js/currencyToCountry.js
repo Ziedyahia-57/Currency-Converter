@@ -20,7 +20,7 @@ export const currencyToCountry = {
   BOB: "bo",
   BRL: "br",
   BSD: "bs",
-  BTC: "xz",
+  BTC: "bc",
   BTN: "bt",
   BWP: "bw",
   BYN: "by",
@@ -132,6 +132,7 @@ export const currencyToCountry = {
   SOS: "so",
   SRD: "sr",
   SSP: "ss",
+  STD: "st",
   STN: "st",
   SVC: "sv",
   SYP: "sy",
@@ -155,14 +156,14 @@ export const currencyToCountry = {
   VUV: "vu",
   WST: "ws",
   XAF: "cm",
-  XAG: "xz",
-  XAU: "xz",
+  XAG: "xg", //
+  XAU: "xu", //
   XCD: "ag",
-  XDR: "xz",
+  XDR: "xr", //
   XOF: "bj",
-  XPD: "xz",
+  XPD: "xd", //
   XPF: "pf",
-  XPT: "xz",
+  XPT: "xt", //
   YER: "ye",
   ZAR: "za",
   ZMW: "zm",
