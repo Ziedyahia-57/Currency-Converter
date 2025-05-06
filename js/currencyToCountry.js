@@ -63,7 +63,7 @@ export const currencyToCountry = {
   HTG: "HT",
   HUF: "HU",
   IDR: "ID",
-  ILS: "IL",
+  ILS: "PS",
   IMP: "IM",
   INR: "IN",
   IQD: "IQ",
