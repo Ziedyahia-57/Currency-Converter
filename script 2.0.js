@@ -38,14 +38,14 @@ async function fetchExchangeRates() {
 
     const data = await response.json();
 
-    if (!data?.conversion_rates) {
-      console.error("(1) ❌ Fetched JSON missing 'conversion_rates'.");
+    if (!data?.rates) {
+      console.error("(1) ❌ Fetched JSON missing 'rates'.");
       throw new Error("Invalid API structure.");
     }
 
-    saveExchangeRates(data.conversion_rates);
+    saveExchangeRates(data.rates);
     console.log("(1) ✅ Exchange rates fetched and saved.");
-    return data.conversion_rates;
+    return data.rates;
   } catch (error) {
     console.warn("(1) ❌ Fetch failed. Attempting to load cached data...");
     const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
@@ -1146,11 +1146,11 @@ function initializeInputStyles() {
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 document.addEventListener("DOMContentLoaded", async () => {
   await updateExchangeRates(); // Load exchange rates first
-  // // Initial check
-  // updateLastUpdateElement(
-  //   navigator.onLine,
-  //   localStorage.getItem(LAST_UPDATED_KEY)
-  // );
+  // Initial check
+  updateLastUpdateElement(
+    navigator.onLine,
+    localStorage.getItem(LAST_UPDATED_KEY)
+  );
 
   // Initial check with proper online status
   const isOnline = navigator.onLine;
