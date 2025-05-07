@@ -156,14 +156,14 @@ export const currencyToCountry = {
   VUV: "vu",
   WST: "ws",
   XAF: "cm",
-  XAG: "xg", //
-  XAU: "xu", //
+  XAG: "xg",
+  XAU: "xu",
   XCD: "ag",
-  XDR: "xr", //
+  XDR: "xr",
   XOF: "bj",
-  XPD: "xd", //
+  XPD: "xd",
   XPF: "pf",
-  XPT: "xt", //
+  XPT: "xt",
   YER: "ye",
   ZAR: "za",
   ZMW: "zm",

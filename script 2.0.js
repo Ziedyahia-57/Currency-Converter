@@ -64,19 +64,6 @@ async function fetchExchangeRates() {
 // * @throws {Error} - Throws an error if the API request fails or if the response is not valid.
 //⚪ fetch exchange rates function (end)
 
-//🔴 get exchange rates function (start)
-let cachedRates = null;
-async function getExchangeRates(base = "USD") {
-  if (cachedRates) {
-    return cachedRates;
-  }
-  cachedRates = await fetchExchangeRates(base);
-  return cachedRates;
-}
-// * @param {string} base - The base currency (e.g., "USD").
-// * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
-//🔴 get exchange rates function (end)
-
 //⚪initialize exchange rates function (start)
 //🟠[fetchExchangeRates, saveExchangeRates, updateLastUpdateElement, loadData]
 const DAYS_BETWEEN_UPDATES = 2; // Update daily (adjust as needed)
