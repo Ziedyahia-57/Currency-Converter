@@ -10,6 +10,8 @@ const hideCurrencyTab = document.getElementById("hide-currency-tab");
 const hideDonationTab = document.getElementById("hide-donation-tab");
 const donationTab = document.getElementById("donation-tab");
 const supportDevBtn = document.getElementById("support-dev-btn");
+const donationButton = document.getElementById("support-dev-btn");
+
 let errorLogged = false; // Global flag to track error logging
 
 const lastUpdateElement = document.querySelector(".last-update");
@@ -78,39 +80,6 @@ async function fetchExchangeRates() {
 // * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
 // * @throws {Error} - Throws an error if the API request fails or if the response is not valid.
 //⚪ fetch exchange rates function (end)
-
-//⚪initialize exchange rates function (start)
-//🟠[fetchExchangeRates, saveExchangeRates, updateLastUpdateElement, loadData]
-
-// async function initializeExchangeRates() {
-//   console.log("(2)Initializing exchange rates...");
-
-//   const savedRates = localStorage.getItem("CURRENCY_DATA_KEY");
-//   const lastUpdated = localStorage.getItem("lastUpdated");
-
-//   // If no valid cache, fetch fresh data
-//   console.log("(2)Fetching latest exchange rates from API...");
-//   console.log("(2)savedRates:", savedRates, "lastUpdated:", lastUpdated); // Debugging log
-
-//   // let fetchedRates;
-//   try {
-//     cachedRates = await fetchExchangeRates("USD");
-//   } catch (error) {
-//     if (!errorLogged) {
-//       console.error("(2)Failed to fetch exchange rates:", error);
-//     }
-//   }
-//   if (cachedRates) {
-//     saveExchangeRates(cachedRates); // Save fresh data
-//     updateLastUpdateElement(true); // Indicate fresh API data
-//     return true; // Successfully fetched fresh data
-//   } else {
-//     console.log("(2)Falling back to saved exchange rates...");
-//     loadData(); // Load cached data if API fails
-//     return false;
-//   }
-// }
-//⚪initialize exchange rates function (end)
 
 //⚪initialize app function (start)
 //🟠 [initializeExchangeRates, loadCurrencyOrder, addCurrency, checkCurrencyCount, updateAddButtonVisibility, initializeDonationContent]
@@ -1185,21 +1154,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkCurrencyCount();
   updateAddButtonVisibility();
   initializeInputStyles(); // Initialize input styles
-  const donationButton = document.getElementById("support-dev-btn");
-  if (donationButton) {
-    donationButton.addEventListener("click", handleDonationButtonClick);
-  }
+
+  //Donation Tab functionality
+
+  donationButton.addEventListener("click", handleDonationButtonClick);
 
   saveCheckboxState();
-
-  // // Convert any input-wrapper divs back to normal inputs
-  // document.querySelectorAll(".input-wrapper").forEach((wrapper) => {
-  //   const input = wrapper.querySelector("input");
-  //   if (input) {
-  //     wrapper.parentNode.insertBefore(input, wrapper);
-  //     wrapper.remove();
-  //   }
-  // });
 });
 
 addCurrencyBtn.addEventListener("click", async () => {
