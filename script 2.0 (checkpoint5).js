@@ -25,53 +25,37 @@ let exchangeRates = {};
 //⚪✅ fetch exchange rates function (start)
 async function fetchExchangeRates() {
   try {
-    //Data connection attempt
+    //Data connection
     const url =
       "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
       Date.now();
     const response = await fetch(url);
 
-    // Check if the response is ok (status code 200-299)
     if (!response || !response.ok) {
       console.error("(1) ❌ Fetch failed with status:", response?.status);
       throw new Error(`API error! Status: ${response?.status}`);
     }
 
-    // Parse the acquired JSON response
     const data = await response.json();
 
-    // Check if the data contains the expected structure
     if (!data?.rates) {
       console.error("(1) ❌ Fetched JSON missing 'rates'.");
       throw new Error("Invalid API structure.");
     }
 
-    // Save the exchange rates to localStorage
     saveExchangeRates(data.rates);
     console.log("(1) ✅ Exchange rates fetched and saved.");
     return data.rates;
   } catch (error) {
-    // Handle errors gracefully
-    console.warn(
-      "(1) ⚠️ Error fetching exchange rates:",
-      error.message,
-      "\nAttempting to load cached data"
-    );
-    // Attempt to load cached data if fetch fails
+    console.warn("(1) ⚠️ Fetch failed. Attempting to load cached data...");
     const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
-    console.log("cached data value:", cached);
-    // Check if cached data is available and valid
-    if (cached) {
+    if (cached?.data) {
       console.log("(1) ✅ Loaded exchange rates from cache.");
-      return cached;
-    } else {
-      console.error(
-        "(1) ❌ No cached data found. Check your internet connection to load conversion rates."
-      );
-      throw new Error(
-        "Failed to fetch exchange rates and no cached data found."
-      );
+      return CURRENCY_DATA_KEY;
     }
+
+    console.error("(1) ❌ No cached data found. Cannot proceed.");
+    throw new Error("Failed to fetch exchange rates and no cached data found.");
   }
 }
 // * @param {string} base - The base currency (e.g., "USD").
@@ -79,37 +63,43 @@ async function fetchExchangeRates() {
 // * @throws {Error} - Throws an error if the API request fails or if the response is not valid.
 //⚪ fetch exchange rates function (end)
 
+//🔴 get exchange rates function (start)
+// * @param {string} base - The base currency (e.g., "USD").
+// * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
+//🔴 get exchange rates function (end)
+
 //⚪initialize exchange rates function (start)
 //🟠[fetchExchangeRates, saveExchangeRates, updateLastUpdateElement, loadData]
+const DAYS_BETWEEN_UPDATES = 2; // Update daily (adjust as needed)
 
-// async function initializeExchangeRates() {
-//   console.log("(2)Initializing exchange rates...");
+async function initializeExchangeRates() {
+  console.log("(2)Initializing exchange rates...");
 
-//   const savedRates = localStorage.getItem("CURRENCY_DATA_KEY");
-//   const lastUpdated = localStorage.getItem("lastUpdated");
+  const savedRates = localStorage.getItem("CURRENCY_DATA_KEY");
+  const lastUpdated = localStorage.getItem("lastUpdated");
 
-//   // If no valid cache, fetch fresh data
-//   console.log("(2)Fetching latest exchange rates from API...");
-//   console.log("(2)savedRates:", savedRates, "lastUpdated:", lastUpdated); // Debugging log
+  // If no valid cache, fetch fresh data
+  console.log("(2)Fetching latest exchange rates from API...");
+  console.log("(2)savedRates:", savedRates, "lastUpdated:", lastUpdated); // Debugging log
 
-//   // let fetchedRates;
-//   try {
-//     cachedRates = await fetchExchangeRates("USD");
-//   } catch (error) {
-//     if (!errorLogged) {
-//       console.error("(2)Failed to fetch exchange rates:", error);
-//     }
-//   }
-//   if (cachedRates) {
-//     saveExchangeRates(cachedRates); // Save fresh data
-//     updateLastUpdateElement(true); // Indicate fresh API data
-//     return true; // Successfully fetched fresh data
-//   } else {
-//     console.log("(2)Falling back to saved exchange rates...");
-//     loadData(); // Load cached data if API fails
-//     return false;
-//   }
-// }
+  // let fetchedRates;
+  try {
+    cachedRates = await fetchExchangeRates("USD");
+  } catch (error) {
+    if (!errorLogged) {
+      console.error("(2)Failed to fetch exchange rates:", error);
+    }
+  }
+  if (cachedRates) {
+    saveExchangeRates(cachedRates); // Save fresh data
+    updateLastUpdateElement(true); // Indicate fresh API data
+    return true; // Successfully fetched fresh data
+  } else {
+    console.log("(2)Falling back to saved exchange rates...");
+    loadData(); // Load cached data if API fails
+    return false;
+  }
+}
 //⚪initialize exchange rates function (end)
 
 //⚪initialize app function (start)
@@ -133,7 +123,7 @@ async function initializeApp() {
   window.addEventListener("online", () => {
     updateLastUpdateElement(true);
     // Try to fetch new data when coming online
-    fetchExchangeRates().then(() => {
+    initializeExchangeRates().then(() => {
       updateCurrencyValues();
     });
   });
@@ -142,9 +132,9 @@ async function initializeApp() {
   );
 
   // Load cached exchange rates
-  const ratesLoaded = await fetchExchangeRates();
+  const ratesLoaded = await initializeExchangeRates();
   if (!ratesLoaded) {
-    console.warn(" ⚠️Exchange rates not freshly loaded — using fallback data.");
+    console.warn("Exchange rates not freshly loaded — using fallback data.");
   }
 
   // Try to load saved currencies
@@ -649,9 +639,9 @@ function saveExchangeRates(rates) {
 
 //>>>>>>>>> load exchange rates + last updated date (start)
 // Function to load exchange rates and last updated date from localStorage
+const savedRates = localStorage.getItem(CURRENCY_DATA_KEY);
+const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
 function loadExchangeRates() {
-  const savedRates = localStorage.getItem(CURRENCY_DATA_KEY);
-  const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
   if (savedRates && lastUpdated) {
     exchangeRates = JSON.parse(savedRates);
 
