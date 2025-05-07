@@ -112,6 +112,8 @@ async function initializeApp() {
 
   // Load cached exchange rates
   const ratesLoaded = await fetchExchangeRates();
+  updateCurrencyValues();
+
   if (!ratesLoaded) {
     console.warn(" ⚠️Exchange rates not freshly loaded — using fallback data.");
   }
@@ -711,8 +713,8 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
   }</span>
     - ${
       isOnline
-        ? "Exchange rates are automatically updated <br>once per month."
-        : "Using cached data.<br>"
+        ? "Exchange rates are updated automatically<br>every day. "
+        : "Using cached data. Exchange rates may be outdated.<br>"
     }
     Last Updated: <span class="date">${dateText}</span> <span class="date">${timeText}</span>
   `;
