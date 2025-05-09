@@ -371,12 +371,97 @@ document.querySelectorAll(".currency-input input").forEach((input) => {
     ); // Update currency values based on input
   });
 });
-
 // //>>>>>>>>> Input format: no commas on input (end)
 
 // //>>>>>>>>> Input format: dots & commas (start)
 function formatNumberWithCommas(value) {
-  if (value === ".") return "0."; // Convert single decimal point to "0."
+  document.querySelectorAll(".currency-input input").forEach((input) => {
+    // Format with thousand separators on blur
+    input.addEventListener("blur", (event) => {
+      const value = input.value.replace(/,/g, "");
+      if (!isNaN(parseFloat(value))) {
+        input.value = formatNumberWithCommas(value);
+      }
+    });
+
+    // Handle keydown for validation
+    input.addEventListener("keydown", (event) => {
+      // Check for Ctrl combinations FIRST
+      if (
+        event.ctrlKey &&
+        ["a", "c", "x", "v", "z", "y"].includes(event.key.toLowerCase())
+      ) {
+        return; // Allow default behavior for these shortcuts
+      }
+
+      const isNumber = /^[0-9]$/.test(event.key);
+      const isDot = event.key === ".";
+      const isComma = event.key === ",";
+      const isAllowedControlKey = [
+        "Backspace",
+        "Delete",
+        "ArrowLeft",
+        "ArrowRight",
+        "Tab",
+        "Home",
+        "End",
+      ].includes(event.key);
+
+      const cursorPos = input.selectionStart;
+      const value = input.value.replace(/,/g, "");
+      const hasDot = value.includes(".");
+
+      // Block invalid characters (but allow commas temporarily)
+      if (!isNumber && !isDot && !isAllowedControlKey && !isComma) {
+        return event.preventDefault();
+      }
+
+      // Handle leading zero cases
+      if (
+        isNumber &&
+        cursorPos === 0 &&
+        value.length > 0 &&
+        value[0] === "0" &&
+        !hasDot
+      ) {
+        input.value = event.key + value.slice(1);
+        input.setSelectionRange(1, 1);
+        return event.preventDefault();
+      }
+
+      // Handle decimal cases
+      if (isDot) {
+        if (hasDot) return event.preventDefault();
+        if (value === "") {
+          input.value = "0.";
+          input.setSelectionRange(2, 2);
+          return event.preventDefault();
+        }
+      }
+    });
+
+    // Cleanup and formatting during input
+    input.addEventListener("input", (event) => {
+      let value = input.value.replace(/,/g, ""); // Remove existing commas
+
+      // Format with commas as thousand separators (but keep decimal part intact)
+      if (value.includes(".")) {
+        const parts = value.split(".");
+        input.value = formatNumberWithCommas(parts[0]) + "." + parts[1];
+      } else {
+        input.value = formatNumberWithCommas(value);
+      }
+    });
+  });
+
+  // Helper function to format numbers with commas
+  function formatNumberWithCommas(numStr) {
+    // Remove existing commas and leading zeros
+    numStr = numStr.replace(/,/g, "").replace(/^0+(?=\d)/, "");
+
+    // Format with thousand separators
+    return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
 
   document.querySelectorAll(".currency-input input").forEach((input) => {
     input.addEventListener("blur", () => {
