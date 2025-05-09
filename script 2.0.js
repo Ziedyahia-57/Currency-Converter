@@ -352,48 +352,23 @@ currencyContainer.addEventListener("drop", (event) => {
 //
 //⚪++++++++++++++++++++++++++++ INPUT FORMAT VALIDATION ++++++++++++++++++++++++++++
 // //>>>>>>>>> Input format: no commas on input (start)
-// document.querySelectorAll(".currency-input input").forEach((input) => {
-//   input.addEventListener("input", (event) => {
-//     let rawValue = event.target.value
-//       ? event.target.value.replace(/,/g, "")
-//       : ""; // Remove commas
-
-//     if (!/^\d*\.?\d*$/.test(rawValue)) {
-//       event.target.value = event.target.dataset.previousValue || 0;
-//       return;
-//     } // Regex to allow only digits and one decimal point
-
-//     event.target.dataset.previousValue = rawValue;
-//     event.target.value = formatNumberWithCommas(rawValue);
-//     updateCurrencyValues(
-//       parseFloat(rawValue) || 0,
-//       event.target.dataset.currency
-//     ); // Update currency values based on input
-//   });
-// });
 document.querySelectorAll(".currency-input input").forEach((input) => {
   input.addEventListener("input", (event) => {
     let rawValue = event.target.value
       ? event.target.value.replace(/,/g, "")
-      : "";
+      : ""; // Remove commas
 
     if (!/^\d*\.?\d*$/.test(rawValue)) {
-      event.target.value = event.target.dataset.previousValue || "0";
+      event.target.value = event.target.dataset.previousValue || 0;
       return;
-    }
+    } // Regex to allow only digits and one decimal point
 
-    // Only update if the value is actually changing
-    if (
-      parseFloat(rawValue) !==
-      parseFloat(event.target.dataset.previousValue || 0)
-    ) {
-      event.target.dataset.previousValue = rawValue;
-      event.target.value = formatNumberWithCommas(rawValue);
-      updateCurrencyValues(
-        parseFloat(rawValue) || 0,
-        event.target.dataset.currency
-      );
-    }
+    event.target.dataset.previousValue = rawValue;
+    event.target.value = formatNumberWithCommas(rawValue);
+    updateCurrencyValues(
+      parseFloat(rawValue) || 0,
+      event.target.dataset.currency
+    ); // Update currency values based on input
   });
 });
 
@@ -661,26 +636,12 @@ function loadExchangeRates() {
 //>>>>>>>>> load exchange rates + last updated date (end)
 
 //>>>>>>>>> load data function (start)
-// function loadData() {
-//   console.log("LoadingData is active");
-//   const savedData = loadExchangeRates();
-//   if (savedData) {
-//     exchangeRates = savedData.rates;
-//     updateLastUpdateElement(false, savedData.lastUpdated); // Update the "last updated" date
-
-//     // Update the UI with the cached exchange rates
-//     updateCurrencyValues(1, "USD"); // Default to 1 USD as the base value
-//   } else {
-//     updateLastUpdateElement(false);
-//   }
-// }
 function loadData() {
   console.log("LoadingData is active");
   const savedData = loadExchangeRates();
   if (savedData) {
     exchangeRates = savedData.rates;
-    updateLastUpdateElement(false, savedData.lastUpdated);
-    // Don't call updateCurrencyValues here
+    updateLastUpdateElement(false, savedData.lastUpdated); // Update the "last updated" date
   } else {
     updateLastUpdateElement(false);
   }
@@ -748,39 +709,11 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
 //
 //⚪++++++++++++++++++++++++++++ CURRENCY CONVERSION FUNCTIONS ++++++++++++++++++++++++++++
 //>>>>>>>>> convert currency values function (start)
-// function updateCurrencyValues(baseValue = 0, baseCurrency = "USD") {
-//   if (!exchangeRates) {
-//     console.error("No exchange rates available for conversion.");
-//     return;
-//   }
-
-//   // Round the base value to 2 decimal places
-//   const roundedBaseValue = parseFloat(baseValue.toFixed(2));
-
-//   document.querySelectorAll(".currency-input input").forEach((input) => {
-//     const currency = input.dataset.currency;
-//     if (currency !== baseCurrency) {
-//       // Calculate the converted value based on the base currency and exchange rates
-//       const convertedValue =
-//         roundedBaseValue *
-//         (exchangeRates[currency] / exchangeRates[baseCurrency]);
-
-//       // Round the converted value to 2 decimal places
-//       const roundedValue = convertedValue.toFixed(2);
-
-//       // Update the input field with the rounded value
-//       input.value = formatNumberWithCommas(roundedValue || 0);
-//     }
-//   });
-// }
 function updateCurrencyValues(baseValue = 0, baseCurrency = "USD") {
   if (!exchangeRates) {
     console.error("No exchange rates available for conversion.");
     return;
   }
-
-  // Only update if the base value is actually changing (not 0)
-  if (baseValue === 0) return;
 
   // Round the base value to 2 decimal places
   const roundedBaseValue = parseFloat(baseValue.toFixed(2));
@@ -926,15 +859,9 @@ window.addEventListener("online", async () => {
 //>>>>>>>>> Online event (end)
 
 //>>>>>>>>> Offline event (start)
-// window.addEventListener("offline", () => {
-//   console.log("App is offline. Loading saved exchange rates...");
-//   loadData();
-// });
 window.addEventListener("offline", () => {
   console.log("App is offline. Loading saved exchange rates...");
-  // Don't call updateCurrencyValues here - just load the data
   loadData();
-  updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
 });
 //>>>>>>>>> Offline event (end)
 
