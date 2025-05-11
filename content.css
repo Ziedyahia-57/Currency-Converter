@@ -22,10 +22,18 @@
     border-style: solid;
     border-color: #ffffff transparent transparent transparent;
   }
+  -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 #currency-converter-popup {
   /* Ensures visibility on all sites */
   background: #ffffff !important;
   color: #00c816 !important;
   z-index: 999999999 !important;
+  -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
