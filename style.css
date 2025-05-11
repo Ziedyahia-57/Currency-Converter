@@ -68,13 +68,15 @@ body {
     height: fit-content;
     min-height: 238px;
     max-height: 288px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow-y: overlay;
     background: var(--light-gray);
     align-items: center;
     display: flex;
     flex-direction: column;
     width: 380px;
+    scrollbar-color: #6e6e6e73 transparent;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
 }
 
 .currency-converter-ex label {
@@ -227,11 +229,14 @@ body {
 }
 
 .currency-converter-ex #currency-list {
-    overflow-y: auto;
+    overflow-y: overlay;
     /* Enable scrolling for the currency options */
     height: calc(100% - 70px);
     /* Adjust height to account for the sticky title */
     position: relative;
+    scrollbar-color: #6e6e6e73 transparent;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
 }
 
 .currency-converter-ex .currency-option {
