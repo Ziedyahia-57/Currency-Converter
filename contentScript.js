@@ -1,22 +1,58 @@
 // ===== CONFIGURATION =====
 const POPUP_ID = "currency-converter-popup";
-const POPUP_DISTANCE = 40; // px above selection
-const POPUP_HEIGHT = 32;
+const POPUP_DISTANCE = 40;
+const CURRENCY_SYMBOLS = ["$", "€", "£", "¥", "₹", "₽", "₩", "₪", "₺", "₴"];
+const CURRENCY_CODES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "INR",
+  "RUB",
+  "KRW",
+  "ILS",
+  "TRY",
+  "UAH",
+  "AUD",
+  "CAD",
+  "CNY",
+];
+
+// ===== CURRENCY DETECTION =====
+function isCurrencyValue(text) {
+  // Regex patterns
+  const symbolFirstPattern = new RegExp(
+    `^[${CURRENCY_SYMBOLS.join("")}]\\s?\\d+([.,]\\d+)?$`
+  );
+  const symbolLastPattern = new RegExp(
+    `^\\d+([.,]\\d+)?\\s?[${CURRENCY_SYMBOLS.join("")}]$`
+  );
+  const codePattern = new RegExp(
+    `^(${CURRENCY_CODES.join(
+      "|"
+    )})\\s?\\d+([.,]\\d+)?$|^\\d+([.,]\\d+)?\\s?(${CURRENCY_CODES.join("|")})$`,
+    "i"
+  );
+
+  const trimmed = text.trim();
+  return (
+    symbolFirstPattern.test(trimmed) ||
+    symbolLastPattern.test(trimmed) ||
+    codePattern.test(trimmed)
+  );
+}
 
 // ===== POPUP CREATION =====
 function createPopup() {
-  // Remove existing popup if any
   const existing = document.getElementById(POPUP_ID);
   if (existing) existing.remove();
 
   const popup = document.createElement("div");
   popup.id = POPUP_ID;
-
-  // Main popup styles
   popup.style.cssText = `
     position: absolute;
     background: #ffffff;
-    height: ${POPUP_HEIGHT}px;
+    height: 32px;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     z-index: 2147483647;
@@ -33,7 +69,7 @@ function createPopup() {
     transform: translateX(-50%);
   `;
 
-  // Create pointer triangle
+  // Pointer triangle
   const pointer = document.createElement("div");
   pointer.style.cssText = `
     position: absolute;
@@ -49,57 +85,17 @@ function createPopup() {
   `;
   popup.appendChild(pointer);
 
-  // Create icon container
-  const iconContainer = document.createElement("div");
-  iconContainer.style.cssText = `
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
+  // Icon and text
+  popup.innerHTML += `
+    <div style="display:flex;align-items:center;justify-content:center;width:16px;height:16px">
+      <img src="${chrome.runtime.getURL("icons/icon32.png")}" 
+           style="width:16px;height:16px;object-fit:contain"
+           onerror="this.replaceWith('<div style=\\'width:16px;height:16px;background:#ff3366;border-radius:2px\\'></div>')">
+    </div>
+    <span id="${POPUP_ID}-text" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px"></span>
   `;
 
-  // Add icon (with fallback)
-  try {
-    const iconImg = document.createElement("img");
-    iconImg.src = chrome.runtime.getURL("icons/icon32.png");
-    iconImg.style.cssText = `
-      width: 16px;
-      height: 16px;
-      object-fit: contain;
-    `;
-    iconImg.onerror = () => {
-      iconImg.remove();
-      const fallback = document.createElement("div");
-      fallback.style.cssText = `
-        width: 16px;
-        height: 16px;
-        background: #ff3366;
-        border-radius: 2px;
-      `;
-      iconContainer.appendChild(fallback);
-    };
-    iconContainer.appendChild(iconImg);
-  } catch (e) {
-    const fallback = document.createElement("div");
-    fallback.textContent = "💰";
-    iconContainer.appendChild(fallback);
-  }
-
-  // Create text element
-  const text = document.createElement("span");
-  text.id = `${POPUP_ID}-text`;
-  text.style.cssText = `
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 150px;
-  `;
-
-  popup.appendChild(iconContainer);
-  popup.appendChild(text);
   document.body.appendChild(popup);
-
   return popup;
 }
 
@@ -116,59 +112,55 @@ function updatePopupPosition(popup) {
     lastSelectionRect.left + scrollX + lastSelectionRect.width / 2
   }px`;
   popup.style.top = `${lastSelectionRect.top + scrollY - POPUP_DISTANCE}px`;
-  popup.style.display = "flex";
 }
 
-function showPopupForSelection(popup, selection) {
-  try {
-    const range = selection.getRangeAt(0);
-    lastSelectionRect = range.getBoundingClientRect();
+function handleSelection(popup) {
+  const selection = window.getSelection();
+  const selectedText = selection.toString().trim();
 
-    // Update popup content
-    const textElement = document.getElementById(`${POPUP_ID}-text`);
-    textElement.textContent = selection.toString().trim().slice(0, 20);
+  if (!selection.isCollapsed && isCurrencyValue(selectedText)) {
+    try {
+      const range = selection.getRangeAt(0);
+      lastSelectionRect = range.getBoundingClientRect();
 
-    // Position popup
-    updatePopupPosition(popup);
-  } catch (error) {
-    console.error("Selection error:", error);
-  }
-}
-
-// ===== SCROLL/RESIZE HANDLING =====
-function setupScrollHandler(popup) {
-  window.addEventListener("resize", () => {
-    if (popup.style.display === "flex") {
+      document.getElementById(`${POPUP_ID}-text`).textContent = selectedText;
+      popup.style.display = "flex";
       updatePopupPosition(popup);
+    } catch (error) {
+      console.error("Selection error:", error);
     }
-  });
+  } else {
+    popup.style.display = "none";
+    lastSelectionRect = null;
+  }
 }
 
 // ===== MAIN EXECUTION =====
 (function init() {
   const popup = createPopup();
-  setupScrollHandler(popup);
 
-  // Selection handler
-  const handleSelection = () => {
-    const selection = window.getSelection();
-    if (selection && !selection.isCollapsed && selection.toString().trim()) {
-      showPopupForSelection(popup, selection);
-    } else {
-      popup.style.display = "none";
-      lastSelectionRect = null;
-    }
+  // Debounced scroll/resize handler
+  let debounceTimer;
+  const handleScrollResize = () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      if (popup.style.display === "flex") {
+        updatePopupPosition(popup);
+      }
+    }, 100);
   };
 
-  // Event listeners
-  document.addEventListener("selectionchange", handleSelection);
-  document.addEventListener("mouseup", handleSelection);
+  window.addEventListener("scroll", handleScrollResize, { passive: true });
+  window.addEventListener("resize", handleScrollResize);
 
-  // Hide popup when clicking elsewhere
+  // Selection events
+  document.addEventListener("selectionchange", () => handleSelection(popup));
+  document.addEventListener("mouseup", () => handleSelection(popup));
+
+  // Hide on click outside
   document.addEventListener("mousedown", (e) => {
-    if (!popup.contains(e.target)) {
+    if (!document.getElementById(POPUP_ID).contains(e.target)) {
       popup.style.display = "none";
-      lastSelectionRect = null;
     }
   });
 })();
