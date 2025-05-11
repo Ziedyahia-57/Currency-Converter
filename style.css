@@ -98,7 +98,7 @@ body {
     transition: transform 0.2s linear, background 0.2s linear;
     border: var(--border-dark) solid 1px;
     border-radius: 8px;
-    margin: 5px 14px 5px 5px;
+    margin: 5px 0px 5px 9px;
     background: var(--gray);
     padding: 0;
     width: 320px;
