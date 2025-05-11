@@ -1,0 +1,31 @@
+
+#selection-popup {
+  position: absolute;
+  background-color: #ff0000;
+  color: white;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 999999999; /* Ensure it's above everything */
+  pointer-events: none; /* Allow clicks to pass through */
+  
+  /* Optional triangle pointer */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #ffffff transparent transparent transparent;
+  }
+}
+#currency-converter-popup {
+  /* Ensures visibility on all sites */
+  background: #ffffff !important;
+  color: #00c816 !important;
+  z-index: 999999999 !important;
+}
