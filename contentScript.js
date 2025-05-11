@@ -182,19 +182,30 @@ const DEFAULT_CURRENCIES = {
 // ===== STATE MANAGEMENT =====
 let currentMode = "selection";
 let lastSelectionValue = "";
-let savedCurrencies = {};
+let savedCurrencies;
 let popupTopPosition = 0;
 let isMouseDown = false;
 
 // Initialize currencies from storage
-// chrome.storage.sync.get(["currencies"], (result) => {
-//   savedCurrencies = result.currencies || DEFAULT_CURRENCIES;
-//   console.log("Loaded currencies:", savedCurrencies);
-// });
-
-chrome.runtime.sendMessage({ type: "GET_CURRENCY_ORDER" }, (response) => {
-  const savedCurrencies = response.currencyOrder || DEFAULT_CURRENCIES;
-  console.log("Received currencyOrder:", savedCurrencies);
+chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
+  chrome.storage.local.get(null, (data) => {
+    console.log("Full storage contents:", data);
+  });
+  if (result.currencyOrder && result.currencyData) {
+    // If we have an order array, use it with default rates
+    savedCurrencies = {};
+    result.currencyOrder.forEach((currency) => {
+      if (result.currencyData[currency]) {
+        savedCurrencies[currency] = result.currencyData[currency];
+      }
+    });
+    console.log("✅⚙️Loaded ordered currencies:", savedCurrencies);
+  } else {
+    // Fallback to the full currencies object if no order is specified
+    savedCurrencies = DEFAULT_CURRENCIES;
+    console.warn("⚠️⚙️Using default currencies");
+  }
+  console.log("Loaded currencies:", savedCurrencies);
 });
 
 // ===== CURRENCY DETECTION =====
@@ -226,7 +237,7 @@ function createPopup() {
     width: fit-content;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    z-index: 99999999999999;
+    z-index: 999999999999;
     display: none;
     flex-direction: column;
     padding: 4px;
@@ -298,7 +309,7 @@ function createPopup() {
 // ===== VIEW MANAGEMENT =====
 function showSelectionView(popup, value) {
   const popupElement = document.getElementById(POPUP_ID);
-  popupElement.style.height = "fit-content";
+  //   popupElement.style.height = "fit-content";
   popupElement.style.pointerEvents = "auto";
   lastSelectionValue = value;
   document.getElementById(`${POPUP_ID}-text`).textContent = value;
@@ -315,21 +326,40 @@ function showCurrenciesView(popup, baseValue) {
     '<div style="padding:4px 0;text-align:center">Loading...</div>';
 
   // Get fresh currency data
-  chrome.storage.sync.get(["currencies"], (result) => {
-    savedCurrencies = result.currencies || DEFAULT_CURRENCIES;
+  chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
+    // Update savedCurrencies based on the order
+    const orderedCurrencies = {};
+    if (result.currencyOrder && result.currencyData) {
+      result.currencyOrder.forEach((currency) => {
+        if (result.currencyData[currency]) {
+          orderedCurrencies[currency] = result.currencyData[currency];
+        }
+      });
+    } else {
+      Object.assign(orderedCurrencies, DEFAULT_CURRENCIES);
+    }
 
     const numericValue =
       parseFloat(baseValue.replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
     currenciesContainer.innerHTML = "";
 
-    Object.entries(savedCurrencies).forEach(([currency, rate]) => {
+    // Create currency items in the specified order
+    Object.keys(orderedCurrencies).forEach((currency) => {
+      const rate = orderedCurrencies[currency];
       const convertedValue = (numericValue * rate).toFixed(2);
       const item = document.createElement("div");
-      item.className = "currency-item"; // Apply the class
+      item.className = "currency-item";
 
-      // Add this to your popup's style section
       const style = document.createElement("style");
       style.textContent = `
+      #${POPUP_ID} {
+    height: fit-content !important;
+  }
+  #${POPUP_ID}-currencies {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
   .currency-item {
     display: flex;
     justify-content: space-between;
@@ -345,18 +375,18 @@ function showCurrenciesView(popup, baseValue) {
       document.head.appendChild(style);
 
       item.innerHTML = `
-    <span>${currency} → </span>
-    <span>${convertedValue}</span>
-  `;
+        <span>${currency} → </span>
+        <span>${convertedValue}</span>
+      `;
       currenciesContainer.appendChild(item);
     });
 
-    // Calculate expanded height (24px per item + padding)
+    // Calculate expanded height
     const itemHeight = 24;
     const padding = 16;
     const newHeight = Math.min(
-      Object.keys(savedCurrencies).length * itemHeight + padding + 40, // 40px for selection row
-      300 // Max height
+      Object.keys(savedCurrencies).length * itemHeight + padding + 40,
+      300
     );
 
     popupElement.style.height = `${newHeight}px`;
@@ -367,6 +397,32 @@ function showCurrenciesView(popup, baseValue) {
   currenciesContainer.style.display = "flex";
   currentMode = "currencies";
   popupElement.style.pointerEvents = "none";
+}
+
+function displayCurrencyConversions(baseValue) {
+  const numericValue =
+    parseFloat(baseValue.replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
+  const container = document.getElementById(`${POPUP_ID}-currencies`);
+  container.innerHTML = "";
+
+  // Calculate content height
+  let totalHeight = 40; // Base height (selection row + padding)
+
+  Object.entries(savedCurrencies).forEach(([currency, rate]) => {
+    const item = document.createElement("div");
+    item.className = "currency-item";
+    item.style.height = "24px"; // Fixed height per item
+    item.innerHTML = `
+      <span>${currency} → </span>
+      <span>${(numericValue * rate).toFixed(2)}</span>
+    `;
+    container.appendChild(item);
+    totalHeight += 24; // Add item height
+  });
+
+  // Set popup height
+  const popup = document.getElementById(POPUP_ID);
+  popup.style.height = `${Math.min(totalHeight, 300)}px`; // Max 300px
 }
 
 let lastSelectionRect = null;
@@ -489,3 +545,6 @@ function handleSelection(popup) {
     }
   });
 })();
+
+// Run in console to check storage
+chrome.storage.local.get(null, (data) => console.log(data));

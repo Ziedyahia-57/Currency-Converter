@@ -9,11 +9,11 @@
     "service_worker": "background.js"
   },
   "icons": {
-    "148": "./icons/icon (alpha).png"
+    "148": "./icons/icon (beta).png"
   },
   "action": {
     "default_popup": "index.html",
-    "default_icon": "./icons/icon (alpha).png"
+    "default_icon": "./icons/icon (beta).png"
   },
   "content_scripts": [
     {

@@ -526,6 +526,11 @@ function saveCurrencyOrder() {
   currencies = currencyOrder;
 
   localStorage.setItem("currencyOrder", JSON.stringify(currencyOrder));
+  chrome.storage.local.set({ currencyOrder }, () => {
+    chrome.storage.local.get("currencyOrder", (result) => {
+      console.log("Saved currencyOrder:", result.currencyOrder);
+    });
+  });
   console.log("Saved currency order:", currencyOrder);
 }
 //>>>>>>>>> save currency order function (end)
@@ -684,6 +689,10 @@ function saveExchangeRates(rates) {
     const now = new Date().toISOString(); // ISO format avoids parsing issues
     localStorage.setItem(LAST_UPDATED_KEY, now);
     localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(rates));
+    chrome.storage.local.set({
+      [LAST_UPDATED_KEY]: now,
+      [CURRENCY_DATA_KEY]: rates,
+    });
   }
 }
 //>>>>>>>>> save exchange rates + last updated date (end)

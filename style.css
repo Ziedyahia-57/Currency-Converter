@@ -55,6 +55,8 @@ body {
     height: 50px;
     width: 100%;
     background: linear-gradient(#00530a, #00c816);
+    /* background: linear-gradient(#3e3e3e, #303030);
+    background: #1b1a1e; */
     border: none;
 }
 
