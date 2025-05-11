@@ -187,9 +187,14 @@ let popupTopPosition = 0;
 let isMouseDown = false;
 
 // Initialize currencies from storage
-chrome.storage.sync.get(["currencies"], (result) => {
-  savedCurrencies = result.currencies || DEFAULT_CURRENCIES;
-  console.log("Loaded currencies:", savedCurrencies);
+// chrome.storage.sync.get(["currencies"], (result) => {
+//   savedCurrencies = result.currencies || DEFAULT_CURRENCIES;
+//   console.log("Loaded currencies:", savedCurrencies);
+// });
+
+chrome.runtime.sendMessage({ type: "GET_CURRENCY_ORDER" }, (response) => {
+  const savedCurrencies = response.currencyOrder || DEFAULT_CURRENCIES;
+  console.log("Received currencyOrder:", savedCurrencies);
 });
 
 // ===== CURRENCY DETECTION =====
@@ -221,7 +226,7 @@ function createPopup() {
     width: fit-content;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    z-index: 99999999999;
+    z-index: 99999999999999;
     display: none;
     flex-direction: column;
     padding: 4px;
@@ -278,7 +283,7 @@ function createPopup() {
   currenciesView.style.cssText = `
     display: none;
     flex-direction: column;
-    padding: 8px 12px;
+    padding: 2px 12px;
     gap: 4px;
     color: #707070;
     font-style: normal;
@@ -320,16 +325,29 @@ function showCurrenciesView(popup, baseValue) {
     Object.entries(savedCurrencies).forEach(([currency, rate]) => {
       const convertedValue = (numericValue * rate).toFixed(2);
       const item = document.createElement("div");
-      item.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 4px 0;
-      `;
+      item.className = "currency-item"; // Apply the class
+
+      // Add this to your popup's style section
+      const style = document.createElement("style");
+      style.textContent = `
+  .currency-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+  }
+  .currency-item:first-child {
+    border-top: 1px solid lightgray;
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+`;
+      document.head.appendChild(style);
+
       item.innerHTML = `
-        <span>${currency} → </span>
-        <span>${convertedValue}</span>
-      `;
+    <span>${currency} → </span>
+    <span>${convertedValue}</span>
+  `;
       currenciesContainer.appendChild(item);
     });
 
