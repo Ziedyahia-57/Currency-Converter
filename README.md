@@ -19,9 +19,8 @@ This browser extension allows you to convert any chosen currency to multiple oth
 * **🌙 Dark Mode Support:** Automatically matches your system theme or toggle it manually.
 * **🔒 Private & Secure:** Your data stays on your device; no tracking or analytics.
 * **📡 Offline Support:** Converts using the cached exchange rates when you're offline or disconnected.
-
-***To Be Added (BETA):***
 * **🪙 Pop-up Convert on Select:** Instantly convert selected text from any webpage with a simple click.
+* **🧪 Smart Currency Detection:**  Automatically detects the currency format on a webpage
 
 ***⚠️ Want to add a feature? contact: ziedyahia20102012@gmail.com***
 
