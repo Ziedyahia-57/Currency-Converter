@@ -19,15 +19,20 @@
     {
       "matches": ["<all_urls>"],
       "js": ["contentScript.js"],
-      "css": ["content.css"],
+      "css": ["flag-icons/css/flag-icons.min.css", "content.css"],
+      "type": "module",
       "run_at": "document_end",
       "all_frames": true,
       "match_about_blank": true
     }
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts; script-src 'self'"
+  },
   "web_accessible_resources": [
     {
-      "resources": ["*"],
+      "resources": ["*", "flag-icons/flags/4x3/*.svg"],
       "matches": ["<all_urls>"]
     }
   ]
