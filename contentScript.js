@@ -457,7 +457,8 @@ function createPopup() {
     flex-direction: column;
     padding: 4px;
     font-family: Arial, sans-serif;
-    font-size: 10px;
+    font-size: 12px;
+    font-weight: bold;
     color: #333333;
     border: 1px solid #e0e0e0;
     box-sizing: border-box;
@@ -531,6 +532,7 @@ function createPopup() {
     padding: 4px 0;
     gap: 4px;
     margin-right: auto;
+    color: #6c6c6c;
 }
     .currency-highlight {
       color: rgb(0, 200, 22);
@@ -721,14 +723,16 @@ function updatePopupPosition(popup) {
   const viewportHeight = window.innerHeight;
   const pointer = popup.querySelector("div");
 
-  // First try to position above the selection (preferred position)
-  let proposedTop =
-    lastSelectionRect.top + scrollY - popupHeight - POPUP_DISTANCE;
+  // Calculate positions
+  const spaceAbove = lastSelectionRect.top - POPUP_DISTANCE;
+  const spaceBelow = viewportHeight - lastSelectionRect.bottom - POPUP_DISTANCE;
 
-  // Check if we have enough space above
-  if (proposedTop >= scrollY) {
-    // Position above with triangle pointing down
-    popup.style.top = `${proposedTop}px`;
+  // Determine best position - prefer above if possible
+  if (spaceAbove >= popupHeight) {
+    // Position above selection (preferred)
+    popup.style.top = `${
+      lastSelectionRect.top + scrollY - popupHeight - POPUP_DISTANCE
+    }px`;
     pointer.style.top = "100%";
     pointer.style.transform = "translateX(-50%)";
     pointer.style.borderLeft = "8px solid transparent";
@@ -736,34 +740,33 @@ function updatePopupPosition(popup) {
     pointer.style.borderTop = "8px solid #ffffff";
     pointer.style.borderBottom = "none";
     pointer.style.filter = "drop-shadow(0 1px 1px rgba(0,0,0,0.1))";
+  } else if (spaceBelow >= popupHeight) {
+    // Position below selection
+    popup.style.top = `${
+      lastSelectionRect.bottom + scrollY + POPUP_DISTANCE
+    }px`;
+    pointer.style.top = "-8px";
+    pointer.style.transform = "translateX(-50%)";
+    pointer.style.borderLeft = "8px solid transparent";
+    pointer.style.borderRight = "8px solid transparent";
+    pointer.style.borderBottom = "8px solid #ffffff";
+    pointer.style.borderTop = "none";
+    pointer.style.filter = "drop-shadow(0 -1px 1px rgba(0,0,0,0.1))";
   } else {
-    // Not enough space above, check if we have space below
-    const bottomSpace =
-      viewportHeight - (lastSelectionRect.bottom + scrollY + POPUP_DISTANCE);
-
-    if (bottomSpace >= popupHeight) {
-      // Position below with triangle pointing up
-      popup.style.top = `${
-        lastSelectionRect.bottom + scrollY + POPUP_DISTANCE
-      }px`;
-      pointer.style.top = "-8px";
-      pointer.style.transform = "translateX(-50%)";
-      pointer.style.borderLeft = "8px solid transparent";
-      pointer.style.borderRight = "8px solid transparent";
-      pointer.style.borderBottom = "8px solid #ffffff";
-      pointer.style.borderTop = "none";
-      pointer.style.filter = "drop-shadow(0 -1px 1px rgba(0,0,0,0.1))";
-    } else {
-      // Not enough space either above or below, default to above with scroll
-      popup.style.top = `${scrollY}px`; // Align with top of viewport
-      pointer.style.top = `${lastSelectionRect.top - POPUP_DISTANCE}px`;
-      pointer.style.transform = "translateX(-50%)";
-      pointer.style.borderLeft = "8px solid transparent";
-      pointer.style.borderRight = "8px solid transparent";
-      pointer.style.borderBottom = "8px solid #ffffff";
-      pointer.style.borderTop = "none";
-      pointer.style.filter = "drop-shadow(0 -1px 1px rgba(0,0,0,0.1))";
-    }
+    // Not enough space in either direction - adjust popup height and position below
+    const adjustedHeight = Math.min(popupHeight, spaceBelow);
+    popup.style.height = `${adjustedHeight}px`;
+    popup.style.overflowY = "auto";
+    popup.style.top = `${
+      lastSelectionRect.bottom + scrollY + POPUP_DISTANCE
+    }px`;
+    pointer.style.top = "-8px";
+    pointer.style.transform = "translateX(-50%)";
+    pointer.style.borderLeft = "8px solid transparent";
+    pointer.style.borderRight = "8px solid transparent";
+    pointer.style.borderBottom = "8px solid #ffffff";
+    pointer.style.borderTop = "none";
+    pointer.style.filter = "drop-shadow(0 -1px 1px rgba(0,0,0,0.1))";
   }
 
   // Horizontal positioning (centered above/below selection)
@@ -773,6 +776,7 @@ function updatePopupPosition(popup) {
 }
 
 // ===== MAIN APPLICATION =====
+
 function initialize() {
   // Check the checkbox state before creating the popup
   chrome.storage.local.get(["checkboxState"], (result) => {
