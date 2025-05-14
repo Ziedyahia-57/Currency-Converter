@@ -833,34 +833,11 @@ function initialize() {
       });
     };
 
-    // function isCurrencyValue(text) {
-    //   // First check if there's a valid number > 0
-    //   const numericPart = detectCurrency(text).amount;
-    //   const numberValue = parseNumber(numericPart);
-    //   if (isNaN(numberValue) || numberValue <= 0) {
-    //     return false;
-    //   }
-
-    //   // Then check for currency indicators
-    //   const { currency, type } = detectCurrency(text);
-    //   return (
-    //     type !== "unknown" ||
-    //     Object.keys(CURRENCY_SYMBOLS).some((s) => text.includes(s)) ||
-    //     Object.keys(currencyToCountry).some((c) =>
-    //       new RegExp(c, "i").test(text)
-    //     )
-    //   );
-    // }
-
     // Add event listeners
     function isCurrencyValue(text) {
       // First check if there's a valid number > 0
       const { currency, amount, type } = detectCurrency(text);
       const numberValue = parseNumber(amount);
-
-      // if (isNaN(numberValue)) {
-      //   return false;
-      // }
 
       // Reject if:
       // 1. No valid number parsed
