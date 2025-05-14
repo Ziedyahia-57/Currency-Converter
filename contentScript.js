@@ -234,43 +234,54 @@ function getFlagElement(currencyCode) {
   // Get country code from currency
   const countryCode = (currencyToCountry[currencyCode] || "xx").toLowerCase();
 
+  // Create container for the flag
+  const flagContainer = document.createElement("div");
+  flagContainer.style.display = "flex";
+  flagContainer.style.alignItems = "center";
+  flagContainer.style.justifyContent = "center";
+  flagContainer.style.width = "16px";
+  flagContainer.style.height = "10px";
+
   try {
-    // Add this to debug
-    console.log(
-      "Trying to load flag for:",
-      currencyCode,
-      "country:",
-      countryCode
-    );
-    console.log(
-      "Full path:",
-      chrome.runtime.getURL(`flag-icons/flags/4x3/${countryCode}.svg`)
-    );
     const flagImg = document.createElement("img");
     flagImg.className = "currency-flag-img";
     flagImg.alt = currencyCode;
-    flagImg.src = chrome.runtime.getURL(
-      `flag-icons/flags/4x3/${countryCode}.svg`
-    );
+    flagImg.style.width = "100%";
+    flagImg.style.height = "100%";
+    flagImg.style.objectFit = "cover";
+    flagImg.style.borderRadius = "2px";
 
-    // Add error handling for missing flags
+    // Try to load the flag
+    const flagPath = `flag-icons/flags/4x3/${countryCode}.svg`;
+    flagImg.src = chrome.runtime.getURL(flagPath);
+
+    // Fallback if image fails to load
     flagImg.onerror = function () {
-      this.style.display = "none";
+      flagContainer.innerHTML = "";
       const fallback = document.createElement("div");
       fallback.className = "currency-flag-fallback";
-      fallback.textContent = currencyCode;
-      flagDiv.appendChild(fallback);
+      fallback.textContent = currencyCode.substring(0, 2);
+      fallback.style.width = "24px";
+      fallback.style.height = "18px";
+      fallback.style.display = "flex";
+      fallback.style.alignItems = "center";
+      fallback.style.justifyContent = "center";
+      fallback.style.fontSize = "10px";
+      fallback.style.background = "#f0f0f0";
+      fallback.style.borderRadius = "2px";
+      flagContainer.appendChild(fallback);
     };
 
-    flagDiv.appendChild(flagImg);
+    flagContainer.appendChild(flagImg);
   } catch (e) {
     console.error("Error creating flag element:", e);
     const fallback = document.createElement("div");
     fallback.className = "currency-flag-fallback";
-    fallback.textContent = currencyCode;
-    flagDiv.appendChild(fallback);
+    fallback.textContent = currencyCode.substring(0, 2);
+    flagContainer.appendChild(fallback);
   }
 
+  flagDiv.appendChild(flagContainer);
   return flagDiv;
 }
 
@@ -439,7 +450,6 @@ function createPopup() {
     position: absolute;
     background: #ffffff;
     width: fit-content;
-    min-width: 140px;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     z-index: 999999999999;
@@ -447,7 +457,7 @@ function createPopup() {
     flex-direction: column;
     padding: 4px;
     font-family: Arial, sans-serif;
-    font-size: 13px;
+    font-size: 10px;
     color: #333333;
     border: 1px solid #e0e0e0;
     box-sizing: border-box;
@@ -482,7 +492,7 @@ function createPopup() {
     align-self: center;
     gap: 8px;
     background: #ffffff;
-    padding: 6px 12px;
+    padding: 4px 8px;
   `;
 
   selectionView.innerHTML = `
@@ -499,7 +509,7 @@ function createPopup() {
   const currenciesView = document.createElement("div");
   currenciesView.id = `${POPUP_ID}-currencies`;
   currenciesView.style.cssText = `
-    width: fit-content; display: flex; flex-direction: column;  gap: 4px; color: rgb(112, 112, 112); font-style: normal;
+    width: fit-content; display: flex; flex-direction: column;  gap: 4px; color: rgb(112, 112, 112); font-style: normal; padding: 0px 4px;
   `;
   popup.appendChild(currenciesView);
 
@@ -512,27 +522,20 @@ function createPopup() {
     #${POPUP_ID}-currencies {
       display: flex;
       flex-direction: column;
-      gap: 4px;
       align-self: center;
     }
     .currency-item {
-          display: flex;
+    display: flex;
     justify-content: center;
     align-items: center;
-    padding: 6px 0;
+    padding: 4px 0;
     gap: 4px;
-    margin-right:auto;
-    }
-    .currency-source {
-      font-weight: bold;
-      color: #333;
-      border-top: 1px solid #e0e0e0;
-      padding-top: 8px;
-      margin-top: 4px;
-    }
+    margin-right: auto;
+}
     .currency-highlight {
-      color: #2e7d32;
-      font-weight: bold;
+      color: rgb(0, 200, 22);
+    font-weight: bold;
+    border-top: solid #7070702e 1px;
     }
     .currency-error {
       color: #d32f2f;
@@ -628,6 +631,7 @@ function showCurrenciesView(popup, baseText) {
     sourceItem.className = `currency-item currency-source ${
       isSupported ? "currency-highlight" : ""
     }`;
+    sourceItem.style.paddingTop = "8px";
 
     // Create flag container
     const sourceFlagContainer = document.createElement("div");
