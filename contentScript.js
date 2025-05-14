@@ -277,6 +277,7 @@ function getFlagElement(currencyCode) {
 function detectCurrency(text) {
   text = text.trim();
 
+  // First try to find currency indicators
   // Check for symbol prefix
   for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOLS)) {
     if (text.startsWith(symbol)) {
@@ -325,11 +326,90 @@ function detectCurrency(text) {
     }
   }
 
-  // Default to USD if no currency detected
+  // Default to USD if no currency detected but has number
+  const numberValue = parseNumber(text);
+  if (!isNaN(numberValue) && numberValue > 0) {
+    return {
+      currency: "USD",
+      amount: text,
+      type: "unknown",
+    };
+  }
+
+  // Return invalid if no currency and no valid number
   return {
-    currency: "USD",
+    currency: "",
     amount: text,
-    type: "unknown",
+    type: "invalid",
+  };
+}
+function detectCurrency(text) {
+  text = text.trim();
+
+  // First try to find currency indicators
+  // Check for symbol prefix
+  for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOLS)) {
+    if (text.startsWith(symbol)) {
+      return {
+        currency: currency,
+        amount: text.replace(symbol, "").trim(),
+        type: "symbol",
+        symbol: symbol,
+      };
+    }
+  }
+
+  // Check for symbol suffix
+  for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOLS)) {
+    if (text.endsWith(symbol)) {
+      return {
+        currency: currency,
+        amount: text.replace(symbol, "").trim(),
+        type: "symbol",
+        symbol: symbol,
+      };
+    }
+  }
+
+  // Check for code prefix (case insensitive)
+  for (const code of Object.keys(currencyToCountry)) {
+    const regex = new RegExp(`^${code}\\s`, "i");
+    if (regex.test(text)) {
+      return {
+        currency: code.toUpperCase(),
+        amount: text.replace(regex, "").trim(),
+        type: "code",
+      };
+    }
+  }
+
+  // Check for code suffix (case insensitive)
+  for (const code of Object.keys(currencyToCountry)) {
+    const regex = new RegExp(`\\s${code}$`, "i");
+    if (regex.test(text)) {
+      return {
+        currency: code.toUpperCase(),
+        amount: text.replace(regex, "").trim(),
+        type: "code",
+      };
+    }
+  }
+
+  // Default to USD if no currency detected but has number
+  const numberValue = parseNumber(text);
+  if (!isNaN(numberValue) && numberValue > 0) {
+    return {
+      currency: "USD",
+      amount: text,
+      type: "unknown",
+    };
+  }
+
+  // Return invalid if no currency and no valid number
+  return {
+    currency: "",
+    amount: text,
+    type: "invalid",
   };
 }
 
@@ -758,8 +838,15 @@ function initialize() {
     }
   };
 
-  // Helper function to check if text is a currency value
   function isCurrencyValue(text) {
+    // First check if there's a valid number > 0
+    const numericPart = detectCurrency(text).amount;
+    const numberValue = parseNumber(numericPart);
+    if (isNaN(numberValue) || numberValue <= 0) {
+      return false;
+    }
+
+    // Then check for currency indicators
     const { currency, type } = detectCurrency(text);
     return (
       type !== "unknown" ||
