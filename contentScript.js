@@ -286,63 +286,76 @@ function getFlagElement(currencyCode) {
 }
 
 function detectCurrency(text) {
-  text = text.trim();
+  // First remove all whitespace from the text for cleaner processing
+  const cleanText = text.replace(/\s+/g, "").trim();
 
   // First try to find currency indicators
   // Check for symbol prefix
   for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOLS)) {
-    if (text.startsWith(symbol)) {
-      return {
-        currency: currency,
-        amount: text.replace(symbol, "").trim(),
-        type: "symbol",
-        symbol: symbol,
-      };
+    if (cleanText.startsWith(symbol)) {
+      const amountPart = cleanText.slice(symbol.length);
+      if (amountPart && !isNaN(parseNumber(amountPart))) {
+        return {
+          currency: currency,
+          amount: amountPart,
+          type: "symbol",
+          symbol: symbol,
+        };
+      }
     }
   }
 
   // Check for symbol suffix
   for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOLS)) {
-    if (text.endsWith(symbol)) {
-      return {
-        currency: currency,
-        amount: text.replace(symbol, "").trim(),
-        type: "symbol",
-        symbol: symbol,
-      };
+    if (cleanText.endsWith(symbol)) {
+      const amountPart = cleanText.slice(0, -symbol.length);
+      if (amountPart && !isNaN(parseNumber(amountPart))) {
+        return {
+          currency: currency,
+          amount: amountPart,
+          type: "symbol",
+          symbol: symbol,
+        };
+      }
     }
   }
 
   // Check for code prefix (case insensitive)
   for (const code of Object.keys(currencyToCountry)) {
-    const regex = new RegExp(`^${code}\\s`, "i");
-    if (regex.test(text)) {
-      return {
-        currency: code.toUpperCase(),
-        amount: text.replace(regex, "").trim(),
-        type: "code",
-      };
+    const regex = new RegExp(`^${code}`, "i");
+    if (regex.test(cleanText)) {
+      const amountPart = cleanText.slice(code.length);
+      if (amountPart && !isNaN(parseNumber(amountPart))) {
+        return {
+          currency: code.toUpperCase(),
+          amount: amountPart,
+          type: "code",
+        };
+      }
     }
   }
 
   // Check for code suffix (case insensitive)
   for (const code of Object.keys(currencyToCountry)) {
-    const regex = new RegExp(`\\s${code}$`, "i");
-    if (regex.test(text)) {
-      return {
-        currency: code.toUpperCase(),
-        amount: text.replace(regex, "").trim(),
-        type: "code",
-      };
+    const regex = new RegExp(`${code}$`, "i");
+    if (regex.test(cleanText)) {
+      const amountPart = cleanText.slice(0, -code.length);
+      if (amountPart && !isNaN(parseNumber(amountPart))) {
+        return {
+          currency: code.toUpperCase(),
+          amount: amountPart,
+          type: "code",
+        };
+      }
     }
   }
 
-  // Default to USD if no currency detected but has number
-  const numberValue = parseNumber(text);
+  // Default to USD if no currency detected but has valid number
+  const numberValue = parseNumber(cleanText);
   if (!isNaN(numberValue) && numberValue > 0) {
     return {
       currency: "USD",
-      amount: text,
+      amount: cleanText,
       type: "unknown",
     };
   }
@@ -350,76 +363,7 @@ function detectCurrency(text) {
   // Return invalid if no currency and no valid number
   return {
     currency: "",
-    amount: text,
-    type: "invalid",
-  };
-}
-function detectCurrency(text) {
-  text = text.trim();
-
-  // First try to find currency indicators
-  // Check for symbol prefix
-  for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOLS)) {
-    if (text.startsWith(symbol)) {
-      return {
-        currency: currency,
-        amount: text.replace(symbol, "").trim(),
-        type: "symbol",
-        symbol: symbol,
-      };
-    }
-  }
-
-  // Check for symbol suffix
-  for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOLS)) {
-    if (text.endsWith(symbol)) {
-      return {
-        currency: currency,
-        amount: text.replace(symbol, "").trim(),
-        type: "symbol",
-        symbol: symbol,
-      };
-    }
-  }
-
-  // Check for code prefix (case insensitive)
-  for (const code of Object.keys(currencyToCountry)) {
-    const regex = new RegExp(`^${code}\\s`, "i");
-    if (regex.test(text)) {
-      return {
-        currency: code.toUpperCase(),
-        amount: text.replace(regex, "").trim(),
-        type: "code",
-      };
-    }
-  }
-
-  // Check for code suffix (case insensitive)
-  for (const code of Object.keys(currencyToCountry)) {
-    const regex = new RegExp(`\\s${code}$`, "i");
-    if (regex.test(text)) {
-      return {
-        currency: code.toUpperCase(),
-        amount: text.replace(regex, "").trim(),
-        type: "code",
-      };
-    }
-  }
-
-  // Default to USD if no currency detected but has number
-  const numberValue = parseNumber(text);
-  if (!isNaN(numberValue) && numberValue > 0) {
-    return {
-      currency: "USD",
-      amount: text,
-      type: "unknown",
-    };
-  }
-
-  // Return invalid if no currency and no valid number
-  return {
-    currency: "",
-    amount: text,
+    amount: cleanText,
     type: "invalid",
   };
 }
@@ -624,7 +568,7 @@ function showCurrenciesView(popup, baseText) {
     if (!isSupported && type !== "unknown") {
       const errorItem = document.createElement("div");
       errorItem.className = "currency-error";
-      errorItem.textContent = `Currency "${sourceCurrency}" not supported`;
+      errorItem.textContent = `⨂${sourceCurrency} not supported`;
       currenciesContainer.appendChild(errorItem);
     }
 
