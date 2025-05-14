@@ -774,114 +774,150 @@ function updatePopupPosition(popup) {
 
 // ===== MAIN APPLICATION =====
 function initialize() {
-  const popup = createPopup();
-  let mouseDownOnPopup = false;
+  // Check the checkbox state before creating the popup
+  chrome.storage.local.get(["checkboxState"], (result) => {
+    // Explicitly check for true/false/undefined
+    const isEnabled = result.checkboxState === true;
 
-  // Track if mouse down happened on the popup
-  popup.addEventListener("mousedown", (e) => {
-    mouseDownOnPopup = true;
-  });
-
-  // Click handler
-  popup.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (currentMode === "selection" && lastSelectionValue) {
-      showCurrenciesView(popup, lastSelectionValue);
+    if (!isEnabled) {
+      return; // Exit if extension is disabled
     }
-  });
 
-  // Hide when clicking outside
-  document.addEventListener("click", (e) => {
-    if (!popup.contains(e.target) && !mouseDownOnPopup) {
-      popup.style.display = "none";
-      showSelectionView(popup, lastSelectionValue);
-    }
-    mouseDownOnPopup = false;
-  });
+    const popup = createPopup();
+    let mouseDownOnPopup = false;
 
-  // Scroll/resize handling
-  let debounceTimer;
-  const handleScrollResize = () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      if (popup.style.display === "flex") {
-        updatePopupPosition(popup);
+    // Track if mouse down happened on the popup
+    popup.addEventListener("mousedown", (e) => {
+      mouseDownOnPopup = true;
+    });
+
+    // Click handler
+    popup.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (currentMode === "selection" && lastSelectionValue) {
+        showCurrenciesView(popup, lastSelectionValue);
       }
-    }, 100);
-  };
+    });
 
-  window.addEventListener("resize", handleScrollResize);
-
-  // Selection change handler
-  const handleSelectionChange = () => {
-    setTimeout(() => {
-      const selection = window.getSelection();
-      const selectedText = selection.toString().trim();
-
-      if (!selection.isCollapsed && isCurrencyValue(selectedText)) {
-        try {
-          const range = selection.getRangeAt(0);
-          lastSelectionRect = range.getBoundingClientRect();
-
-          showSelectionView(popup, selectedText);
-          popup.style.display = "flex";
-          updatePopupPosition(popup);
-        } catch (error) {
-          console.error("Selection error:", error);
-        }
-      } else {
+    // Hide when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!popup.contains(e.target) && !mouseDownOnPopup) {
         popup.style.display = "none";
-        lastSelectionRect = null;
+        showSelectionView(popup, lastSelectionValue);
       }
-    }, 50);
-  };
+      mouseDownOnPopup = false;
+    });
 
-  // Mouseup handler
-  const handleMouseUp = (e) => {
-    if (!popup.contains(e.target)) {
-      setTimeout(() => {
-        const selection = window.getSelection();
-        const selectedText = selection.toString().trim();
-
-        if (!selection.isCollapsed && isCurrencyValue(selectedText)) {
-          try {
-            const range = selection.getRangeAt(0);
-            lastSelectionRect = range.getBoundingClientRect();
-
-            showSelectionView(popup, selectedText);
-            popup.style.display = "flex";
-            updatePopupPosition(popup);
-          } catch (error) {
-            console.error("Selection error:", error);
-          }
-        } else {
-          popup.style.display = "none";
-          lastSelectionRect = null;
+    // Scroll/resize handling
+    let debounceTimer;
+    const handleScrollResize = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (popup.style.display === "flex") {
+          updatePopupPosition(popup);
         }
-      }, 50);
+      }, 100);
+    };
+
+    window.addEventListener("resize", handleScrollResize);
+
+    // Selection change handler
+    const handleSelectionChange = () => {
+      chrome.storage.local.get(["checkboxState"], (result) => {
+        if (result.checkboxState !== true) {
+          popup.style.display = "none";
+          return;
+        }
+
+        setTimeout(() => {
+          const selection = window.getSelection();
+          const selectedText = selection.toString().trim();
+
+          if (!selection.isCollapsed && isCurrencyValue(selectedText)) {
+            try {
+              const range = selection.getRangeAt(0);
+              lastSelectionRect = range.getBoundingClientRect();
+
+              showSelectionView(popup, selectedText);
+              popup.style.display = "flex";
+              updatePopupPosition(popup);
+            } catch (error) {
+              console.error("Selection error:", error);
+            }
+          } else {
+            popup.style.display = "none";
+            lastSelectionRect = null;
+          }
+        }, 50);
+      });
+    };
+
+    // Mouseup handler
+    const handleMouseUp = (e) => {
+      chrome.storage.local.get(["checkboxState"], (result) => {
+        if (result.checkboxState !== true) {
+          popup.style.display = "none";
+          return;
+        }
+
+        if (!popup.contains(e.target)) {
+          setTimeout(() => {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+
+            if (!selection.isCollapsed && isCurrencyValue(selectedText)) {
+              try {
+                const range = selection.getRangeAt(0);
+                lastSelectionRect = range.getBoundingClientRect();
+
+                showSelectionView(popup, selectedText);
+                popup.style.display = "flex";
+                updatePopupPosition(popup);
+              } catch (error) {
+                console.error("Selection error:", error);
+              }
+            } else {
+              popup.style.display = "none";
+              lastSelectionRect = null;
+            }
+          }, 50);
+        }
+      });
+    };
+
+    function isCurrencyValue(text) {
+      // First check if there's a valid number > 0
+      const numericPart = detectCurrency(text).amount;
+      const numberValue = parseNumber(numericPart);
+      if (isNaN(numberValue) || numberValue <= 0) {
+        return false;
+      }
+
+      // Then check for currency indicators
+      const { currency, type } = detectCurrency(text);
+      return (
+        type !== "unknown" ||
+        Object.keys(CURRENCY_SYMBOLS).some((s) => text.includes(s)) ||
+        Object.keys(currencyToCountry).some((c) =>
+          new RegExp(c, "i").test(text)
+        )
+      );
     }
-  };
 
-  function isCurrencyValue(text) {
-    // First check if there's a valid number > 0
-    const numericPart = detectCurrency(text).amount;
-    const numberValue = parseNumber(numericPart);
-    if (isNaN(numberValue) || numberValue <= 0) {
-      return false;
-    }
+    // Add event listeners
+    document.addEventListener("selectionchange", handleSelectionChange);
+    document.addEventListener("mouseup", handleMouseUp);
 
-    // Then check for currency indicators
-    const { currency, type } = detectCurrency(text);
-    return (
-      type !== "unknown" ||
-      Object.keys(CURRENCY_SYMBOLS).some((s) => text.includes(s)) ||
-      Object.keys(currencyToCountry).some((c) => new RegExp(c, "i").test(text))
-    );
-  }
-
-  // Add event listeners
-  document.addEventListener("selectionchange", handleSelectionChange);
-  document.addEventListener("mouseup", handleMouseUp);
+    // Add storage change listener
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (changes.checkboxState) {
+        if (changes.checkboxState.newValue === false) {
+          // Extension was disabled - hide popup
+          popup.style.display = "none";
+        }
+      }
+    });
+  });
 }
 
 // Start the application
