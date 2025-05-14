@@ -887,6 +887,7 @@ function loadCheckboxState() {
 function saveCheckboxState() {
   checkbox.addEventListener("change", () => {
     localStorage.setItem(CHECKBOX_STATE_KEY, checkbox.checked); // Save boolean as string
+    chrome.storage.local.set({ [CHECKBOX_STATE_KEY]: checkbox.checked });
     console.log("Checkbox state saved to localStorage:", checkbox.checked);
   });
 }

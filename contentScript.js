@@ -718,35 +718,55 @@ function updatePopupPosition(popup) {
   const scrollY = window.scrollY || window.pageYOffset;
   const scrollX = window.scrollX || window.pageXOffset;
   const popupHeight = popup.offsetHeight;
+  const viewportHeight = window.innerHeight;
+  const pointer = popup.querySelector("div");
 
-  // Try to position above selection first
+  // First try to position above the selection (preferred position)
   let proposedTop =
     lastSelectionRect.top + scrollY - popupHeight - POPUP_DISTANCE;
-  const pointer = popup.querySelector("div");
 
   // Check if we have enough space above
   if (proposedTop >= scrollY) {
+    // Position above with triangle pointing down
     popup.style.top = `${proposedTop}px`;
-    pointer.style.top = "-8px";
-    pointer.style.bottom = "";
-    pointer.style.borderBottom = "8px solid #ffffff";
-    pointer.style.borderTop = "none";
-    pointer.style.filter = "drop-shadow(0 -1px 1px rgba(0,0,0,0.1))";
+    pointer.style.top = "100%";
+    pointer.style.transform = "translateX(-50%)";
+    pointer.style.borderLeft = "8px solid transparent";
+    pointer.style.borderRight = "8px solid transparent";
+    pointer.style.borderTop = "8px solid #ffffff";
+    pointer.style.borderBottom = "none";
+    pointer.style.filter = "drop-shadow(0 1px 1px rgba(0,0,0,0.1))";
   } else {
-    // Not enough space above, position below
-    popup.style.top = `${
-      lastSelectionRect.top +
-      scrollY +
-      lastSelectionRect.height +
-      POPUP_DISTANCE
-    }px`;
-    pointer.style.top = "-8px";
-    pointer.style.bottom = "";
-    pointer.style.borderBottom = "8px solid #ffffff";
-    pointer.style.borderTop = "none";
-    pointer.style.filter = "drop-shadow(0 -1px 1px rgba(0,0,0,0.1))";
+    // Not enough space above, check if we have space below
+    const bottomSpace =
+      viewportHeight - (lastSelectionRect.bottom + scrollY + POPUP_DISTANCE);
+
+    if (bottomSpace >= popupHeight) {
+      // Position below with triangle pointing up
+      popup.style.top = `${
+        lastSelectionRect.bottom + scrollY + POPUP_DISTANCE
+      }px`;
+      pointer.style.top = "-8px";
+      pointer.style.transform = "translateX(-50%)";
+      pointer.style.borderLeft = "8px solid transparent";
+      pointer.style.borderRight = "8px solid transparent";
+      pointer.style.borderBottom = "8px solid #ffffff";
+      pointer.style.borderTop = "none";
+      pointer.style.filter = "drop-shadow(0 -1px 1px rgba(0,0,0,0.1))";
+    } else {
+      // Not enough space either above or below, default to above with scroll
+      popup.style.top = `${scrollY}px`; // Align with top of viewport
+      pointer.style.top = `${lastSelectionRect.top - POPUP_DISTANCE}px`;
+      pointer.style.transform = "translateX(-50%)";
+      pointer.style.borderLeft = "8px solid transparent";
+      pointer.style.borderRight = "8px solid transparent";
+      pointer.style.borderBottom = "8px solid #ffffff";
+      pointer.style.borderTop = "none";
+      pointer.style.filter = "drop-shadow(0 -1px 1px rgba(0,0,0,0.1))";
+    }
   }
 
+  // Horizontal positioning (centered above/below selection)
   popup.style.left = `${
     lastSelectionRect.left + scrollX + lastSelectionRect.width / 2
   }px`;
