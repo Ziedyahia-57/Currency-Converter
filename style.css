@@ -580,7 +580,7 @@ body {
     text-align: center;
     margin: auto;
     width: -webkit-fill-available;
-    padding: 0 24px;
+    padding: 24px;
     position: absolute;
     height: -webkit-fill-available;
     background: var(--light-gray);
