@@ -12,6 +12,7 @@ const CURRENCY_SYMBOLS = {
   "₪": "ILS",
   "₺": "TRY",
   "₴": "UAH",
+  "﷼": "SAR",
 };
 
 // Inline currencyToCountry mapping (instead of import)
@@ -217,7 +218,13 @@ chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
 });
 
 // ===== UTILITY FUNCTIONS =====
-function formatNumber(num) {
+function formatNumber(num, currency) {
+  if (currency === "BTC") {
+    return num.toLocaleString("en-US", {
+      minimumFractionDigits: 8,
+      maximumFractionDigits: 8,
+    });
+  }
   return num.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -603,7 +610,7 @@ function showCurrenciesView(popup, baseText) {
 
     // Add amount
     const sourceValueSpan = document.createElement("span");
-    sourceValueSpan.textContent = formatNumber(numericAmount);
+    sourceValueSpan.textContent = formatNumber(numericAmount, sourceCurrency);
     sourceItem.appendChild(sourceValueSpan);
 
     currenciesContainer.appendChild(sourceItem);
@@ -640,7 +647,7 @@ function showCurrenciesView(popup, baseText) {
 
       // Add converted value
       const valueSpan = document.createElement("span");
-      valueSpan.textContent = formatNumber(convertedValue);
+      valueSpan.textContent = formatNumber(convertedValue, targetCurrency);
       item.appendChild(valueSpan);
 
       currenciesContainer.appendChild(item);
