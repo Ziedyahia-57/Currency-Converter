@@ -25,8 +25,6 @@ This browser extension allows you to convert any chosen currency to multiple oth
 * **📡 Offline Support:** Converts using the cached exchange rates when you're offline or disconnected.
 * **🪙 Pop-up Convert on Select:** Instantly convert selected text from any webpage with a simple click.
 * **✨ Smart Currency Detection:**  Automatically detects the currency format on a webpage (example: 100USD, 100 USD, 100$, 100 $, and all possible variants!)
- 
-***Want to add a feature? contact: ziedyahia20102012@gmail.com***
 
 # Installation
 1. Clone this repository: git clone https://github.com/Ziedyahia-57/Currency-Converter.git.
@@ -37,6 +35,8 @@ This browser extension allows you to convert any chosen currency to multiple oth
 
 # Contributions
 Contributions to this project are welcome. Feel free to open issues and submit pull requests.
+***Want to add a feature? contact: ziedyahia20102012@gmail.com***
+***Found a bug? Submit an issue***
 
 # Authors
 - Ziedyahia-57
