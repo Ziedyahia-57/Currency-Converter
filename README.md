@@ -1,4 +1,4 @@
-# Currency Converter (beta)
+# Currency Converter (Beta)
 A browser extension for currency conversion
 
 ![image](https://github.com/user-attachments/assets/5cd68b33-e1ed-4313-aeb5-18aa74328c7f)
