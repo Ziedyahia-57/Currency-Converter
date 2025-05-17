@@ -188,24 +188,23 @@ const currencyToCountry = {
   ZWL: "zw",
 };
 
-const DEFAULT_CURRENCIES = {
-  USD: 1.0,
-  EUR: 0.85,
-  GBP: 0.75,
-  JPY: 110.0,
-  AUD: 1.35,
-  CAD: 1.25,
-  CHF: 0.92,
-  CNY: 6.45,
-};
-
 // ===== STATE MANAGEMENT =====
 let currentMode = "selection";
 let lastSelectionValue = "";
-let savedCurrencies = DEFAULT_CURRENCIES;
+let savedCurrencies = {};
 let lastSelectionRect = null;
 
 // Initialize currencies from storage
+// chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
+//   if (result.currencyOrder && result.currencyData) {
+//     savedCurrencies = {};
+//     result.currencyOrder.forEach((currency) => {
+//       if (result.currencyData[currency]) {
+//         savedCurrencies[currency] = result.currencyData[currency];
+//       }
+//     });
+//   }
+// });
 chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
   if (result.currencyOrder && result.currencyData) {
     savedCurrencies = {};
@@ -689,6 +688,12 @@ function showCurrenciesView(popup, baseText) {
 
   // Get fresh currency data
   chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
+    if (!result.currencyData) {
+      currenciesContainer.innerHTML =
+        '<div class="currency-error">No currency data available</div>';
+      return;
+    }
+
     const orderedCurrencies = {};
     const rates = result.currencyData || DEFAULT_CURRENCIES;
 
@@ -915,8 +920,8 @@ function initialize() {
 
     // Selection change handler
     const handleSelectionChange = () => {
-      chrome.storage.local.get(["checkboxState"], (result) => {
-        if (result.checkboxState !== true) {
+      chrome.storage.local.get(["checkboxState", "currencyData"], (result) => {
+        if (result.checkboxState !== true || !result.currencyData) {
           popup.style.display = "none";
           return;
         }
@@ -946,8 +951,8 @@ function initialize() {
 
     // Mouseup handler
     const handleMouseUp = (e) => {
-      chrome.storage.local.get(["checkboxState"], (result) => {
-        if (result.checkboxState !== true) {
+      chrome.storage.local.get(["checkboxState", "currencyData"], (result) => {
+        if (result.checkboxState !== true || !result.currencyData) {
           popup.style.display = "none";
           return;
         }
