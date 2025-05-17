@@ -311,7 +311,7 @@ body {
     position: relative;
     background: var(--gray);
     box-shadow: 0 0 24px 0px var(--shadow);
-    z-index: 2;/*EXPERIMENTAL*/
+    z-index: 2;
 }
 
 .currency-converter-ex .last-update {

@@ -59,7 +59,6 @@ function removeOfflineMessage() {
 //⚪✅ fetch exchange rates function (start)
 // async function fetchExchangeRates() {
 //   try {
-//     //Data connection attempt
 //     const url =
 //       "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
 //       Date.now();
@@ -82,88 +81,77 @@ function removeOfflineMessage() {
 
 //     // Save the exchange rates to localStorage
 //     saveExchangeRates(data.rates);
-//     console.log("(1) ✅ Exchange rates fetched and saved.");
+//     removeOfflineMessage();
 //     return data.rates;
 //   } catch (error) {
-//     // Handle errors gracefully
-//     console.warn(
-//       "(1) ⚠️ Error fetching exchange rates:",
-//       error.message,
-//       "\nAttempting to load cached data"
-//     );
-//     // Attempt to load cached data if fetch fails
-//     const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
-//     console.log("cached data value:", cached);
-//     // Check if cached data is available and valid
-//     if (cached) {
-//       console.log("(1) ✅ Loaded exchange rates from cache.");
-//       return cached;
-//     } else {
-//       console.error(
-//         "(1) ❌ No cached data found. Check your internet connection to load conversion rates."
-//       );
-//       throw new Error(
-//         "Failed to fetch exchange rates and no cached data found."
-//       );
+//     console.warn("Fetch failed, trying cache:", error.message);
+
+//     // Try to load from cache
+//     try {
+//       const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
+//       if (cached) {
+//         console.log("Using cached rates");
+//         removeOfflineMessage();
+//         return cached;
+//       }
+//       throw new Error("No cached data available");
+//     } catch (cacheError) {
+//       console.error("Cache load failed:", cacheError.message);
+//       showOfflineMessage();
+
+//       // Provide minimal fallback rates to keep basic functionality
+//       const fallbackRates = {
+//         USD: 1,
+//         EUR: 0.85,
+//         GBP: 0.75,
+//         JPY: 110,
+//         // Add other essential currencies
+//       };
+
+//       return fallbackRates;
 //     }
 //   }
 // }
 
 async function fetchExchangeRates() {
   try {
-    // Data connection attempt
     const url =
       "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
       Date.now();
     const response = await fetch(url);
 
-    // Check if the response is ok (status code 200-299)
     if (!response || !response.ok) {
-      console.error("(1) ❌ Fetch failed with status:", response?.status);
       throw new Error(`API error! Status: ${response?.status}`);
     }
 
-    // Parse the acquired JSON response
     const data = await response.json();
-
-    // Check if the data contains the expected structure
     if (!data?.rates) {
-      console.error("(1) ❌ Fetched JSON missing 'rates'.");
       throw new Error("Invalid API structure.");
     }
 
-    // Save the exchange rates to localStorage
+    // Save and return the rates
     saveExchangeRates(data.rates);
-    console.log("(1) ✅ Exchange rates fetched and saved.");
-
-    // Remove offline message if it exists
-    removeOfflineMessage();
+    removeOfflineMessage(); // Remove offline message on successful fetch
     return data.rates;
   } catch (error) {
-    // Handle errors gracefully
-    console.warn(
-      "(1) ⚠️ Error fetching exchange rates:",
-      error.message,
-      "\nAttempting to load cached data"
-    );
+    console.warn("Fetch failed, trying cache:", error.message);
 
-    // Attempt to load cached data if fetch fails
-    const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
-    console.log("cached data value:", cached);
-
-    // Check if cached data is available and valid
-    if (cached) {
-      console.log("(1) ✅ Loaded exchange rates from cache.");
-      removeOfflineMessage();
-      return cached;
-    } else {
-      console.error(
-        "(1) ❌ No cached data found. Check your internet connection to load conversion rates."
-      );
-      showOfflineMessage();
-      throw new Error(
-        "Failed to fetch exchange rates and no cached data found."
-      );
+    // Try to load from cache
+    try {
+      const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
+      if (cached) {
+        console.log("Using cached rates");
+        removeOfflineMessage(); // Remove offline message if cache is valid
+        return cached;
+      }
+      throw new Error("No cached data available");
+    } catch (cacheError) {
+      console.error("Cache load failed:", cacheError.message);
+      // Only show offline message if we have no cached data
+      if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
+        showOfflineMessage();
+      }
+      throw new Error("Failed to fetch and no valid cache available");
     }
   }
 }
@@ -174,65 +162,84 @@ async function fetchExchangeRates() {
 
 //⚪initialize app function (start)
 //🟠 [initializeExchangeRates, loadCurrencyOrder, addCurrency, checkCurrencyCount, updateAddButtonVisibility, initializeDonationContent]
+// async function initializeApp() {
+//   try {
+//     console.log("Initializing app...");
+
+//     // Initialize UI elements first
+//     // initializePreferences(); //🟠Placeholder, do not recommend.
+//     // initializeBasicUI();
+
+//     // Try to load rates (will use fallback if both network and cache fail)
+//     exchangeRates = await fetchExchangeRates();
+
+//     // Initialize currency list
+//     try {
+//       const loadedSuccessfully = loadCurrencyOrder();
+//       if (!loadedSuccessfully) {
+//         addCurrency("USD", false);
+//         addCurrency("EUR", true);
+//       }
+//     } catch (currencyError) {
+//       console.error("Currency init failed:", currencyError);
+//       // Ensure at least basic currencies are available
+//       addCurrency("USD", false);
+//       addCurrency("EUR", true);
+//     }
+
+//     // Set up event listeners
+//     setupEventListeners();
+
+//     // Update UI
+//     updateLastUpdateElement(navigator.onLine);
+//     updateAddButtonVisibility();
+//     checkCurrencyCount();
+//   } catch (mainError) {
+//     console.error("App initialization failed:", mainError);
+//     // Ensure basic functionality still works
+//     initializeBasicUI();
+//     setupEventListeners();
+//     showOfflineMessage();
+//   }
+// }
+
 async function initializeApp() {
-  console.log("Initializing app...");
+  try {
+    console.log("Initializing app...");
 
-  // Get the actual online status
-  const isOnline = navigator.onLine;
+    // Try to load rates (will throw if both network and cache fail)
+    exchangeRates = await fetchExchangeRates();
 
-  // Update UI with correct online status and last updated time
-  updateLastUpdateElement(isOnline);
+    // Initialize currency list
+    try {
+      const loadedSuccessfully = loadCurrencyOrder();
+      if (!loadedSuccessfully) {
+        addCurrency("USD", false);
+        addCurrency("EUR", true);
+      }
+    } catch (currencyError) {
+      console.error("Currency init failed:", currencyError);
+      // If we have rates but no saved currencies, initialize defaults
+      if (exchangeRates) {
+        addCurrency("USD", false);
+        addCurrency("EUR", true);
+      }
+    }
 
-  // 1. FIRST load the date synchronously
-  const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+    // Set up event listeners
+    setupEventListeners();
 
-  // 2. THEN show UI with the date
-  updateLastUpdateElement(navigator.onLine, lastUpdated);
-
-  // Set up real-time listeners
-  window.addEventListener("online", () => {
-    updateLastUpdateElement(true);
-    // Try to fetch new data when coming online
-    fetchExchangeRates().then(() => {
-      updateCurrencyValues();
-      removeOfflineMessage();
-    });
-  });
-  window.addEventListener("offline", () => {
-    updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
+    // Update UI
+    updateLastUpdateElement(navigator.onLine);
+    updateAddButtonVisibility();
+    checkCurrencyCount();
+  } catch (mainError) {
+    console.error("App initialization failed:", mainError);
     // Only show offline message if we have no cached data
     if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
       showOfflineMessage();
     }
-  });
-
-  // Load cached exchange rates
-  const ratesLoaded = await fetchExchangeRates();
-  updateCurrencyValues();
-
-  if (!ratesLoaded) {
-    console.warn(" ⚠️Exchange rates not freshly loaded — using fallback data.");
   }
-
-  // Try to load saved currencies
-  const loadedSuccessfully = loadCurrencyOrder();
-
-  // Only load defaults if nothing was loaded from localStorage
-  if (!loadedSuccessfully) {
-    console.log("No saved currencies found, loading defaults");
-    addCurrency("USD", false); // Don't save after each addition
-    addCurrency("EUR", true); // Save after the last addition
-  }
-
-  // Set all input values to 0.00
-  document.querySelectorAll(".currency-input input").forEach((input) => {
-    input.value = "0.00";
-  });
-
-  // Check currency count and update button visibility
-  checkCurrencyCount();
-  updateAddButtonVisibility();
-  initializeDonationContent();
 }
 //⚪initialize app function (end)
 
@@ -516,7 +523,7 @@ function formatNumberWithCommas(value, inputElement) {
 
   // Format decimal part if exists
   if (decimalPart !== undefined) {
-    decimalPart = decimalPart.substring(0); //🟠Changed "substring(0,2)"
+    decimalPart = decimalPart.substring(0);
     cleanValue = `${integerPart}.${decimalPart}`;
   } else {
     cleanValue = integerPart;
@@ -835,7 +842,7 @@ function loadData() {
 //>>>>>>>>> Last update state function (start)
 // Function to update the .last-update element
 function updateLastUpdateElement(isOnline, lastUpdated) {
-  let dateText = `¯\_(ツ)_/¯`; // Default state
+  let dateText = `¯\\_(ツ)_/¯`; // Default state
   let timeText = "."; // Default state
 
   if (!lastUpdated) {
@@ -875,7 +882,7 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
     - ${
       isOnline
         ? "Exchange rates are updated automatically<br>every day. "
-        : "Using cached data. Exchange rates may be outdated.<br>"
+        : "Using cached data. Exchange rates<br>may be outdated. "
     }
     Last Updated: <span class="date">${dateText}</span> <span class="date">${timeText}</span>
   `;
@@ -961,11 +968,27 @@ const CHECKBOX_STATE_KEY = "checkboxState";
 
 //>>>>>>>>> Load checkbox state (start)
 // Load checkbox state from localStorage
+// function loadCheckboxState() {
+//   const savedState = localStorage.getItem(CHECKBOX_STATE_KEY);
+//   if (savedState !== null) {
+//     checkbox.checked = savedState === "true"; // Convert string to boolean
+//     console.log("Checkbox state loaded from localStorage:", checkbox.checked);
+//   }
+// }
+
 function loadCheckboxState() {
-  const savedState = localStorage.getItem(CHECKBOX_STATE_KEY);
-  if (savedState !== null) {
+  try {
+    const savedState = localStorage.getItem(CHECKBOX_STATE_KEY);
     checkbox.checked = savedState === "true"; // Convert string to boolean
-    console.log("Checkbox state loaded from localStorage:", checkbox.checked);
+    if (savedState === null) {
+      // Set default state if no preference is saved
+      checkbox.checked = false;
+      localStorage.setItem(CHECKBOX_STATE_KEY, "false");
+    }
+  } catch (error) {
+    console.error("Error loading checkbox state:", error);
+    // Fallback to unchecked if there's an error
+    checkbox.checked = false;
   }
 }
 //>>>>>>>>> Load checkbox state (end)
@@ -990,11 +1013,31 @@ const darkModeBtn = document.getElementById("dark-mode-btn");
 const root = document.documentElement;
 
 //>>>>>>>>> Load dark mode state (start)
+// function loadDarkMode() {
+//   const savedMode = localStorage.getItem("darkMode");
+//   if (savedMode === "dark") {
+//     root.classList.add("dark-mode");
+//     darkModeBtn.classList.add("active");
+//   }
+// }
+
 function loadDarkMode() {
-  const savedMode = localStorage.getItem("darkMode");
-  if (savedMode === "dark") {
-    root.classList.add("dark-mode");
-    darkModeBtn.classList.add("active");
+  try {
+    const savedMode = localStorage.getItem("darkMode");
+    if (savedMode === "dark") {
+      root.classList.add("dark-mode");
+      darkModeBtn.classList.add("active");
+    } else {
+      // Default to light mode if no preference is saved
+      root.classList.remove("dark-mode");
+      darkModeBtn.classList.remove("active");
+      localStorage.setItem("darkMode", "light");
+    }
+  } catch (error) {
+    console.error("Error loading dark mode:", error);
+    // Fallback to light mode if there's an error
+    root.classList.remove("dark-mode");
+    darkModeBtn.classList.remove("active");
   }
 }
 //>>>>>>>>> Load dark mode state (end)
@@ -1023,20 +1066,11 @@ window.addEventListener("online", async () => {
     if (exchangeRates) {
       saveExchangeRates(exchangeRates);
       updateLastUpdateElement(true);
+      updateCurrencyValues(); // Update displayed values with fresh rates
     }
   } catch (error) {
     console.error("Failed to fetch exchange rates:", error);
-
-    if (error.message === "inactive-account") {
-      console.log("API account is inactive. Loading saved exchange rates...");
-    } else {
-      console.log(
-        "Loading saved exchange rates due to an error",
-        error.message
-      );
-    }
-
-    loadData();
+    loadData(); // Try to load cached data
   }
 });
 //>>>>>>>>> Online event (end)
@@ -1045,6 +1079,10 @@ window.addEventListener("online", async () => {
 window.addEventListener("offline", () => {
   console.log("App is offline. Loading saved exchange rates...");
   loadData();
+  // Only show offline message if we have no cached data
+  if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
+    showOfflineMessage();
+  }
 });
 //>>>>>>>>> Offline event (end)
 
@@ -1262,13 +1300,6 @@ function initializeInputStyles() {
 //🟣++++++++++++++++++++++++++++ APPLICATION ++++++++++++++++++++++++++++
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 document.addEventListener("DOMContentLoaded", async () => {
-  await updateExchangeRates(); // Load exchange rates first
-  // Initial check
-  updateLastUpdateElement(
-    navigator.onLine,
-    localStorage.getItem(LAST_UPDATED_KEY)
-  );
-
   // Initial check with proper online status
   const isOnline = navigator.onLine;
   const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
@@ -1307,6 +1338,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   donationButton.addEventListener("click", handleDonationButtonClick);
 
   saveCheckboxState();
+  await updateExchangeRates(); // Load exchange rates first
+  // Initial check
+  updateLastUpdateElement(
+    navigator.onLine,
+    localStorage.getItem(LAST_UPDATED_KEY)
+  );
 });
 
 addCurrencyBtn.addEventListener("click", async () => {
