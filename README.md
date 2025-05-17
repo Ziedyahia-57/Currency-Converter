@@ -37,7 +37,7 @@ This browser extension allows you to convert any chosen currency to multiple oth
 Contributions to this project are welcome. Feel free to open issues and submit pull requests.
 <br/>
 <br/>***Want to add a feature? contact: ziedyahia20102012@gmail.com***
-<br/>***Found a bug? Submit an issue***
+<br/>***Found a bug? [Submit an issue](https://github.com/Ziedyahia-57/Currency-Converter/issues/new)***
 
 # Authors
 - Ziedyahia-57
