@@ -541,6 +541,136 @@ function showSelectionView(popup, value) {
   currentMode = "selection";
 }
 
+// function showCurrenciesView(popup, baseText) {
+//   const popupElement = document.getElementById(POPUP_ID);
+//   const currenciesContainer = document.getElementById(`${POPUP_ID}-currencies`);
+
+//   currenciesContainer.innerHTML =
+//     '<div style="padding:4px 0;text-align:center">Loading...</div>';
+
+//   // Detect source currency and amount
+//   const {
+//     currency: sourceCurrency,
+//     amount,
+//     type,
+//     symbol,
+//   } = detectCurrency(baseText);
+//   const numericAmount = parseNumber(amount);
+
+//   // Get fresh currency data
+//   chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
+//     const orderedCurrencies = {};
+//     const rates = result.currencyData || DEFAULT_CURRENCIES;
+
+//     // Create ordered list of currencies
+//     if (result.currencyOrder) {
+//       result.currencyOrder.forEach((curr) => {
+//         if (rates[curr]) orderedCurrencies[curr] = rates[curr];
+//       });
+//     } else {
+//       Object.assign(orderedCurrencies, rates);
+//     }
+
+//     currenciesContainer.innerHTML = "";
+
+//     // Check if source currency is supported
+//     const isSupported =
+//       Object.keys(orderedCurrencies).includes(sourceCurrency) ||
+//       (symbol && CURRENCY_SYMBOLS[symbol] === sourceCurrency);
+
+//     if (!isSupported && type !== "unknown") {
+//       const errorItem = document.createElement("div");
+//       errorItem.className = "currency-error";
+//       errorItem.textContent = `⨂${sourceCurrency} not supported`;
+//       currenciesContainer.appendChild(errorItem);
+//     }
+
+//     // Add source currency as first item
+//     const sourceItem = document.createElement("div");
+//     sourceItem.className = `currency-item currency-source ${
+//       isSupported ? "currency-highlight" : ""
+//     }`;
+//     sourceItem.style.paddingTop = "8px";
+
+//     // Create flag container
+//     const sourceFlagContainer = document.createElement("div");
+//     sourceFlagContainer.style.display = "flex";
+//     sourceFlagContainer.style.alignItems = "center";
+//     sourceFlagContainer.style.gap = "6px";
+
+//     // Add flag
+//     sourceFlagContainer.appendChild(getFlagElement(sourceCurrency));
+
+//     // Add currency code
+//     const sourceCodeSpan = document.createElement("span");
+//     sourceCodeSpan.textContent = `${sourceCurrency} → `;
+//     sourceFlagContainer.appendChild(sourceCodeSpan);
+
+//     sourceItem.appendChild(sourceFlagContainer);
+
+//     // Add amount
+//     const sourceValueSpan = document.createElement("span");
+//     sourceValueSpan.textContent = formatNumber(numericAmount, sourceCurrency);
+//     sourceItem.appendChild(sourceValueSpan);
+
+//     currenciesContainer.appendChild(sourceItem);
+
+//     // Create currency items in the specified order
+//     Object.keys(orderedCurrencies).forEach((targetCurrency) => {
+//       if (targetCurrency === sourceCurrency) return;
+
+//       const convertedValue = convertCurrency(
+//         numericAmount,
+//         sourceCurrency,
+//         targetCurrency,
+//         rates
+//       );
+
+//       const item = document.createElement("div");
+//       item.className = "currency-item";
+
+//       // Create flag container
+//       const flagContainer = document.createElement("div");
+//       flagContainer.style.display = "flex";
+//       flagContainer.style.alignItems = "center";
+//       flagContainer.style.gap = "6px";
+
+//       // Add flag
+//       flagContainer.appendChild(getFlagElement(targetCurrency));
+
+//       // Add currency code
+//       const codeSpan = document.createElement("span");
+//       codeSpan.textContent = `${targetCurrency} → `;
+//       flagContainer.appendChild(codeSpan);
+
+//       item.appendChild(flagContainer);
+
+//       // Add converted value
+//       const valueSpan = document.createElement("span");
+//       valueSpan.textContent = formatNumber(convertedValue, targetCurrency);
+//       item.appendChild(valueSpan);
+
+//       currenciesContainer.appendChild(item);
+//     });
+
+//     // Calculate expanded height
+//     const itemHeight = 24;
+//     const padding = 16;
+//     const itemCount =
+//       Object.keys(orderedCurrencies).length -
+//       (orderedCurrencies[sourceCurrency] ? 1 : 0);
+//     const newHeight = Math.min(itemCount * itemHeight + padding + 60, 300);
+
+//     popupElement.style.height = `${newHeight}px`;
+//     updatePopupPosition(popupElement);
+//   });
+
+//   document.getElementById(`${POPUP_ID}-selection`).style.display = "flex";
+//   currenciesContainer.style.display = "flex";
+//   currentMode = "currencies";
+//   popupElement.style.pointerEvents = "none";
+// }
+
 function showCurrenciesView(popup, baseText) {
   const popupElement = document.getElementById(POPUP_ID);
   const currenciesContainer = document.getElementById(`${POPUP_ID}-currencies`);
@@ -573,12 +703,13 @@ function showCurrenciesView(popup, baseText) {
 
     currenciesContainer.innerHTML = "";
 
-    // Check if source currency is supported
-    const isSupported =
-      Object.keys(orderedCurrencies).includes(sourceCurrency) ||
-      (symbol && CURRENCY_SYMBOLS[symbol] === sourceCurrency);
+    // Check if source currency is valid (either in rates or has a symbol)
+    const isValidCurrency =
+      sourceCurrency in rates ||
+      (symbol && CURRENCY_SYMBOLS[symbol] === sourceCurrency) ||
+      type === "unknown"; // USD is always valid
 
-    if (!isSupported && type !== "unknown") {
+    if (!isValidCurrency && type !== "unknown") {
       const errorItem = document.createElement("div");
       errorItem.className = "currency-error";
       errorItem.textContent = `⨂${sourceCurrency} not supported`;
@@ -588,7 +719,7 @@ function showCurrenciesView(popup, baseText) {
     // Add source currency as first item
     const sourceItem = document.createElement("div");
     sourceItem.className = `currency-item currency-source ${
-      isSupported ? "currency-highlight" : ""
+      isValidCurrency ? "currency-highlight" : ""
     }`;
     sourceItem.style.paddingTop = "8px";
 
