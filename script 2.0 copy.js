@@ -352,6 +352,26 @@ currencyContainer.addEventListener("drop", (event) => {
 //
 //⚪++++++++++++++++++++++++++++ INPUT FORMAT VALIDATION ++++++++++++++++++++++++++++
 // //>>>>>>>>> Input format: no commas on input (start)
+// document.querySelectorAll(".currency-input input").forEach((input) => {
+//   input.addEventListener("input", (event) => {
+//     let rawValue = event.target.value
+//       ? event.target.value.replace(/,/g, "")
+//       : ""; // Remove commas
+
+//     if (!/^\d*\.?\d*$/.test(rawValue)) {
+//       event.target.value = event.target.dataset.previousValue || 0;
+//       return;
+//     } // Regex to allow only digits and one decimal point
+
+//     event.target.dataset.previousValue = rawValue;
+//     event.target.value = formatNumberWithCommas(rawValue);
+//     updateCurrencyValues(
+//       parseFloat(rawValue) || 0,
+//       event.target.dataset.currency
+//     ); // Update currency values based on input
+//   });
+// });
+
 document.querySelectorAll(".currency-input input").forEach((input) => {
   input.addEventListener("input", (event) => {
     const input = event.target;
@@ -396,7 +416,7 @@ function formatNumberWithCommas(value, inputElement) {
     integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
     if (decimalPart !== undefined) {
-      decimalPart = decimalPart.substring(0); //🟠Changed "substring(0,2)"
+      decimalPart = decimalPart.substring(0, 2);
       return `${integerPart}.${decimalPart}`;
     }
     return integerPart;
@@ -420,7 +440,7 @@ function formatNumberWithCommas(value, inputElement) {
 
   // Format decimal part if exists
   if (decimalPart !== undefined) {
-    decimalPart = decimalPart.substring(0); //🟠Changed "substring(0,2)"
+    decimalPart = decimalPart.substring(0, 2);
     cleanValue = `${integerPart}.${decimalPart}`;
   } else {
     cleanValue = integerPart;
@@ -449,7 +469,13 @@ function formatNumberWithCommas(value, inputElement) {
 
   return cleanValue;
 }
+//>>>>>>>>> Input format: dots & commas (end)
 
+//
+//
+//
+//
+//⚪++++++++++++++++++++++++++++ NUMBERS TO WORDS ++++++++++++++++++++++++++++
 const numToTextElement = document.getElementById("num-to-text");
 
 //>>>>>>>>> Numbers to words (start)
@@ -792,28 +818,26 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
 //
 //⚪++++++++++++++++++++++++++++ CURRENCY CONVERSION FUNCTIONS ++++++++++++++++++++++++++++
 //>>>>>>>>> convert currency values function (start)
+//🔴TEST
 function updateCurrencyValues(baseValue = 0, baseCurrency = "USD") {
   if (!exchangeRates) {
     console.error("No exchange rates available for conversion.");
     return;
   }
 
-  // Don't round the base value here - keep full precision for calculations
-  const fullPrecisionBaseValue = parseFloat(baseValue);
+  // Round the base value to 2 decimal places
+  const roundedBaseValue = parseFloat(baseValue.toFixed(2));
 
   document.querySelectorAll(".currency-input input").forEach((input) => {
     const currency = input.dataset.currency;
     if (currency !== baseCurrency) {
-      // Calculate the converted value with full precision
+      // Calculate the converted value based on the base currency and exchange rates
       const convertedValue =
-        fullPrecisionBaseValue *
+        roundedBaseValue *
         (exchangeRates[currency] / exchangeRates[baseCurrency]);
 
-      // Special rounding for BTC (8 decimals) vs others (2 decimals)
-      const roundedValue =
-        currency === "BTC"
-          ? convertedValue.toFixed(8)
-          : convertedValue.toFixed(2);
+      // Round the converted value to 2 decimal places
+      const roundedValue = convertedValue.toFixed(2);
 
       // Update the input field with the rounded value
       input.value = formatNumberWithCommas(roundedValue || 0);
