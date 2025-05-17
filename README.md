@@ -32,7 +32,7 @@ This browser extension allows you to convert any chosen currency to multiple oth
 3. Enable "Developer mode" by toggling the switch at the top right corner.
 4. Click on "Load unpacked" and select the cloned repository folder.
 <br/>
-<br/> ***(will be available in chrome webstore & firefox add-ons soon!)***
+***(will be available in chrome webstore & firefox add-ons soon!)***
 
 # Contributions
 Contributions to this project are welcome. Feel free to open issues and submit pull requests.
