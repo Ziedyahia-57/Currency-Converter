@@ -16,7 +16,7 @@ This browser extension allows you to convert any chosen currency to multiple oth
 * **💱 Supports Major Currencies:** Including USD, EUR, GBP, JPY, AUD, CAD, and many more (149 Total).
 * **🏳️ Currency Flags:** Visual country flags next to each currency to aid quick recognition.
 * **⌨️ Keyboard Navigation:** Fully accessible with keyboard shortcuts and tab navigation.
-  * Fully navigable via keyboard (Tab, Arrow keys, Enter).
+  * Fully navigable via keyboard (Tab, Arrow keys, A-Z keys, Enter, Esc).
   * Jump quickly to currency names by pressing the first letter of the currency (e.g. pressing U jumps to UAH).
 
 * **🧲 Drag & Drop Organization:** Easily reorder your target currencies by dragging them into your preferred order.
