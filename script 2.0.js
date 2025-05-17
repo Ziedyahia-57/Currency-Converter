@@ -21,13 +21,97 @@ const LAST_UPDATED_KEY = "lastUpdated";
 let currencies = [];
 let exchangeRates = {};
 
+function showOfflineMessage() {
+  const currencyContainer = document.getElementById("currency-container");
+  if (
+    currencyContainer &&
+    !currencyContainer.querySelector(".first-launch-offline")
+  ) {
+    currencyContainer.innerHTML = `
+      <div class="first-launch-offline">
+        <p class="emoji">¯\\_(ツ)_/¯</p>
+        <p class="error-msg"></p>
+        <div class="msg-title">Oops! You appear to be offline!</div> 
+        <p>Connect to the internet to save currency rates to use offline.</p>
+      </div>
+    `;
+  }
+}
+
+function removeOfflineMessage() {
+  const currencyContainer = document.getElementById("currency-container");
+  const offlineMessage = currencyContainer?.querySelector(
+    ".first-launch-offline"
+  );
+  if (offlineMessage) {
+    offlineMessage.remove();
+
+    // Reinitialize the app if we're coming back online
+    if (navigator.onLine) {
+      initializeApp();
+    }
+  }
+}
+
 //🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //🔵++++++++++++++++++++++++++++ ASYNC FUNCTIONS ++++++++++++++++++++++++++++
 //🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //⚪✅ fetch exchange rates function (start)
+// async function fetchExchangeRates() {
+//   try {
+//     //Data connection attempt
+//     const url =
+//       "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
+//       Date.now();
+//     const response = await fetch(url);
+
+//     // Check if the response is ok (status code 200-299)
+//     if (!response || !response.ok) {
+//       console.error("(1) ❌ Fetch failed with status:", response?.status);
+//       throw new Error(`API error! Status: ${response?.status}`);
+//     }
+
+//     // Parse the acquired JSON response
+//     const data = await response.json();
+
+//     // Check if the data contains the expected structure
+//     if (!data?.rates) {
+//       console.error("(1) ❌ Fetched JSON missing 'rates'.");
+//       throw new Error("Invalid API structure.");
+//     }
+
+//     // Save the exchange rates to localStorage
+//     saveExchangeRates(data.rates);
+//     console.log("(1) ✅ Exchange rates fetched and saved.");
+//     return data.rates;
+//   } catch (error) {
+//     // Handle errors gracefully
+//     console.warn(
+//       "(1) ⚠️ Error fetching exchange rates:",
+//       error.message,
+//       "\nAttempting to load cached data"
+//     );
+//     // Attempt to load cached data if fetch fails
+//     const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
+//     console.log("cached data value:", cached);
+//     // Check if cached data is available and valid
+//     if (cached) {
+//       console.log("(1) ✅ Loaded exchange rates from cache.");
+//       return cached;
+//     } else {
+//       console.error(
+//         "(1) ❌ No cached data found. Check your internet connection to load conversion rates."
+//       );
+//       throw new Error(
+//         "Failed to fetch exchange rates and no cached data found."
+//       );
+//     }
+//   }
+// }
+
 async function fetchExchangeRates() {
   try {
-    //Data connection attempt
+    // Data connection attempt
     const url =
       "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
       Date.now();
@@ -51,6 +135,9 @@ async function fetchExchangeRates() {
     // Save the exchange rates to localStorage
     saveExchangeRates(data.rates);
     console.log("(1) ✅ Exchange rates fetched and saved.");
+
+    // Remove offline message if it exists
+    removeOfflineMessage();
     return data.rates;
   } catch (error) {
     // Handle errors gracefully
@@ -59,17 +146,21 @@ async function fetchExchangeRates() {
       error.message,
       "\nAttempting to load cached data"
     );
+
     // Attempt to load cached data if fetch fails
     const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
     console.log("cached data value:", cached);
+
     // Check if cached data is available and valid
     if (cached) {
       console.log("(1) ✅ Loaded exchange rates from cache.");
+      removeOfflineMessage();
       return cached;
     } else {
       console.error(
         "(1) ❌ No cached data found. Check your internet connection to load conversion rates."
       );
+      showOfflineMessage();
       throw new Error(
         "Failed to fetch exchange rates and no cached data found."
       );
@@ -104,11 +195,16 @@ async function initializeApp() {
     // Try to fetch new data when coming online
     fetchExchangeRates().then(() => {
       updateCurrencyValues();
+      removeOfflineMessage();
     });
   });
-  window.addEventListener("offline", () =>
-    updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY))
-  );
+  window.addEventListener("offline", () => {
+    updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
+    // Only show offline message if we have no cached data
+    if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
+      showOfflineMessage();
+    }
+  });
 
   // Load cached exchange rates
   const ratesLoaded = await fetchExchangeRates();
@@ -124,8 +220,8 @@ async function initializeApp() {
   // Only load defaults if nothing was loaded from localStorage
   if (!loadedSuccessfully) {
     console.log("No saved currencies found, loading defaults");
-    addCurrency("USD");
-    addCurrency("EUR");
+    addCurrency("USD", false); // Don't save after each addition
+    addCurrency("EUR", true); // Save after the last addition
   }
 
   // Set all input values to 0.00

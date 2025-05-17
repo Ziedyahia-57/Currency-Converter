@@ -311,9 +311,11 @@ body {
     position: relative;
     background: var(--gray);
     box-shadow: 0 0 24px 0px var(--shadow);
+    z-index: 2;/*EXPERIMENTAL*/
 }
 
 .currency-converter-ex .last-update {
+    min-height: 30px;
     height: fit-content;
     padding: 5px;
     color: #626262;
@@ -571,4 +573,30 @@ body {
         transform: translate(-50%, -50%) scale(20);
         opacity: 0;
     }
+}
+
+
+.first-launch-offline {
+    text-align: center;
+    margin: auto;
+    width: -webkit-fill-available;
+    padding: 0 24px;
+    position: absolute;
+    height: -webkit-fill-available;
+    background: var(--light-gray);
+    z-index: 1;
+}
+.first-launch-offline p {
+    width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.emoji {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--font-color2)
+}
+.msg-title {
+    color: var(--font-color2);
+    font-weight: 600;
 }
