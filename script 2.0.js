@@ -57,62 +57,6 @@ function removeOfflineMessage() {
 //🔵++++++++++++++++++++++++++++ ASYNC FUNCTIONS ++++++++++++++++++++++++++++
 //🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //⚪✅ fetch exchange rates function (start)
-// async function fetchExchangeRates() {
-//   try {
-//     const url =
-//       "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
-//       Date.now();
-//     const response = await fetch(url);
-
-//     // Check if the response is ok (status code 200-299)
-//     if (!response || !response.ok) {
-//       console.error("(1) ❌ Fetch failed with status:", response?.status);
-//       throw new Error(`API error! Status: ${response?.status}`);
-//     }
-
-//     // Parse the acquired JSON response
-//     const data = await response.json();
-
-//     // Check if the data contains the expected structure
-//     if (!data?.rates) {
-//       console.error("(1) ❌ Fetched JSON missing 'rates'.");
-//       throw new Error("Invalid API structure.");
-//     }
-
-//     // Save the exchange rates to localStorage
-//     saveExchangeRates(data.rates);
-//     removeOfflineMessage();
-//     return data.rates;
-//   } catch (error) {
-//     console.warn("Fetch failed, trying cache:", error.message);
-
-//     // Try to load from cache
-//     try {
-//       const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
-//       if (cached) {
-//         console.log("Using cached rates");
-//         removeOfflineMessage();
-//         return cached;
-//       }
-//       throw new Error("No cached data available");
-//     } catch (cacheError) {
-//       console.error("Cache load failed:", cacheError.message);
-//       showOfflineMessage();
-
-//       // Provide minimal fallback rates to keep basic functionality
-//       const fallbackRates = {
-//         USD: 1,
-//         EUR: 0.85,
-//         GBP: 0.75,
-//         JPY: 110,
-//         // Add other essential currencies
-//       };
-
-//       return fallbackRates;
-//     }
-//   }
-// }
-
 async function fetchExchangeRates() {
   try {
     const url =
@@ -162,47 +106,6 @@ async function fetchExchangeRates() {
 
 //⚪initialize app function (start)
 //🟠 [initializeExchangeRates, loadCurrencyOrder, addCurrency, checkCurrencyCount, updateAddButtonVisibility, initializeDonationContent]
-// async function initializeApp() {
-//   try {
-//     console.log("Initializing app...");
-
-//     // Initialize UI elements first
-//     // initializePreferences(); //🟠Placeholder, do not recommend.
-//     // initializeBasicUI();
-
-//     // Try to load rates (will use fallback if both network and cache fail)
-//     exchangeRates = await fetchExchangeRates();
-
-//     // Initialize currency list
-//     try {
-//       const loadedSuccessfully = loadCurrencyOrder();
-//       if (!loadedSuccessfully) {
-//         addCurrency("USD", false);
-//         addCurrency("EUR", true);
-//       }
-//     } catch (currencyError) {
-//       console.error("Currency init failed:", currencyError);
-//       // Ensure at least basic currencies are available
-//       addCurrency("USD", false);
-//       addCurrency("EUR", true);
-//     }
-
-//     // Set up event listeners
-//     setupEventListeners();
-
-//     // Update UI
-//     updateLastUpdateElement(navigator.onLine);
-//     updateAddButtonVisibility();
-//     checkCurrencyCount();
-//   } catch (mainError) {
-//     console.error("App initialization failed:", mainError);
-//     // Ensure basic functionality still works
-//     initializeBasicUI();
-//     setupEventListeners();
-//     showOfflineMessage();
-//   }
-// }
-
 async function initializeApp() {
   try {
     console.log("Initializing app...");
@@ -225,9 +128,6 @@ async function initializeApp() {
         addCurrency("EUR", true);
       }
     }
-
-    // Set up event listeners
-    setupEventListeners();
 
     // Update UI
     updateLastUpdateElement(navigator.onLine);
@@ -385,14 +285,14 @@ currencyContainer.addEventListener("dragover", (event) => {
   if (targetItem && targetItem !== draggedItem) {
     // Visual feedback for the target item
     targetItem.style.background = "var(--drag-background)";
-    targetItem.style.border = "1px solid var(--drag-border)";
+    // targetItem.style.border = "1px solid var(--drag-border)";
   }
 
   // Reset styles for all other items
   document.querySelectorAll(".currency-input").forEach((item) => {
     if (item !== targetItem && item !== draggedItem) {
       item.style.background = "var(--gray)";
-      item.style.border = "var(--border-dark) solid 1px";
+      // item.style.border = "var(--border-dark) solid 1px";
     }
   });
 });
@@ -404,12 +304,12 @@ currencyContainer.addEventListener("dragend", (event) => {
     // Reset styles for the dragged item
     draggedItem.style.background = "var(--gray)";
     draggedItem.style.opacity = "1";
-    draggedItem.style.border = "var(--border-dark) solid 1px";
+    // draggedItem.style.border = "var(--border-dark) solid 1px";
 
     // Reset styles for all currency inputs
     document.querySelectorAll(".currency-input").forEach((item) => {
       item.style.background = "var(--gray)";
-      item.style.border = "var(--border-dark) solid 1px";
+      // item.style.border = "var(--border-dark) solid 1px";
     });
 
     draggedItem = null; // Reset the dragged item
@@ -444,7 +344,7 @@ currencyContainer.addEventListener("drop", (event) => {
   // Reset styles for all items
   document.querySelectorAll(".currency-input").forEach((item) => {
     item.style.background = "var(--gray)";
-    item.style.border = "var(--border-dark) solid 1px";
+    // item.style.border = "var(--border-dark) solid 1px";
   });
 });
 //>>>>>>>>> Drop event (end)
@@ -488,7 +388,6 @@ document.querySelectorAll(".currency-input input").forEach((input) => {
 // //>>>>>>>>> Input format: no commas on input (end)
 
 // //>>>>>>>>> Input format: dots & commas (start)
-//🔴TEST
 function formatNumberWithCommas(value, inputElement) {
   // Return early if inputElement is not valid
   if (!inputElement || typeof inputElement.selectionStart !== "number") {
@@ -658,7 +557,6 @@ function updateAddButtonVisibility() {
 //>>>>>>>>> update add button visibility function (end)
 
 //>>>>>>>>> add currency function (start)
-//🔴TEST
 function addCurrency(currency, shouldSave = true) {
   if (currencies.includes(currency)) return;
 
@@ -879,12 +777,7 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
     <span class="${isOnline ? "green" : "red"}">● ${
     isOnline ? "Online" : "Offline"
   }</span>
-    - ${
-      isOnline
-        ? "Exchange rates are updated automatically<br>every day. "
-        : "Using cached data. Exchange rates<br>may be outdated. "
-    }
-    Last Updated: <span class="date">${dateText}</span> <span class="date">${timeText}</span>
+    - Last Updated: <span class="date">${dateText}</span> at <span class="date">${timeText}</span>
   `;
 }
 //>>>>>>>>> Last update state function (end)
@@ -967,15 +860,6 @@ const checkbox = document.getElementById("convert-on-select");
 const CHECKBOX_STATE_KEY = "checkboxState";
 
 //>>>>>>>>> Load checkbox state (start)
-// Load checkbox state from localStorage
-// function loadCheckboxState() {
-//   const savedState = localStorage.getItem(CHECKBOX_STATE_KEY);
-//   if (savedState !== null) {
-//     checkbox.checked = savedState === "true"; // Convert string to boolean
-//     console.log("Checkbox state loaded from localStorage:", checkbox.checked);
-//   }
-// }
-
 function loadCheckboxState() {
   try {
     const savedState = localStorage.getItem(CHECKBOX_STATE_KEY);
@@ -1013,14 +897,6 @@ const darkModeBtn = document.getElementById("dark-mode-btn");
 const root = document.documentElement;
 
 //>>>>>>>>> Load dark mode state (start)
-// function loadDarkMode() {
-//   const savedMode = localStorage.getItem("darkMode");
-//   if (savedMode === "dark") {
-//     root.classList.add("dark-mode");
-//     darkModeBtn.classList.add("active");
-//   }
-// }
-
 function loadDarkMode() {
   try {
     const savedMode = localStorage.getItem("darkMode");
