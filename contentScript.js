@@ -438,9 +438,7 @@ function createPopup() {
 
   selectionView.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:center;width:16px;height:16px">
-      <img class="icon" src="${chrome.runtime.getURL(
-        "icons/currency converter logo.png"
-      )}" 
+      <img class="icon" src="${chrome.runtime.getURL("icons/icon.png")}" 
            onerror="this.replaceWith('<div style=\\'width:16px;height:16px;background:var(--error);border-radius:2px\\'></div>')">
     </div>
     <span id="${POPUP_ID}-text" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px"></span>
