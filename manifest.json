@@ -9,11 +9,13 @@
     "service_worker": "background.js"
   },
   "icons": {
-    "148": "./icons/currency converter logo.ico"
+    "32": "./icons/icon(32).png",
+    "48": "./icons/icon(48).png",
+    "128": "./icons/icon(128).png"
   },
   "action": {
     "default_popup": "index.html",
-    "default_icon": "./icons/currency converter logo.png"
+    "default_icon": "./icons/icon.png"
   },
   "content_scripts": [
     {
