@@ -896,7 +896,7 @@ function saveCheckboxState() {
 const darkModeBtn = document.getElementById("dark-mode-btn");
 const root = document.documentElement;
 
-//>>>>>>>>> Load dark mode state (start)
+// //>>>>>>>>> Load dark mode state (start)
 function loadDarkMode() {
   try {
     const savedMode = localStorage.getItem("darkMode");
@@ -916,18 +916,20 @@ function loadDarkMode() {
     darkModeBtn.classList.remove("active");
   }
 }
-//>>>>>>>>> Load dark mode state (end)
+// //>>>>>>>>> Load dark mode state (end)
 
-//>>>>>>>>> save dark mode state (start)
+// //>>>>>>>>> save dark mode state (start)
 function saveDarkMode() {
   // Save user preference to localStorage
   if (root.classList.contains("dark-mode")) {
     localStorage.setItem("darkMode", "dark");
+    chrome.storage.local.set({ ["darkMode"]: "dark" });
   } else {
     localStorage.setItem("darkMode", "light");
+    chrome.storage.local.set({ ["darkMode"]: "light" });
   }
 }
-//>>>>>>>>> save dark mode state (end)
+// //>>>>>>>>> save dark mode state (end)
 
 //
 //
@@ -1175,6 +1177,53 @@ function initializeInputStyles() {
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //🟣++++++++++++++++++++++++++++ APPLICATION ++++++++++++++++++++++++++++
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// document.addEventListener("DOMContentLoaded", async () => {
+//   // Initial check with proper online status
+//   const isOnline = navigator.onLine;
+//   const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+
+//   updateLastUpdateElement(isOnline, lastUpdated);
+
+//   // Listen for network changes
+//   window.addEventListener("online", () => {
+//     updateLastUpdateElement(true, localStorage.getItem(LAST_UPDATED_KEY));
+//   });
+
+//   window.addEventListener("offline", () => {
+//     updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
+//   });
+
+//   // Load user preference from localStorage
+//   loadDarkMode();
+
+//   // Toggle dark mode
+//   darkModeBtn.addEventListener("click", () => {
+//     root.classList.toggle("dark-mode");
+//     darkModeBtn.classList.toggle("active");
+
+//     saveDarkMode(); // Save user preference to localStorage
+//   });
+
+//   loadCheckboxState();
+//   initializeApp(); // Initialize the app
+
+//   checkCurrencyCount();
+//   updateAddButtonVisibility();
+//   initializeInputStyles(); // Initialize input styles
+
+//   //Donation Tab functionality
+
+//   donationButton.addEventListener("click", handleDonationButtonClick);
+
+//   saveCheckboxState();
+//   await updateExchangeRates(); // Load exchange rates first
+//   // Initial check
+//   updateLastUpdateElement(
+//     navigator.onLine,
+//     localStorage.getItem(LAST_UPDATED_KEY)
+//   );
+// });
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Initial check with proper online status
   const isOnline = navigator.onLine;
@@ -1191,15 +1240,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
   });
 
-  // Load user preference from localStorage
+  // Load user preference from localStorage and chrome.storage
   loadDarkMode();
 
   // Toggle dark mode
   darkModeBtn.addEventListener("click", () => {
     root.classList.toggle("dark-mode");
     darkModeBtn.classList.toggle("active");
-
-    saveDarkMode(); // Save user preference to localStorage
+    saveDarkMode(); // Save user preference to both localStorage and chrome.storage
   });
 
   loadCheckboxState();
@@ -1209,8 +1257,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateAddButtonVisibility();
   initializeInputStyles(); // Initialize input styles
 
-  //Donation Tab functionality
-
+  // Donation Tab functionality
   donationButton.addEventListener("click", handleDonationButtonClick);
 
   saveCheckboxState();
