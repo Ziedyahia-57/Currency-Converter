@@ -195,16 +195,6 @@ let savedCurrencies = {};
 let lastSelectionRect = null;
 
 // Initialize currencies from storage
-// chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
-//   if (result.currencyOrder && result.currencyData) {
-//     savedCurrencies = {};
-//     result.currencyOrder.forEach((currency) => {
-//       if (result.currencyData[currency]) {
-//         savedCurrencies[currency] = result.currencyData[currency];
-//       }
-//     });
-//   }
-// });
 chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
   if (result.currencyOrder && result.currencyData) {
     savedCurrencies = {};
@@ -668,7 +658,6 @@ function updatePopupPosition(popup) {
     lastSelectionRect.left + scrollX + lastSelectionRect.width / 2
   }px`;
 }
-
 // ===== MAIN APPLICATION =====
 
 function initialize() {
@@ -694,6 +683,9 @@ function initialize() {
         });
       }
     });
+
+    let isActive = false;
+    let hideTimeout = null;
     let mouseDownOnPopup = false;
 
     // Track if mouse down happened on the popup
@@ -712,11 +704,16 @@ function initialize() {
     // Hide when clicking outside
     document.addEventListener("click", (e) => {
       if (!popup.contains(e.target) && !mouseDownOnPopup) {
-        popup.style.display = "none";
-        showSelectionView(popup, lastSelectionValue);
+        hidePopup();
       }
       mouseDownOnPopup = false;
     });
+
+    function hidePopup() {
+      popup.style.display = "none";
+      showSelectionView(popup, lastSelectionValue);
+      isActive = false;
+    }
 
     // Scroll/resize handling
     let debounceTimer;
@@ -726,73 +723,52 @@ function initialize() {
         if (popup.style.display === "flex") {
           updatePopupPosition(popup);
         }
-      }, 100);
+      }, 50);
     };
 
     window.addEventListener("resize", handleScrollResize);
 
-    // Selection change handler
-    const handleSelectionChange = () => {
+    // Consolidated selection handler
+    const handleSelection = () => {
       chrome.storage.local.get(["checkboxState", "currencyData"], (result) => {
         if (result.checkboxState !== true || !result.currencyData) {
-          popup.style.display = "none";
+          hidePopup();
           return;
         }
 
-        setTimeout(() => {
-          const selection = window.getSelection();
-          const selectedText = selection.toString().trim();
+        const selection = window.getSelection();
+        const selectedText = selection.toString().trim();
 
-          if (!selection.isCollapsed && isCurrencyValue(selectedText)) {
-            try {
-              const range = selection.getRangeAt(0);
-              lastSelectionRect = range.getBoundingClientRect();
+        if (!selection.isCollapsed && isCurrencyValue(selectedText)) {
+          try {
+            const range = selection.getRangeAt(0);
+            lastSelectionRect = range.getBoundingClientRect();
 
-              showSelectionView(popup, selectedText);
-              popup.style.display = "flex";
-              updatePopupPosition(popup);
-            } catch (error) {
-              console.error("Selection error:", error);
+            // Clear any pending hide operations
+            if (hideTimeout) {
+              clearTimeout(hideTimeout);
+              hideTimeout = null;
             }
-          } else {
-            popup.style.display = "none";
-            lastSelectionRect = null;
+
+            showSelectionView(popup, selectedText);
+            popup.style.display = "flex";
+            updatePopupPosition(popup);
+            isActive = true;
+          } catch (error) {
+            console.error("Selection error:", error);
           }
-        }, 50);
+        } else if (isActive) {
+          // Only hide if we were previously active
+          hideTimeout = setTimeout(hidePopup, 100);
+        }
       });
     };
 
-    // Mouseup handler
+    // Mouseup handler - use the same logic as selection change
     const handleMouseUp = (e) => {
-      chrome.storage.local.get(["checkboxState", "currencyData"], (result) => {
-        if (result.checkboxState !== true || !result.currencyData) {
-          popup.style.display = "none";
-          return;
-        }
-
-        if (!popup.contains(e.target)) {
-          setTimeout(() => {
-            const selection = window.getSelection();
-            const selectedText = selection.toString().trim();
-
-            if (!selection.isCollapsed && isCurrencyValue(selectedText)) {
-              try {
-                const range = selection.getRangeAt(0);
-                lastSelectionRect = range.getBoundingClientRect();
-
-                showSelectionView(popup, selectedText);
-                popup.style.display = "flex";
-                updatePopupPosition(popup);
-              } catch (error) {
-                console.error("Selection error:", error);
-              }
-            } else {
-              popup.style.display = "none";
-              lastSelectionRect = null;
-            }
-          }, 50);
-        }
-      });
+      if (!popup.contains(e.target)) {
+        handleSelection();
+      }
     };
 
     // Add event listeners
@@ -858,15 +834,15 @@ function initialize() {
       );
     }
 
-    document.addEventListener("selectionchange", handleSelectionChange);
+    // Add event listeners
+    document.addEventListener("selectionchange", handleSelection);
     document.addEventListener("mouseup", handleMouseUp);
 
     // Add storage change listener
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (changes.checkboxState) {
         if (changes.checkboxState.newValue === false) {
-          // Extension was disabled - hide popup
-          popup.style.display = "none";
+          hidePopup();
         }
       }
     });
