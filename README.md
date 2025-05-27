@@ -4,6 +4,10 @@ A browser extension for currency conversion
 ![image](https://github.com/user-attachments/assets/5f146817-9165-4505-8a92-03fcfa80617b)
 ![image](https://github.com/user-attachments/assets/b0419152-fdb2-4848-bf36-6d086b64a862)
 
+![image dark 2 (1)](https://github.com/user-attachments/assets/894275f9-743b-4293-99e2-55940a46e23a)
+![image 2 (1)](https://github.com/user-attachments/assets/0cd01fd0-fa72-48e0-a192-5a56634b61bb)
+
+
 ![image dark 2](https://github.com/user-attachments/assets/cb991748-c3ed-40b4-af1d-5944d2de2f60)
 ![image 2](https://github.com/user-attachments/assets/bdfe45bb-e84d-4449-8ba9-9332bcc570f2)
 
