@@ -1,41 +1,6 @@
 // ===== CONFIGURATION =====
 const POPUP_ID = "currency-converter-popup";
 const POPUP_DISTANCE = 20;
-// const CURRENCY_SYMBOLS = {
-//   $: "USD",
-//   "€": "EUR",
-//   "£": "GBP",
-//   "¥": "JPY", // Also used for CNY (Chinese Yuan)
-//   "₹": "INR",
-//   "₽": "RUB",
-//   "₩": "KRW",
-//   "₪": "ILS",
-//   "₺": "TRY",
-//   "₴": "UAH",
-//   "﷼": "SAR",
-//   "ر.س": "SAR",
-//   "ر.ع": "OMR",
-//   "ر.ق": "QAR",
-//   "฿": "THB",
-//   "₫": "VND",
-//   "֏": "AMD",
-//   "₡": "CRC",
-//   "₦": "NGN",
-//   "₱": "PHP",
-//   "৳": "BDT",
-//   "₲": "PYG",
-//   "₮": "MNT",
-//   "₸": "KZT",
-//   "₾": "GEL",
-//   "៛": "KHR",
-//   "₵": "GHS",
-//   "₭": "LAK",
-//   "؋": "AFN",
-//   "₼": "AZN",
-//   ƒ: "ANG",
-//   "₨": "PKR", // Generic rupee symbol (used by PKR, NPR, MUR, SCR, etc.)
-//   "₿": "BTC",
-// };
 
 const CURRENCY_SYMBOLS = {
   // Single-currency symbols
@@ -56,9 +21,17 @@ const CURRENCY_SYMBOLS = {
     "BZD",
     "BBD",
     "XCD",
+    "SBD", // Solomon Islands
+    "LRD", // Liberia
+    "SRD", // Suriname
+    "GYD", // Guyana
+    "KYD", // Cayman Islands
+    "FJD", // Fiji
+    "JMD", // Jamaica
+    "NAD", // Namibia
   ],
   "€": ["EUR"],
-  "£": ["GBP", "EGP", "LBP", "SYP", "FKP", "GIP"],
+  "£": ["GBP", "EGP", "LBP", "SYP", "FKP", "GIP", "SDG", "SSP"],
   "₹": ["INR"],
   "₽": ["RUB"],
   "₩": ["KRW"],
@@ -88,9 +61,10 @@ const CURRENCY_SYMBOLS = {
   ƒ: ["ANG", "AWG"],
   "₨": ["PKR", "NPR", "LKR", "MUR", "SCR"], // Could also include NPR, MUR, etc.
   "₿": ["BTC"],
+  "Fr.": ["CHF", "XOF", "XAF", "CDF", "RWF", "BIF", "DJF", "GNF", "KMF", "MGA"],
+  "₣": ["CHF", "XOF", "XAF", "CDF", "RWF", "BIF", "DJF", "GNF", "KMF", "MGA"],
 
   // Multi-currency symbols (now arrays)
-  $: ["USD", "CAD", "AUD", "NZD", "SGD", "HKD", "MXN", "BRL", "CLP", "COP"],
   "¥": ["JPY", "CNY"],
   // Add other multi-currency symbols as needed
 };
