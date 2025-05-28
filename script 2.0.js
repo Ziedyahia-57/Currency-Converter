@@ -179,7 +179,8 @@ document.addEventListener("keydown", (event) => {
     const currencyItems = Array.from(currencyList.children);
 
     if (/^[A-Z]$/.test(pressedKey)) {
-      if (currentLetter !== pressedKey) {
+      // Reset selection if it's a different letter or same letter pressed again
+      if (currentLetter !== pressedKey || matchingCurrencies.length === 0) {
         currentLetter = pressedKey;
         currentIndex = 0;
         matchingCurrencies = currencyItems.filter((option) =>
@@ -849,6 +850,11 @@ function openCurrencyTab() {
 function closeCurrencyTab() {
   currencyTab.classList.remove("show");
   currencyTab.classList.add("hidden");
+  // Reset selection state
+  currentLetter = "";
+  currentIndex = 0;
+  matchingCurrencies = [];
+  highlightedCurrency = null;
 }
 //>>>>>>>>> close currency tab (end)
 
