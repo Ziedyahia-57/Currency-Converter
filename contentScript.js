@@ -5,7 +5,7 @@ const CURRENCY_SYMBOLS = {
   $: "USD",
   "€": "EUR",
   "£": "GBP",
-  "¥": "JPY",
+  "¥": "JPY", // Also used for CNY (Chinese Yuan)
   "₹": "INR",
   "₽": "RUB",
   "₩": "KRW",
@@ -13,6 +13,28 @@ const CURRENCY_SYMBOLS = {
   "₺": "TRY",
   "₴": "UAH",
   "﷼": "SAR",
+  "ر.س": "SAR",
+  "ر.ع": "OMR",
+  "ر.ق": "QAR",
+  "฿": "THB",
+  "₫": "VND",
+  "֏": "AMD",
+  "₡": "CRC",
+  "₦": "NGN",
+  "₱": "PHP",
+  "৳": "BDT",
+  "₲": "PYG",
+  "₮": "MNT",
+  "₸": "KZT",
+  "₾": "GEL",
+  "៛": "KHR",
+  "₵": "GHS",
+  "₭": "LAK",
+  "؋": "AFN",
+  "₼": "AZN",
+  ƒ: "ANG",
+  "₨": "PKR", // Generic rupee symbol (used by PKR, NPR, MUR, SCR, etc.)
+  "₿": "BTC",
 };
 
 // Inline currencyToCountry mapping (instead of import)
