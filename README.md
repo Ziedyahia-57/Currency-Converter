@@ -4,8 +4,8 @@ A browser extension for currency conversion
 ![image](https://github.com/user-attachments/assets/5f146817-9165-4505-8a92-03fcfa80617b)
 ![image](https://github.com/user-attachments/assets/b0419152-fdb2-4848-bf36-6d086b64a862)
 
-![dark](https://github.com/user-attachments/assets/8522c52e-f79e-47c7-ac7a-2886c0af95a7)
-![light](https://github.com/user-attachments/assets/971785c8-7219-4df5-b5c9-2edb48a5651c)
+![image](https://github.com/user-attachments/assets/e52d25fe-cfe0-42d0-921d-a15a68f656bf)
+![image (1)](https://github.com/user-attachments/assets/6760f9d4-68e4-4018-9205-e9963788b3e3)
 
 # Description
 This browser extension allows you to convert any chosen currency to multiple other currencies simultaneously, saving you time when you need exchange rates for several currencies at once.
@@ -24,6 +24,7 @@ This browser extension allows you to convert any chosen currency to multiple oth
 * **📡 Offline Support:** Converts using the cached exchange rates when you're offline or disconnected.
 * **🪙 Convert on Select:** Instantly convert selected text from any webpage with a simple click.
 * **✨ Smart Currency Detection:**  Automatically detects the currency format on a webpage (example: 100USD, 100 USD, 100$, 100 $, and many other variants!)
+* **🔁 Shared Symbol Handling:** Select the correct currency when multiple currencies use the same symbol — like choosing between USD, CAD, or AUD for $100.
 
 # Installation
 1. Clone this repository: git clone https://github.com/Ziedyahia-57/Currency-Converter.git.
@@ -39,8 +40,12 @@ Contributions to this project are welcome. Feel free to open issues and submit p
 <br/>***Found a bug? [Submit an issue](https://github.com/Ziedyahia-57/Currency-Converter/issues/new)***
 
 # Authors
-- Ziedyahia-57
-[Github](https://github.com/Ziedyahia-57) [LinkedIn](https://www.linkedin.com/in/zied-yahia/)
+- Ziedyahia-57 [![GitHub](https://img.shields.io/badge/-GitHub-black?style=flat&logo=github)](https://github.com/Ziedyahia-57) [![LinkedIn](https://img.shields.io/badge/-LinkedIn-blue?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/zied-yahia/)
+
+
+# License
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+
 
 # Credits
 Special thanks to the creator of [flag-icons (MIT)](https://github.com/lipis/flag-icons), [lipis](https://github.com/lipis)!
