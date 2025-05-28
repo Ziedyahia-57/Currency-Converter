@@ -43,6 +43,10 @@ Contributions to this project are welcome. Feel free to open issues and submit p
 - Ziedyahia-57
 [Github](https://github.com/Ziedyahia-57) [LinkedIn](https://www.linkedin.com/in/zied-yahia/)
 
+# License
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+
+
 # Credits
 Special thanks to the creator of [flag-icons (MIT)](https://github.com/lipis/flag-icons), [lipis](https://github.com/lipis)!
 Thank you ❤️
