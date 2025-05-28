@@ -1,40 +1,98 @@
 // ===== CONFIGURATION =====
 const POPUP_ID = "currency-converter-popup";
 const POPUP_DISTANCE = 20;
+// const CURRENCY_SYMBOLS = {
+//   $: "USD",
+//   "€": "EUR",
+//   "£": "GBP",
+//   "¥": "JPY", // Also used for CNY (Chinese Yuan)
+//   "₹": "INR",
+//   "₽": "RUB",
+//   "₩": "KRW",
+//   "₪": "ILS",
+//   "₺": "TRY",
+//   "₴": "UAH",
+//   "﷼": "SAR",
+//   "ر.س": "SAR",
+//   "ر.ع": "OMR",
+//   "ر.ق": "QAR",
+//   "฿": "THB",
+//   "₫": "VND",
+//   "֏": "AMD",
+//   "₡": "CRC",
+//   "₦": "NGN",
+//   "₱": "PHP",
+//   "৳": "BDT",
+//   "₲": "PYG",
+//   "₮": "MNT",
+//   "₸": "KZT",
+//   "₾": "GEL",
+//   "៛": "KHR",
+//   "₵": "GHS",
+//   "₭": "LAK",
+//   "؋": "AFN",
+//   "₼": "AZN",
+//   ƒ: "ANG",
+//   "₨": "PKR", // Generic rupee symbol (used by PKR, NPR, MUR, SCR, etc.)
+//   "₿": "BTC",
+// };
+
 const CURRENCY_SYMBOLS = {
-  $: "USD",
-  "€": "EUR",
-  "£": "GBP",
-  "¥": "JPY", // Also used for CNY (Chinese Yuan)
-  "₹": "INR",
-  "₽": "RUB",
-  "₩": "KRW",
-  "₪": "ILS",
-  "₺": "TRY",
-  "₴": "UAH",
-  "﷼": "SAR",
-  "ر.س": "SAR",
-  "ر.ع": "OMR",
-  "ر.ق": "QAR",
-  "฿": "THB",
-  "₫": "VND",
-  "֏": "AMD",
-  "₡": "CRC",
-  "₦": "NGN",
-  "₱": "PHP",
-  "৳": "BDT",
-  "₲": "PYG",
-  "₮": "MNT",
-  "₸": "KZT",
-  "₾": "GEL",
-  "៛": "KHR",
-  "₵": "GHS",
-  "₭": "LAK",
-  "؋": "AFN",
-  "₼": "AZN",
-  ƒ: "ANG",
-  "₨": "PKR", // Generic rupee symbol (used by PKR, NPR, MUR, SCR, etc.)
-  "₿": "BTC",
+  // Single-currency symbols
+  $: [
+    "USD",
+    "CAD",
+    "AUD",
+    "NZD",
+    "SGD",
+    "HKD",
+    "MXN",
+    "BRL",
+    "CLP",
+    "COP",
+    "ZWL",
+    "TTD",
+    "BSD",
+    "BZD",
+    "BBD",
+    "XCD",
+  ],
+  "€": ["EUR"],
+  "£": ["GBP", "EGP", "LBP", "SYP", "FKP", "GIP"],
+  "₹": ["INR"],
+  "₽": ["RUB"],
+  "₩": ["KRW"],
+  "₪": ["ILS"],
+  "₺": ["TRY"],
+  "₴": ["UAH"],
+  "﷼": ["SAR", "IRR", "YER", "OMR", "QAR"],
+  "ر.س": ["SAR"],
+  "ر.ع": ["OMR"],
+  "ر.ق": ["QAR"],
+  "฿": ["THB"],
+  "₫": ["VND"],
+  "֏": ["AMD"],
+  "₡": ["CRC"],
+  "₦": ["NGN"],
+  "₱": ["PHP"],
+  "৳": ["BDT"],
+  "₲": ["PYG"],
+  "₮": ["MNT"],
+  "₸": ["KZT"],
+  "₾": ["GEL"],
+  "៛": ["KHR"],
+  "₵": ["GHS"],
+  "₭": ["LAK"],
+  "؋": ["AFN"],
+  "₼": ["AZN"],
+  ƒ: ["ANG", "AWG"],
+  "₨": ["PKR", "NPR", "LKR", "MUR", "SCR"], // Could also include NPR, MUR, etc.
+  "₿": ["BTC"],
+
+  // Multi-currency symbols (now arrays)
+  $: ["USD", "CAD", "AUD", "NZD", "SGD", "HKD", "MXN", "BRL", "CLP", "COP"],
+  "¥": ["JPY", "CNY"],
+  // Add other multi-currency symbols as needed
 };
 
 // Inline currencyToCountry mapping (instead of import)
@@ -315,12 +373,13 @@ function detectCurrency(text) {
 
   // First try to find currency indicators
   // Check for symbol prefix
-  for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOLS)) {
+  for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
     if (cleanText.startsWith(symbol)) {
       const amountPart = cleanText.slice(symbol.length);
       if (amountPart && !isNaN(parseNumber(amountPart))) {
         return {
-          currency: currency,
+          currency: currencies[0], // Default to first currency in array
+          possibleCurrencies: currencies, // All possible currencies for this symbol
           amount: amountPart,
           type: "symbol",
           symbol: symbol,
@@ -330,12 +389,13 @@ function detectCurrency(text) {
   }
 
   // Check for symbol suffix
-  for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOLS)) {
+  for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
     if (cleanText.endsWith(symbol)) {
       const amountPart = cleanText.slice(0, -symbol.length);
       if (amountPart && !isNaN(parseNumber(amountPart))) {
         return {
-          currency: currency,
+          currency: currencies[0], // Default to first currency
+          possibleCurrencies: currencies, // All possibilities
           amount: amountPart,
           type: "symbol",
           symbol: symbol,
@@ -480,6 +540,7 @@ function showSelectionView(popup, value) {
   currentMode = "selection";
 }
 
+// ===== MODIFIED CODE =====
 function showCurrenciesView(popup, baseText) {
   const popupElement = document.getElementById(POPUP_ID);
   const currenciesContainer = document.getElementById(`${POPUP_ID}-currencies`);
@@ -487,12 +548,13 @@ function showCurrenciesView(popup, baseText) {
   currenciesContainer.innerHTML =
     '<div style="padding:4px 0;text-align:center">Loading...</div>';
 
-  // Detect source currency and amount
+  // Detect currency including possible alternatives
   const {
     currency: sourceCurrency,
     amount,
     type,
     symbol,
+    possibleCurrencies = [sourceCurrency],
   } = detectCurrency(baseText);
   const numericAmount = parseNumber(amount);
 
@@ -504,120 +566,185 @@ function showCurrenciesView(popup, baseText) {
       return;
     }
 
-    const orderedCurrencies = {};
     const rates = result.currencyData || DEFAULT_CURRENCIES;
+    let orderedCurrencies = {};
 
-    // Create ordered list of currencies
+    // Create ordered list of currencies from settings
     if (result.currencyOrder) {
       result.currencyOrder.forEach((curr) => {
         if (rates[curr]) orderedCurrencies[curr] = rates[curr];
       });
     } else {
-      Object.assign(orderedCurrencies, rates);
+      orderedCurrencies = { ...rates };
     }
 
-    currenciesContainer.innerHTML = "";
+    // Store the original ordered currencies for reference
+    const originalOrderedCurrencies = { ...orderedCurrencies };
 
-    // Check if source currency is valid (either in rates or has a symbol)
-    const isValidCurrency =
-      sourceCurrency in rates ||
-      (symbol && CURRENCY_SYMBOLS[symbol] === sourceCurrency) ||
-      type === "unknown"; // USD is always valid
+    // Current base currency state
+    let currentBaseCurrency = sourceCurrency;
+    let currentSymbolIndex = 0;
 
-    if (!isValidCurrency && type !== "unknown") {
-      const errorItem = document.createElement("div");
-      errorItem.className = "currency-error";
-      errorItem.textContent = `⨂${sourceCurrency} not supported`;
-      currenciesContainer.appendChild(errorItem);
-    }
+    function renderConversions(baseCurrency, amount) {
+      currenciesContainer.innerHTML = "";
 
-    // Add source currency as first item
-    const sourceItem = document.createElement("div");
-    sourceItem.className = `currency-item currency-source ${
-      isValidCurrency ? "currency-highlight" : ""
-    }`;
-    sourceItem.style.paddingTop = "8px";
-
-    // Create flag container
-    const sourceFlagContainer = document.createElement("div");
-    sourceFlagContainer.style.display = "flex";
-    sourceFlagContainer.style.alignItems = "center";
-    sourceFlagContainer.style.gap = "2px";
-    sourceFlagContainer.style.width = "68px";
-
-    // Add flag
-    sourceFlagContainer.appendChild(getFlagElement(sourceCurrency));
-
-    // Add currency code
-    const sourceCodeSpan = document.createElement("span");
-    sourceCodeSpan.textContent = `${sourceCurrency}    `;
-    sourceFlagContainer.appendChild(sourceCodeSpan);
-
-    sourceItem.appendChild(sourceFlagContainer);
-
-    // Add amount
-    const sourceValueSpan = document.createElement("span");
-    sourceValueSpan.textContent = formatNumber(numericAmount, sourceCurrency);
-    sourceItem.appendChild(sourceValueSpan);
-
-    currenciesContainer.appendChild(sourceItem);
-
-    // Create currency items in the specified order
-    Object.keys(orderedCurrencies).forEach((targetCurrency) => {
-      if (targetCurrency === sourceCurrency) return;
-
-      const convertedValue = convertCurrency(
-        numericAmount,
-        sourceCurrency,
-        targetCurrency,
-        rates
-      );
-
-      const item = document.createElement("div");
-      item.className = "currency-item";
+      // Add source currency as first item
+      const sourceItem = document.createElement("div");
+      sourceItem.className = `currency-item currency-source currency-highlight`;
+      sourceItem.style.paddingTop = "8px";
 
       // Create flag container
-      const flagContainer = document.createElement("div");
-      flagContainer.style.display = "flex";
-      flagContainer.style.alignItems = "center";
-      flagContainer.style.gap = "2px";
-      flagContainer.style.color = "var(--font)";
-      flagContainer.style.width = "68px";
+      const sourceFlagContainer = document.createElement("div");
+      sourceFlagContainer.style.display = "flex";
+      sourceFlagContainer.style.alignItems = "center";
+      sourceFlagContainer.style.gap = "2px";
+      sourceFlagContainer.style.width = "68px";
 
       // Add flag
-      flagContainer.appendChild(getFlagElement(targetCurrency));
+      sourceFlagContainer.appendChild(getFlagElement(baseCurrency));
 
       // Add currency code
-      const codeSpan = document.createElement("span");
-      codeSpan.textContent = `${targetCurrency}    `;
-      flagContainer.appendChild(codeSpan);
+      const sourceCodeSpan = document.createElement("span");
+      sourceCodeSpan.textContent = `${baseCurrency}    `;
+      sourceFlagContainer.appendChild(sourceCodeSpan);
 
-      item.appendChild(flagContainer);
+      // Add symbol switcher if multiple currencies available
+      if (possibleCurrencies.length > 1) {
+        const switcher = document.createElement("div");
+        switcher.className = "symbol-switcher";
+        switcher.style.display = "flex";
+        switcher.style.alignItems = "center";
+        switcher.style.marginLeft = "4px";
+        switcher.style.cursor = "pointer";
 
-      // Add converted value
-      const valueSpan = document.createElement("span");
-      valueSpan.textContent = formatNumber(convertedValue, targetCurrency);
-      item.appendChild(valueSpan);
+        const switcherIcon = document.createElement("span");
+        switcherIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-repeat" viewBox="0 0 16 16">
+  <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
+</svg>`;
+        switcherIcon.title = `Switch between ${possibleCurrencies.join(", ")}`;
 
-      currenciesContainer.appendChild(item);
-    });
+        switcher.appendChild(switcherIcon);
+        sourceFlagContainer.appendChild(switcher);
 
-    // Calculate expanded height
-    const itemHeight = 24;
-    const padding = 16;
-    const itemCount =
-      Object.keys(orderedCurrencies).length -
-      (orderedCurrencies[sourceCurrency] ? 1 : 0);
-    const newHeight = Math.min(itemCount * itemHeight + padding + 60, 300);
+        switcher.addEventListener("click", (e) => {
+          e.stopPropagation();
+          currentSymbolIndex =
+            (currentSymbolIndex + 1) % possibleCurrencies.length;
+          currentBaseCurrency = possibleCurrencies[currentSymbolIndex];
+          renderConversions(currentBaseCurrency, numericAmount);
+        });
+      }
 
-    popupElement.style.height = `${newHeight}px`;
-    updatePopupPosition(popupElement);
+      sourceItem.appendChild(sourceFlagContainer);
+
+      // Add amount
+      const sourceValueSpan = document.createElement("span");
+      sourceValueSpan.textContent = formatNumber(amount, baseCurrency);
+      sourceItem.appendChild(sourceValueSpan);
+
+      currenciesContainer.appendChild(sourceItem);
+
+      // Create currency items in the specified order
+      Object.keys(originalOrderedCurrencies).forEach((targetCurrency) => {
+        if (targetCurrency === baseCurrency) return;
+
+        const convertedValue = convertCurrency(
+          amount,
+          baseCurrency,
+          targetCurrency,
+          rates
+        );
+
+        const item = document.createElement("div");
+        item.className = "currency-item";
+
+        // Create flag container
+        const flagContainer = document.createElement("div");
+        flagContainer.style.display = "flex";
+        flagContainer.style.alignItems = "center";
+        flagContainer.style.gap = "2px";
+        flagContainer.style.width = "68px";
+
+        // Add flag
+        flagContainer.appendChild(getFlagElement(targetCurrency));
+
+        // Add currency code
+        const codeSpan = document.createElement("span");
+        codeSpan.textContent = `${targetCurrency}    `;
+        flagContainer.appendChild(codeSpan);
+
+        item.appendChild(flagContainer);
+
+        // Add converted value
+        const valueSpan = document.createElement("span");
+        valueSpan.textContent = formatNumber(convertedValue, targetCurrency);
+        item.appendChild(valueSpan);
+
+        currenciesContainer.appendChild(item);
+      });
+
+      // Calculate expanded height
+      const itemHeight = 24;
+      const padding = 16;
+      const itemCount = Object.keys(originalOrderedCurrencies).length - 1;
+      const newHeight = Math.min(itemCount * itemHeight + padding + 60, 300);
+
+      popupElement.style.height = `${newHeight}px`;
+      updatePopupPosition(popupElement);
+    }
+
+    // Initial render
+    renderConversions(currentBaseCurrency, numericAmount);
   });
 
   document.getElementById(`${POPUP_ID}-selection`).style.display = "flex";
   currenciesContainer.style.display = "flex";
   currentMode = "currencies";
-  popupElement.style.pointerEvents = "none";
+  popupElement.style.pointerEvents = "auto";
+}
+
+// New helper function
+function updateBaseCurrency(newCurrency, amount, rates) {
+  const sourceCodeSpan = document.querySelector(
+    "#currency-converter-popup .currency-source span"
+  );
+  const sourceValueSpan = document.querySelector(
+    "#currency-converter-popup .currency-source span:last-child"
+  );
+  const flagContainer = document.querySelector(
+    "#currency-converter-popup .currency-source .flag"
+  );
+
+  // Update code display
+  sourceCodeSpan.textContent = `${newCurrency}    `;
+
+  // Update flag
+  flagContainer.innerHTML = "";
+  flagContainer.appendChild(getFlagElement(newCurrency));
+
+  // Update all conversions
+  document
+    .querySelectorAll(
+      "#currency-converter-popup .currency-item:not(.currency-source)"
+    )
+    .forEach((item) => {
+      const targetCurrency = item
+        .querySelector("span")
+        ?.textContent?.trim()
+        .split(/\s+/)[0];
+      if (targetCurrency && targetCurrency !== newCurrency) {
+        const convertedValue = convertCurrency(
+          amount,
+          newCurrency,
+          targetCurrency,
+          rates
+        );
+        const valueSpan = item.querySelector("span:last-child");
+        if (valueSpan) {
+          valueSpan.textContent = formatNumber(convertedValue, targetCurrency);
+        }
+      }
+    });
 }
 
 function updatePopupPosition(popup) {
@@ -717,25 +844,60 @@ function initialize() {
 
     // Click handler
     popup.addEventListener("click", (e) => {
-      e.stopPropagation();
+      e.stopPropagation(); // Prevent event from bubbling up
       if (currentMode === "selection" && lastSelectionValue) {
         showCurrenciesView(popup, lastSelectionValue);
       }
     });
 
-    // Hide when clicking outside
+    // Hide when clicking outside - modified version
     document.addEventListener("click", (e) => {
-      if (!popup.contains(e.target) && !mouseDownOnPopup) {
+      // Only hide if:
+      // 1. The click is outside the popup
+      // 2. The click isn't on a selection (we check if selection is empty)
+      const selection = window.getSelection();
+      const clickedOnPopup = popup.contains(e.target);
+      const hasSelection = !selection.isCollapsed;
+
+      if (!clickedOnPopup && !hasSelection) {
         hidePopup();
       }
       mouseDownOnPopup = false;
     });
 
     function hidePopup() {
-      popup.style.display = "none";
-      showSelectionView(popup, lastSelectionValue);
-      isActive = false;
+      // Only hide if we're not in the middle of interacting with the popup
+      if (!mouseDownOnPopup) {
+        const popupElement = document.getElementById(POPUP_ID);
+        if (popupElement) {
+          popupElement.style.display = "none";
+          showSelectionView(popupElement, lastSelectionValue);
+          isActive = false;
+        }
+      }
     }
+
+    let isMouseOverPopup = false;
+
+    popup.addEventListener("mouseenter", () => {
+      isMouseOverPopup = true;
+    });
+
+    popup.addEventListener("mouseleave", () => {
+      isMouseOverPopup = false;
+    });
+
+    // Then modify the document click handler to also check this:
+    document.addEventListener("click", (e) => {
+      const selection = window.getSelection();
+      const clickedOnPopup = popup.contains(e.target) || isMouseOverPopup;
+      const hasSelection = !selection.isCollapsed;
+
+      if (!clickedOnPopup && !hasSelection) {
+        hidePopup();
+      }
+      mouseDownOnPopup = false;
+    });
 
     // Scroll/resize handling
     let debounceTimer;
