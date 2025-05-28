@@ -587,7 +587,7 @@ function showCurrenciesView(popup, baseText) {
         const switcher = document.createElement("div");
         switcher.className = "symbol-switcher";
         switcher.style.display = "flex";
-        switcher.style.alignItems = "center";
+        switcher.style.height = "14px";
         switcher.style.marginLeft = "4px";
         switcher.style.cursor = "pointer";
 
