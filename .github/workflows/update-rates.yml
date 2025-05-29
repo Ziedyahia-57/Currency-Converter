@@ -2,16 +2,17 @@ name: Build Extension with Rates
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # every day at 12:00 UTC (adjust as needed)
+    - cron: '0 12 * * *'  # every day at 12:00 UTC
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch Rates
+      - name: Fetch Exchange Rates
         env:
           API_KEY: ${{ secrets.API_KEY }}
         run: |
