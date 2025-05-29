@@ -1,0 +1,32 @@
+# Node.js dependencies
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Environment variables
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output (if any)
+dist/
+build/
+
+# Sass cache
+.sass-cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# data.json
+data.json
+
+# VSCode settings folder
+.vscode/
