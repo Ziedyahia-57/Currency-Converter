@@ -48,6 +48,6 @@ Contributions to this project are welcome. Feel free to open issues and submit p
 
 
 # Credits
-Exchange rates provided by [Open Exchange Rates].(https://openexchangerates.org)
+Exchange rates provided by [Open Exchange Rates](https://openexchangerates.org). <br>
 Special thanks to the creator of [flag-icons (MIT)](https://github.com/lipis/flag-icons), [lipis](https://github.com/lipis)!
 Thank you ❤️
