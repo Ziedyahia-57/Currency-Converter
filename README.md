@@ -19,7 +19,7 @@ This browser extension allows you to convert any chosen currency to multiple oth
   * Jump quickly to currency names by pressing the first letter of the currency (e.g. pressing U jumps to UAH).
 
 * **🧲 Drag & Drop Organization:** Easily reorder your target currencies by dragging them into your preferred order.
-* **🌗 Dark Mode:** Automatically matches your system theme or toggle it manually.
+* **🌗 Dark Mode:** Seamlessly switch between light and dark themes with a simple toggle for a comfortable viewing experience.
 * **🔒 Private & Secure:** Your data stays on your device; no tracking or analytics.
 * **📡 Offline Support:** Converts using the cached exchange rates when you're offline or disconnected.
 * **🪙 Convert on Select:** Instantly convert selected text from any webpage with a simple click.
