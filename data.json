@@ -1,6 +1,6 @@
 {
-  "disclaimer": "Usage subject to terms: https://openexchangerates.org/terms",
-  "license": "https://openexchangerates.org/license",
+  "disclaimer": "Data sourced from ExchangeRate-API. For use in Currency-Converter only."
+  "license": "https://www.exchangerate-api.com/terms",
   "timestamp": 1748520000,
   "base": "USD",
   "rates": {
