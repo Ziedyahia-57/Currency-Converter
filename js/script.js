@@ -1,5 +1,5 @@
-import { currencyToCountry } from "./js/currencyToCountry.js";
-import { donationContent } from "./js/messages.js";
+import { currencyToCountry } from "./currencyToCountry.js";
+import { donationContent } from "./messages.js";
 
 // When donation tab is opened:
 const currencyTab = document.getElementById("currency-tab");

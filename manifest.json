@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Currency Converter",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0.2",
   "description": "Convert currencies dynamically and on text selection",
   "permissions": ["activeTab", "contextMenus", "storage", "scripting"],
   "host_permissions": ["https://v6.exchangerate-api.com/*", "<all_urls>"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "js/background.js"
   },
   "icons": {
     "32": "./icons/icon(32).png",
@@ -20,8 +20,8 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["contentScript.js"],
-      "css": ["flag-icons/css/flag-icons.min.css", "content.css"],
+      "js": ["js/contentScript.js"],
+      "css": ["flag-icons/css/flag-icons.min.css", "css/content.css"],
       "type": "module",
       "run_at": "document_end",
       "all_frames": true,
