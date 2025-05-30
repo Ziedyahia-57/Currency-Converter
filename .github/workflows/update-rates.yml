@@ -10,15 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Fetch Rates
         run: |
           # Fetch and add timestamp/attribution
           curl -s "https://api.exchangerate.host/live?access_key=e03fcd7972217fa94ae33a8f73f27b27" | \
             jq '{
-        disclaimer: "Data sourced from exchangerate.host",
-        timestamp: .date,
-        rates: .rates
-      }' > data.json
+              disclaimer: "Data sourced from exchangerate.host",
+              timestamp: .date,
+              rates: .rates
+            }' > data.json
 
       - name: Commit Changes
         run: |
