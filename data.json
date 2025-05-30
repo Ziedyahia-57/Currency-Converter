@@ -1,0 +1,9 @@
+{
+  "success": false,
+  "error": {
+    "code": 103,
+    "type": "invalid_api_function"
+  },
+  "disclaimer": "Data sourced from exchangerate.host",
+  "timestamp": "2025-05-30T14:26:52Z"
+}
