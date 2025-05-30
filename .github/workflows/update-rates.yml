@@ -1,43 +1,31 @@
-name: Build Extension with Rates
+name: Update Currency Rates
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # every day at 12:00 UTC
+    - cron: '0 12 * * *'  # Daily at 12:00 UTC
   workflow_dispatch:
 
 jobs:
-  build:
+  update-rates:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main  # ensure you’re on main branch
 
-      - name: Fetch Exchange Rates
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
+      - name: Fetch Rates
         run: |
-          curl -s "https://openexchangerates.org/api/latest.json?app_id=$API_KEY" > data.json
+          # Fetch and add timestamp/attribution
+          curl -s "https://api.exchangerate.host/latest?base=USD" | \
+            jq '. + {disclaimer: "Data sourced from exchangerate.host", timestamp: (now | strftime("%Y-%m-%dT%H:%M:%SZ"))}' \
+            > data.json
 
-      - name: Commit data.json if changed
+      - name: Commit Changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
           git add data.json
           if git diff --cached --quiet; then
-            echo "No changes in data.json, skipping commit."
+            echo "No changes to commit"
           else
-            git commit -m "Update exchange rates [skip ci]"
-            git push origin main
+            git commit -m "Update rates: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            git push
           fi
-
-      - name: Package Extension
-        run: |
-          zip -r currency-converter.zip . -x ".git/*" "node_modules/*"
-
-      - name: Upload Extension Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: currency-converter
-          path: currency-converter.zip
