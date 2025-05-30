@@ -24,7 +24,7 @@ jobs:
         id: fetch
         run: |
           # Get raw response with error handling
-          if ! curl -sSf --retry 3 --max-time 10 "https://api.exchangerate.host/latest?base=USD&places=6" > response.json; then
+          if ! curl -sSf --retry 3 --max-time 10 "https://api.exchangerate.host/live?access_key=e03fcd7972217fa94ae33a8f73f27b27" > response.json; then
             echo "::error::Failed to fetch from API"
             exit 1
           fi
