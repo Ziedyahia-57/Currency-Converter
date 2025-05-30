@@ -5,8 +5,8 @@ on:
     - cron: '0 12 * * *'  # Daily at 12:00 UTC
   workflow_dispatch:
 
-permissions:  # Added permissions block
-  contents: write  # Required for pushing changes
+permissions:
+  contents: write
 
 jobs:
   update-rates:
@@ -14,38 +14,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for git diff to work properly
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}  # Critical for push access
 
-      - name: Setup jq
-        run: sudo apt-get install -y jq  # Ensure jq is available
+      - name: Install dependencies
+        run: sudo apt-get install -y jq curl
 
-      - name: Fetch Rates
+      - name: Fetch exchange rates
+        id: fetch
         run: |
-          # Fetch with timeout and retry
-          curl -s --retry 3 --max-time 10 "https://api.exchangerate.host/latest?base=USD&source=ecb" > response.json
-          
-          # Process response with error handling
-          jq -e '{
-            disclaimer: "Data sourced from exchangerate.host",
-            timestamp: (.timestamp|todateiso8601),
-            rates: .rates
-          }' response.json > data.json || (echo "Failed to parse API response"; exit 1)
-          
-          # Validate data
-          if ! jq -e '.rates and (.rates|length)>0' data.json; then
-            echo "Error: Invalid rates data received"
+          # Get raw response with error handling
+          if ! curl -sSf --retry 3 --max-time 10 "https://api.exchangerate.host/latest?base=USD&places=6" > response.json; then
+            echo "::error::Failed to fetch from API"
+            exit 1
+          fi
+
+          # Validate and transform response
+          if ! jq -e '
+            if .success == true then {
+              disclaimer: "Data sourced from exchangerate.host",
+              timestamp: (.date // now|todate),
+              rates: .rates
+            } else error("API error: \(.error.type)") end
+          ' response.json > data.json; then
+            echo "::error::Invalid API response"
             cat response.json
             exit 1
           fi
 
-      - name: Commit Changes
+      - name: Commit changes
+        if: always()  # Always run to report status
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add data.json
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "No changes to commit"
+          if [[ -f data.json ]] && jq -e '.rates' data.json >/dev/null; then
+            git config --global user.name "GitHub Actions"
+            git config --global user.email "actions@github.com"
+            git add data.json
+            if [ -n "$(git status --porcelain)" ]; then
+              git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+              git push
+              echo "::notice::Rates updated successfully"
+            else
+              echo "::notice::No rate changes detected"
+            fi
           else
-            git commit -m "Update rates: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-            git push
+            echo "::error::No valid rates data to commit"
+            exit 1
           fi
