@@ -15,40 +15,44 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}  # Critical for push access
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: sudo apt-get install -y jq curl
 
       - name: Fetch exchange rates
         id: fetch
+        env:
+          API_KEY: "e03fcd7972217fa94ae33a8f73f27b27"  # Your access key
         run: |
-          # Get raw response with error handling
-          if ! curl -sSf --retry 3 --max-time 10 "https://api.exchangerate.host/live?access_key=e03fcd7972217fa94ae33a8f73f27b27" > response.json; then
+          # Fetch with error handling
+          if ! curl -sSf --retry 3 --max-time 10 \
+            "https://api.exchangerate.host/live?access_key=$API_KEY" > response.json; then
             echo "::error::Failed to fetch from API"
             exit 1
           fi
 
-          # Validate and transform response
+          # Process response (using correct .quotes field for /live endpoint)
           if ! jq -e '
             if .success == true then {
               disclaimer: "Data sourced from exchangerate.host",
-              timestamp: (.date // now|todate),
-              rates: .rates
+              timestamp: (.timestamp|todate),
+              rates: .quotes
             } else error("API error: \(.error.type)") end
           ' response.json > data.json; then
-            echo "::error::Invalid API response"
+            echo "::error::Invalid API response structure"
             cat response.json
             exit 1
           fi
 
       - name: Commit changes
-        if: always()  # Always run to report status
+        if: always()
         run: |
           if [[ -f data.json ]] && jq -e '.rates' data.json >/dev/null; then
             git config --global user.name "GitHub Actions"
             git config --global user.email "actions@github.com"
             git add data.json
+            
             if [ -n "$(git status --porcelain)" ]; then
               git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
               git push
@@ -57,6 +61,10 @@ jobs:
               echo "::notice::No rate changes detected"
             fi
           else
-            echo "::error::No valid rates data to commit"
+            echo "::error::Invalid or empty rates data"
+            echo "Debug info:"
+            ls -la
+            [[ -f response.json ]] && cat response.json
+            [[ -f data.json ]] && cat data.json
             exit 1
           fi
