@@ -14,7 +14,7 @@ jobs:
       - name: Fetch Rates
         run: |
           # Fetch and add timestamp/attribution
-          curl -s "https://api.exchangerate.host/latest?access_key=e03fcd7972217fa94ae33a8f73f27b27" | \
+          curl -s "https://api.exchangerate.host/live?access_key=e03fcd7972217fa94ae33a8f73f27b27" | \
             jq '. + {disclaimer: "Data sourced from exchangerate.host", timestamp: (now | strftime("%Y-%m-%dT%H:%M:%SZ"))}' \
             > data.json
 
