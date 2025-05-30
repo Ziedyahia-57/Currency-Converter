@@ -5,26 +5,36 @@ on:
     - cron: '0 12 * * *'  # Daily at 12:00 UTC
   workflow_dispatch:
 
+permissions:  # Added permissions block
+  contents: write  # Required for pushing changes
+
 jobs:
   update-rates:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0  # Required for git diff to work properly
+
+      - name: Setup jq
+        run: sudo apt-get install -y jq  # Ensure jq is available
+
       - name: Fetch Rates
         run: |
-          # Fetch and transform the API response correctly
-          curl -s "https://api.exchangerate.host/latest?base=USD" | \
-            jq '{
-              disclaimer: "Data sourced from exchangerate.host",
-              timestamp: (.timestamp|todate),
-              rates: .rates
-            }' > data.json
+          # Fetch with timeout and retry
+          curl -s --retry 3 --max-time 10 "https://api.exchangerate.host/latest?base=USD&source=ecb" > response.json
           
-          # Verify we got valid rates data
-          if ! jq -e '.rates != null' data.json; then
-            echo "Error: Failed to fetch rates - invalid response structure"
-            cat data.json
+          # Process response with error handling
+          jq -e '{
+            disclaimer: "Data sourced from exchangerate.host",
+            timestamp: (.timestamp|todateiso8601),
+            rates: .rates
+          }' response.json > data.json || (echo "Failed to parse API response"; exit 1)
+          
+          # Validate data
+          if ! jq -e '.rates and (.rates|length)>0' data.json; then
+            echo "Error: Invalid rates data received"
+            cat response.json
             exit 1
           fi
 
@@ -33,7 +43,7 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add data.json
-          if git diff --cached --quiet; then
+          if [ -z "$(git status --porcelain)" ]; then
             echo "No changes to commit"
           else
             git commit -m "Update rates: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
