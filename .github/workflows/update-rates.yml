@@ -13,13 +13,19 @@ jobs:
       
       - name: Fetch Rates
         run: |
-          # Fetch and add timestamp/attribution
-          curl -s "https://api.exchangerate.host/live?access_key=e03fcd7972217fa94ae33a8f73f27b27" | \
+          # Fetch and properly structure the response
+          curl -s "https://api.exchangerate.host/latest?base=USD" | \
             jq '{
               disclaimer: "Data sourced from exchangerate.host",
               timestamp: .date,
               rates: .rates
             }' > data.json
+          
+          # Verify we got valid data
+          if jq -e '.rates == null' data.json; then
+            echo "Error: Failed to fetch rates"
+            exit 1
+          fi
 
       - name: Commit Changes
         run: |
