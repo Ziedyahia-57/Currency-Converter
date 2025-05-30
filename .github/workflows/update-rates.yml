@@ -13,17 +13,18 @@ jobs:
       
       - name: Fetch Rates
         run: |
-          # Fetch and properly structure the response
+          # Fetch and transform the API response correctly
           curl -s "https://api.exchangerate.host/latest?base=USD" | \
             jq '{
               disclaimer: "Data sourced from exchangerate.host",
-              timestamp: .date,
+              timestamp: (.timestamp|todate),
               rates: .rates
             }' > data.json
           
-          # Verify we got valid data
-          if jq -e '.rates == null' data.json; then
-            echo "Error: Failed to fetch rates"
+          # Verify we got valid rates data
+          if ! jq -e '.rates != null' data.json; then
+            echo "Error: Failed to fetch rates - invalid response structure"
+            cat data.json
             exit 1
           fi
 
