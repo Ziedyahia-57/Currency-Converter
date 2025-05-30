@@ -355,31 +355,53 @@ currencyContainer.addEventListener("drop", (event) => {
 //
 //⚪++++++++++++++++++++++++++++ INPUT FORMAT VALIDATION ++++++++++++++++++++++++++++
 // //>>>>>>>>> Input format: no commas on input (start)
+//🔵 document.querySelectorAll(".currency-input input").forEach((input) => {
+//   input.addEventListener("input", (event) => {
+//     const input = event.target;
+//     const rawValue = input.value.replace(/,/g, "");
+
+//     if (!/^\d*\.?\d*$/.test(rawValue)) {
+//       input.value = input.dataset.previousValue || "0";
+//       return;
+//     }
+
+//     input.dataset.previousValue = rawValue;
+//     formatNumberWithCommas(rawValue, input);
+//     updateCurrencyValues(parseFloat(rawValue) || 0, input.dataset.currency);
+//   });
+
+//   // Add blur handler to force decimals
+//   input.addEventListener("blur", () => {
+//     let value = input.value.replace(/,/g, "");
+//     if (value.indexOf(".") === -1) {
+//       value += ".00";
+//     } else {
+//       const parts = value.split(".");
+//       if (parts[1].length < 2) {
+//         parts[1] = parts[1].padEnd(2, "0");
+//         value = parts.join(".");
+//       }
+//     }
+//     input.value = formatNumberWithCommas(value, input);
+//   });
+// });
+
+// Replace your current input event listeners with this:
 document.querySelectorAll(".currency-input input").forEach((input) => {
   input.addEventListener("input", (event) => {
-    const input = event.target;
-    const rawValue = input.value.replace(/,/g, "");
-
-    if (!/^\d*\.?\d*$/.test(rawValue)) {
-      input.value = input.dataset.previousValue || "0";
-      return;
-    }
-
-    input.dataset.previousValue = rawValue;
-    formatNumberWithCommas(rawValue, input);
-    updateCurrencyValues(parseFloat(rawValue) || 0, input.dataset.currency);
+    const rawValue = event.target.value.replace(/,/g, "");
+    formatNumberWithCommas(rawValue, event.target);
+    updateCurrencyValues(event.target.dataset.currency); // Pass the changed currency
   });
 
-  // Add blur handler to force decimals
   input.addEventListener("blur", () => {
     let value = input.value.replace(/,/g, "");
     if (value.indexOf(".") === -1) {
-      value += ".00";
+      value += currency === "BTC" ? ".00000000" : ".00";
     } else {
       const parts = value.split(".");
       if (parts[1].length < 2) {
         parts[1] = parts[1].padEnd(2, "0");
-        value = parts.join(".");
       }
     }
     input.value = formatNumberWithCommas(value, input);
@@ -584,27 +606,50 @@ function addCurrency(currency, shouldSave = true) {
   const inputField = currencyDiv.querySelector("input");
 
   // Initialize with proper value
+  // try {
+  //   inputField.value = formatNumberWithCommas("0.00", inputField);
+  // } catch (error) {
+  //   console.error("Error initializing currency input:", error);
+  //   inputField.value = "0.00";
+  // }
   try {
-    inputField.value = formatNumberWithCommas("0.00", inputField);
+    // Set initial value based on currency type
+    const initialValue = currency === "BTC" ? "0.00000000" : "0.00";
+    inputField.value = formatNumberWithCommas(initialValue, inputField);
   } catch (error) {
     console.error("Error initializing currency input:", error);
-    inputField.value = "0.00";
+    // Fallback value should also respect currency type
+    inputField.value = currency === "BTC" ? "0.00000000" : "0.00";
   }
 
-  // Set up event listeners
+  //🔵 Set up event listeners
+  // 🔵inputField.addEventListener("input", (event) => {
+  //   const rawValue = event.target.value.replace(/,/g, "");
+  //   formatNumberWithCommas(rawValue, event.target);
+  //   updateCurrencyValues(
+  //     parseFloat(rawValue) || 0,
+  //     event.target.dataset.currency
+  //   );
+  // });
+
+  // inputField.addEventListener("blur", () => {
+  //   let value = inputField.value.replace(/,/g, "");
+  //   if (value.indexOf(".") === -1) {
+  //     value += ".00";
+  //   }
+  //   inputField.value = formatNumberWithCommas(value, inputField);
+  // });
+
   inputField.addEventListener("input", (event) => {
     const rawValue = event.target.value.replace(/,/g, "");
     formatNumberWithCommas(rawValue, event.target);
-    updateCurrencyValues(
-      parseFloat(rawValue) || 0,
-      event.target.dataset.currency
-    );
+    updateCurrencyValues(event.target.dataset.currency);
   });
 
   inputField.addEventListener("blur", () => {
     let value = inputField.value.replace(/,/g, "");
     if (value.indexOf(".") === -1) {
-      value += ".00";
+      value += currency === "BTC" ? ".00000000" : ".00";
     }
     inputField.value = formatNumberWithCommas(value, inputField);
   });
@@ -790,31 +835,84 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
 //
 //⚪++++++++++++++++++++++++++++ CURRENCY CONVERSION FUNCTIONS ++++++++++++++++++++++++++++
 //>>>>>>>>> convert currency values function (start)
-function updateCurrencyValues(baseValue = 0, baseCurrency = "USD") {
+// 🔵function updateCurrencyValues(baseValue = 0, baseCurrency = "USD") {
+//   if (!exchangeRates) {
+//     console.error("No exchange rates available for conversion.");
+//     return;
+//   }
+
+//   // Don't round the base value here - keep full precision for calculations
+//   const fullPrecisionBaseValue = parseFloat(baseValue);
+
+//   document.querySelectorAll(".currency-input input").forEach((input) => {
+//     const currency = input.dataset.currency;
+//     if (currency !== baseCurrency) {
+//       // Calculate the converted value with full precision
+//       const convertedValue =
+//         fullPrecisionBaseValue *
+//         (exchangeRates[currency] / exchangeRates[baseCurrency]);
+
+//       // Special rounding for BTC (8 decimals) vs others (2 decimals)
+//       const roundedValue =
+//         currency === "BTC"
+//           ? convertedValue.toFixed(8)
+//           : convertedValue.toFixed(2);
+
+//       // Update the input field with the rounded value
+//       input.value = formatNumberWithCommas(roundedValue || 0);
+//     }
+//   });
+// }
+
+function updateCurrencyValues(changedCurrency) {
   if (!exchangeRates) {
     console.error("No exchange rates available for conversion.");
     return;
   }
 
-  // Don't round the base value here - keep full precision for calculations
-  const fullPrecisionBaseValue = parseFloat(baseValue);
+  // Get all currency inputs
+  const currencyInputs = Array.from(
+    document.querySelectorAll(".currency-input input")
+  );
 
-  document.querySelectorAll(".currency-input input").forEach((input) => {
-    const currency = input.dataset.currency;
-    if (currency !== baseCurrency) {
-      // Calculate the converted value with full precision
-      const convertedValue =
-        fullPrecisionBaseValue *
-        (exchangeRates[currency] / exchangeRates[baseCurrency]);
+  // Find the changed input
+  const changedInput = currencyInputs.find(
+    (input) => input.dataset.currency === changedCurrency
+  );
+  if (!changedInput) return;
 
-      // Special rounding for BTC (8 decimals) vs others (2 decimals)
+  // Get the raw value (without commas) from the changed input
+  const rawValue = changedInput.value.replace(/,/g, "");
+  const numericValue = parseFloat(rawValue) || 0;
+
+  // Update all other currencies based on the changed input
+  currencyInputs.forEach((input) => {
+    if (input.dataset.currency !== changedCurrency) {
+      // Calculate the converted value
+      let convertedValue;
+
+      if (changedCurrency === "USD") {
+        // If USD was changed, directly use its rate
+        convertedValue = numericValue * exchangeRates[input.dataset.currency];
+      } else if (input.dataset.currency === "USD") {
+        // If converting to USD, divide by the rate
+        convertedValue = numericValue / exchangeRates[changedCurrency];
+      } else {
+        // For other currency pairs
+        convertedValue =
+          numericValue *
+          (exchangeRates[input.dataset.currency] /
+            exchangeRates[changedCurrency]);
+      }
+
+      // Format based on currency type (BTC gets 8 decimals, others get 2)
       const roundedValue =
-        currency === "BTC"
+        input.dataset.currency === "BTC"
           ? convertedValue.toFixed(8)
           : convertedValue.toFixed(2);
 
-      // Update the input field with the rounded value
-      input.value = formatNumberWithCommas(roundedValue || 0);
+      // Update the input field
+      input.value = formatNumberWithCommas(roundedValue);
     }
   });
 }
