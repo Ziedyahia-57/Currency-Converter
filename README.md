@@ -12,7 +12,7 @@ This browser extension allows you to convert any chosen currency to multiple oth
 
 # Features
 * **🔄 Bulk currency conversion:** Convert your base currency to multiple target currencies in one operation.
-* **💱 Supports Major Currencies:** Including USD, EUR, GBP, JPY, AUD, CAD, and many more (169 Total Currencies).
+* **💱 Supports Major Currencies:** Including USD, EUR, GBP, JPY, AUD, CAD, and many more (168 Total Currencies).
 * **🏳️ Currency Flags:** Visual country flags next to each currency to aid quick recognition.
 * **⌨️ Keyboard Navigation:** Fully accessible with keyboard shortcuts and tab navigation.
   * Fully navigable via keyboard (Tab, Arrow keys, Enter, Esc).
@@ -48,6 +48,6 @@ Contributions to this project are welcome. Feel free to open issues and submit p
 
 
 # Credits
-Exchange rates provided by [Open Exchange Rates](https://openexchangerates.org). <br>
+Exchange rates provided by [exchangerate.host](https://exchangerate.host/). <br>
 Special thanks to the creator of [flag-icons (MIT)](https://github.com/lipis/flag-icons), [lipis](https://github.com/lipis)!
 Thank you ❤️
