@@ -23,7 +23,7 @@ jobs:
       - name: Fetch exchange rates
         id: fetch
         env:
-          API_KEY: "e03fcd7972217fa94ae33a8f73f27b27"  # Your access key
+          API_KEY: ${{ secrets.EXCHANGERATE_API_KEY }}
         run: |
           # Fetch with error handling
           if ! curl -sSf --retry 3 --max-time 10 \
@@ -32,12 +32,12 @@ jobs:
             exit 1
           fi
 
-          # Process response (using correct .quotes field for /live endpoint)
+          # Process response - remove USD prefix from currency codes
           if ! jq -e '
             if .success == true then {
               disclaimer: "Data sourced from exchangerate.host",
               timestamp: (.timestamp|todate),
-              rates: .quotes
+              rates: .quotes | with_entries(.key |= sub("^USD"; ""))
             } else error("API error: \(.error.type)") end
           ' response.json > data.json; then
             echo "::error::Invalid API response structure"
@@ -62,9 +62,6 @@ jobs:
             fi
           else
             echo "::error::Invalid or empty rates data"
-            echo "Debug info:"
-            ls -la
             [[ -f response.json ]] && cat response.json
-            [[ -f data.json ]] && cat data.json
             exit 1
           fi
