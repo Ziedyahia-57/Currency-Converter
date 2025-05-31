@@ -8,8 +8,11 @@ const addCurrencyBtn = document.getElementById("add-currency-btn");
 const currencyList = document.getElementById("currency-list");
 const hideCurrencyTab = document.getElementById("hide-currency-tab");
 const hideDonationTab = document.getElementById("hide-donation-tab");
+const hideSettingsTab = document.getElementById("hide-settings-tab");
 const donationTab = document.getElementById("donation-tab");
+const settingsTab = document.getElementById("settings-tab");
 const supportDevBtn = document.getElementById("support-dev-btn");
+const settingsBtn = document.getElementById("settings-btn");
 const donationButton = document.getElementById("support-dev-btn");
 
 let errorLogged = false; // Global flag to track error logging
@@ -170,6 +173,12 @@ document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
       closeDonationTab();
+    }
+  }
+  if (!settingsTab.classList.contains("hidden")) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeSettingsTab();
     }
   }
   if (!currencyTab.classList.contains("hidden")) {
@@ -956,6 +965,20 @@ function closeCurrencyTab() {
 }
 //>>>>>>>>> close currency tab (end)
 
+//>>>>>>>>> open settings tab (start)
+function openSettingsTab() {
+  settingsTab.classList.add("show");
+  settingsTab.classList.remove("hidden");
+}
+//>>>>>>>>> open settings tab (end)
+
+//>>>>>>>>> close settings tab (start)
+function closeSettingsTab() {
+  settingsTab.classList.remove("show");
+  settingsTab.classList.add("hidden");
+}
+//>>>>>>>>> close settings tab (end)
+
 //
 //
 //
@@ -1238,12 +1261,20 @@ function initializeDonationContent() {
 //🔵++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //🔵++++++++++++++++++++++++++++ EVENTS ++++++++++++++++++++++++++++
 //🔵++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+settingsBtn.addEventListener("click", () => {
+  openSettingsTab();
+});
+
 supportDevBtn.addEventListener("click", () => {
   openDonationTab();
 });
 
 hideDonationTab.addEventListener("click", () => {
   closeDonationTab();
+});
+
+hideSettingsTab.addEventListener("click", () => {
+  closeSettingsTab();
 });
 
 hideCurrencyTab.addEventListener("click", () => {

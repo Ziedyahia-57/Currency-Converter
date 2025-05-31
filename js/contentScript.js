@@ -61,6 +61,7 @@ const CURRENCY_SYMBOLS = {
   ƒ: ["ANG", "AWG"],
   "₨": ["PKR", "NPR", "LKR", "MUR", "SCR"], // Could also include NPR, MUR, etc.
   "₿": ["BTC"],
+  zł: ["PLN"],
   "Fr.": ["CHF", "XOF", "XAF", "CDF", "RWF", "BIF", "DJF", "GNF", "KMF", "MGA"],
   "₣": ["CHF", "XOF", "XAF", "CDF", "RWF", "BIF", "DJF", "GNF", "KMF", "MGA"],
 

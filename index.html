@@ -23,6 +23,14 @@
         <div class="header">
           <img src="./icons/icon.png" alt="Logo" />
           <span>Currency Converter</span>
+          <button class="settings-btn" id="settings-btn" title="Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+              <!--Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
+              <path
+                d="M495.9 166.6c3.2 8.7 .5 18.4-6.4 24.6l-43.3 39.4c1.1 8.3 1.7 16.8 1.7 25.4s-.6 17.1-1.7 25.4l43.3 39.4c6.9 6.2 9.6 15.9 6.4 24.6c-4.4 11.9-9.7 23.3-15.8 34.3l-4.7 8.1c-6.6 11-14 21.4-22.1 31.2c-5.9 7.2-15.7 9.6-24.5 6.8l-55.7-17.7c-13.4 10.3-28.2 18.9-44 25.4l-12.5 57.1c-2 9.1-9 16.3-18.2 17.8c-13.8 2.3-28 3.5-42.5 3.5s-28.7-1.2-42.5-3.5c-9.2-1.5-16.2-8.7-18.2-17.8l-12.5-57.1c-15.8-6.5-30.6-15.1-44-25.4L83.1 425.9c-8.8 2.8-18.6 .3-24.5-6.8c-8.1-9.8-15.5-20.2-22.1-31.2l-4.7-8.1c-6.1-11-11.4-22.4-15.8-34.3c-3.2-8.7-.5-18.4 6.4-24.6l43.3-39.4C64.6 273.1 64 264.6 64 256s.6-17.1 1.7-25.4L22.4 191.2c-6.9-6.2-9.6-15.9-6.4-24.6c4.4-11.9 9.7-23.3 15.8-34.3l4.7-8.1c6.6-11 14-21.4 22.1-31.2c5.9-7.2 15.7-9.6 24.5-6.8l55.7 17.7c13.4-10.3 28.2-18.9 44-25.4l12.5-57.1c2-9.1 9-16.3 18.2-17.8C227.3 1.2 241.5 0 256 0s28.7 1.2 42.5 3.5c9.2 1.5 16.2 8.7 18.2 17.8l12.5 57.1c15.8 6.5 30.6 15.1 44 25.4l55.7-17.7c8.8-2.8 18.6-.3 24.5 6.8c8.1 9.8 15.5 20.2 22.1 31.2l4.7 8.1c6.1 11 11.4 22.4 15.8 34.3zM256 336a80 80 0 1 0 0-160 80 80 0 1 0 0 160z"
+              ></path>
+            </svg>
+          </button>
         </div>
 
         <div id="currency-container"></div>
@@ -34,7 +42,7 @@
           <div class="add-currency">
             <label class="switch">
               <input type="checkbox" id="convert-on-select" />
-              <span class="slider"></span> </label
+              <span class="slider"></span></label
             ><label class="convert-select" for="convert-on-select"
               >Convert On Select</label
             >
@@ -47,12 +55,20 @@
                 />
               </svg>
             </button>
-            <button id="rate-us-btn" title="Rate Us">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
-                <!--Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
-                <path
-                  d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"
-                />
+            <button id="tax-btn" title="Fee/Tax (%)">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                version="1.1"
+                viewBox="0 0 394.4 394.4"
+                xml:space="preserve"
+                class="dark-mode"
+              >
+                <g>
+                  <path
+                    d="M37.4,377.4c-5.223,0-10.438-1.992-14.423-5.977c-7.97-7.963-7.97-20.883,0-28.846l319.6-319.601   c7.97-7.97,20.876-7.97,28.846,0c7.97,7.962,7.97,20.882,0,28.845l-319.6,319.601C47.838,375.408,42.623,377.4,37.4,377.4z    M394.4,299.199c0-52.496-42.704-95.199-95.2-95.199S204,246.703,204,299.199s42.704,95.201,95.2,95.201   S394.4,351.695,394.4,299.199z M353.601,299.199c0,29.996-24.405,54.4-54.4,54.4s-54.4-24.404-54.4-54.4   c0-29.994,24.405-54.398,54.4-54.398S353.601,269.205,353.601,299.199z M190.4,95.2C190.4,42.704,147.696,0,95.2,0S0,42.704,0,95.2   s42.704,95.2,95.2,95.2S190.4,147.696,190.4,95.2z M149.6,95.2c0,29.995-24.405,54.4-54.4,54.4s-54.4-24.405-54.4-54.4   s24.405-54.4,54.4-54.4S149.6,65.206,149.6,95.2z"
+                  ></path>
+                </g>
               </svg>
             </button>
 
@@ -81,14 +97,14 @@
 
         <div id="currency-tab" class="currency-tab hidden">
           <h3 class="title">
-            <div class="hide-tab" id="hide-currency-tab">
+            <button class="hide-tab" id="hide-currency-tab" title="Back (Esc)">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 321 513">
                 <!--Font Awesome Free 7.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
                 <path
                   d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"
                 />
               </svg>
-            </div>
+            </button>
             Select a Currency
           </h3>
           <div id="currency-list" class="currency-list"></div>
@@ -96,18 +112,92 @@
 
         <div class="donation-tab hidden" id="donation-tab">
           <h3 class="title">
-            <div class="hide-tab" id="hide-donation-tab">
+            <button class="hide-tab" id="hide-donation-tab" title="Back (Esc)">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 321 513">
                 <!--Font Awesome Free 7.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
                 <path
                   d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"
                 />
               </svg>
-            </div>
+            </button>
             Support a Dev
           </h3>
           <div class="donation-content" id="donation-content">
             <!-- Content will be inserted here by JavaScript -->
+          </div>
+        </div>
+
+        <div class="settings-tab hidden" id="settings-tab">
+          <h3 class="title">
+            <button class="hide-tab" id="hide-settings-tab" title="Back (Esc)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 321 513">
+                <!--Font Awesome Free 7.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+                <path
+                  d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"
+                />
+              </svg>
+            </button>
+            Settings
+          </h3>
+          <div class="settings-content">
+            <div class="title-row">
+              <p class="section-title">Formatting</p>
+            </div>
+            <div class="row">
+              <p class="option-name">Number Formatting</p>
+              <select id="format">
+                <option value="comma-dot">1,000.00 (default)</option>
+                <option value="dot-comma">1.000,00</option>
+                <option value="space-dot">1 000.00</option>
+                <option value="space-comma">1 000,00</option>
+                <option value="none-dot">1000.00</option>
+                <option value="none-comma">1000,00</option>
+              </select>
+            </div>
+            <div class="row">
+              <p class="option-name">FIAT Rounding</p>
+              <select id="round">
+                <option value="0">Integer Only</option>
+                <option value="2" selected>2 Decimals (default)</option>
+                <option value="3">3 Decimals</option>
+                <option value="4">4 Decimals</option>
+                <option value="5">5 Decimals</option>
+                <option value="6">6 Decimals</option>
+                <option value="7">7 Decimals</option>
+                <option value="8">8 Decimals</option>
+              </select>
+            </div>
+            <div class="row">
+              <p class="option-name">Crypto Rounding</p>
+              <select id="round">
+                <option value="0">Integer Only</option>
+                <option value="2">2 Decimals (default)</option>
+                <option value="3">3 Decimals</option>
+                <option value="4">4 Decimals</option>
+                <option value="5">5 Decimals</option>
+                <option value="6">6 Decimals</option>
+                <option value="7">7 Decimals</option>
+                <option value="8" selected="">8 Decimals (default)</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-content">
+            <div class="title-row">
+              <p class="section-title">Appearance</p>
+            </div>
+            <div class="row">
+              <p class="option-name">Theme</p>
+              <select id="round">
+                <option value="manual">Manual (default)</option>
+                <option value="auto">Browser Theme</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-content">
+            <div class="row">
+              <p class="option-name">Default Settings?</p>
+              <button id="restore">Restore</button>
+            </div>
           </div>
         </div>
 

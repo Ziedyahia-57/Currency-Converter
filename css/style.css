@@ -22,6 +22,7 @@
   --border-dark: #00000040; /**/
   --font-color: #c1c6cb; /**/
   --fill-color: #6d777e; /**/
+  --dark-background: #191c23; /**/
 
   --shadow: #31313182;
   --drag-border: #535353cc;
@@ -176,8 +177,9 @@ body {
 
 .currency-converter-ex #add-currency-btn,
 .currency-converter-ex #support-dev-btn,
-.currency-converter-ex #rate-us-btn,
+.currency-converter-ex #tax-btn,
 .currency-converter-ex #dark-mode-btn {
+  display: flex;
   cursor: pointer;
   height: 24px;
   width: 24px;
@@ -301,12 +303,20 @@ body {
   z-index: 1;
 }
 
-.currency-converter-ex .hide-tab {
+/* .currency-converter-ex .hide-tab {
   width: 16px;
   height: 1px;
   fill: var(--font-color2);
   margin: 0px 16px 24px 0px;
   cursor: pointer;
+} */
+.currency-converter-ex .hide-tab {
+  width: 28px;
+  height: 28px;
+  fill: var(--font-color2);
+  cursor: pointer;
+  background: transparent;
+  border: none;
 }
 
 .currency-converter-ex .convert-select {
@@ -597,7 +607,7 @@ body {
   }
 }
 
-.first-launch-offline {
+.currency-converter-ex .first-launch-offline {
   display: flex;
   margin-left: 10px;
   flex-direction: column;
@@ -611,16 +621,142 @@ body {
   z-index: 1;
   max-height: 190px;
 }
-.first-launch-offline p {
+.currency-converter-ex .first-launch-offline p {
   margin-left: auto;
   margin-right: auto;
 }
-.emoji {
+.currency-converter-ex .emoji {
   font-size: 24px;
   font-weight: 500;
   color: var(--font-color2);
 }
-.msg-title {
+.currency-converter-ex .msg-title {
   color: var(--font-color2);
   font-weight: 600;
+}
+
+.currency-converter-ex .settings-btn {
+  height: 16px;
+  width: 16px;
+  margin-left: 46px;
+  fill: var(--font-color);
+  cursor: pointer;
+}
+.currency-converter-ex .settings-btn:hover {
+  fill: var(--primary-color);
+  transition: fill 0.3s;
+}
+
+/* .currency-input {
+    background: transparent !important;
+    box-shadow: -1px 1px 5px 0px #0000003d;
+} */
+
+.currency-converter-ex .row {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 10px;
+  align-items: center;
+  height: 40px;
+}
+.currency-converter-ex .title-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 0px 10px;
+  align-items: center;
+  height: 28px;
+}
+
+.currency-converter-ex .option-name {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--font-color2);
+  align-self: center;
+  font-weight: 200;
+}
+
+.currency-converter-ex select#format,
+.currency-converter-ex select#round {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  transition: transform 0.2s linear, background 0.2s linear;
+  border: transparent solid 1px;
+  border-radius: 8px;
+  margin: 5px;
+  background: var(--gray);
+  padding: 0;
+  width: 155px;
+  color: var(--font-color);
+  font-family: Roboto flex;
+}
+
+.currency-converter-ex select:hover {
+  border-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+}
+
+.currency-converter-ex .settings-content {
+  border-radius: 4px;
+  background: #191c23;
+  margin: 4px;
+}
+
+.currency-converter-ex .settings-tab {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  background: var(--gray);
+  width: 100%;
+  height: 100%;
+}
+
+.currency-converter-ex .settings-content {
+  border-radius: 4px;
+  background: var(--light-gray);
+  margin: 4px;
+}
+
+.currency-converter-ex button#restore {
+  height: 26px;
+  user-select: none;
+  width: fit-content;
+  color: var(--font-color);
+  font-family: "Roboto flex";
+  text-align: center;
+  transition: color 0.2s linear;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  border-radius: 8px;
+  margin: 5px;
+  background: var(--gray);
+  padding: 4px;
+}
+.currency-converter-ex button#restore:hover {
+  color: rgb(251, 12, 4);
+  cursor: pointer;
+}
+
+.currency-converter-ex p.section-title {
+  color: var(--font-color2);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.currency-converter-ex #settings-btn {
+  display: flex;
+  cursor: pointer;
+  height: 28px;
+  width: 28px;
+  justify-content: center;
+  align-self: center;
+  fill: var(--font-color);
+  background: transparent;
+  border: none;
 }
