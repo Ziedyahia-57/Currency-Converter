@@ -457,6 +457,9 @@ body {
 .currency-converter-ex #dark-mode-btn.active {
   border: 2px solid var(--primary-color);
 }
+.currency-converter-ex #dark-mode-btn.auto {
+  border: 2px solid cyan;
+}
 
 .currency-converter-ex .donation-tab {
   position: absolute;
@@ -676,7 +679,9 @@ body {
 }
 
 .currency-converter-ex select#format,
-.currency-converter-ex select#round {
+.currency-converter-ex select#fiat-round,
+.currency-converter-ex select#crypto-round,
+.currency-converter-ex select#theme {
   height: 26px;
   display: flex;
   align-items: center;

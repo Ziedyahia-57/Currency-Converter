@@ -14,6 +14,10 @@ const settingsTab = document.getElementById("settings-tab");
 const supportDevBtn = document.getElementById("support-dev-btn");
 const settingsBtn = document.getElementById("settings-btn");
 const donationButton = document.getElementById("support-dev-btn");
+const formatSelector = document.getElementById("format");
+const fiatDecimalSelector = document.getElementById("fiat-round");
+const cryptoDecimalSelector = document.getElementById("crypto-round");
+const themeSelector = document.getElementById("theme");
 
 let errorLogged = false; // Global flag to track error logging
 
@@ -23,6 +27,129 @@ const LAST_UPDATED_KEY = "lastUpdated";
 
 let currencies = [];
 let exchangeRates = {};
+
+async function loadSavedFormat() {
+  const result = await chrome.storage.local.get("numberFormat");
+  const savedFormat = result.numberFormat;
+  if (savedFormat) {
+    formatSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+async function saveNumberFormat() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ numberFormat: formatSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("Format saved:", formatSelector.value);
+        resolve();
+      }
+    });
+  });
+}
+
+async function loadSavedFiatDecimal() {
+  const result = await chrome.storage.local.get("fiatDecimals");
+  const savedFormat = result.fiatDecimals;
+  if (savedFormat) {
+    fiatDecimalSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+async function saveFiatDecimal() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set(
+      { fiatDecimals: fiatDecimalSelector.value },
+      () => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else {
+          console.log("FIAT Decimal Format saved:", fiatDecimalSelector.value);
+          resolve();
+        }
+      }
+    );
+  });
+}
+
+async function loadSavedCryptoDecimal() {
+  const result = await chrome.storage.local.get("cryptoDecimals");
+  const savedFormat = result.cryptoDecimals;
+  if (savedFormat) {
+    cryptoDecimalSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+async function saveCryptoDecimal() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set(
+      { cryptoDecimals: cryptoDecimalSelector.value },
+      () => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else {
+          console.log(
+            "Crypto Decimal Format saved:",
+            cryptoDecimalSelector.value
+          );
+          resolve();
+        }
+      }
+    );
+  });
+}
+
+async function loadThemePreference() {
+  try {
+    const result = await chrome.storage.local.get("theme");
+    const savedTheme = result.theme;
+
+    if (savedTheme) {
+      themeSelector.value = savedTheme; // Set the selected option
+      if (savedTheme === "auto") {
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        let preferredTheme = prefersDark ? "dark" : "light";
+        console.log("Preferred theme based on system setting:", preferredTheme);
+        localStorage.setItem("darkMode", preferredTheme);
+        chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+        darkModeBtn.classList.add("auto");
+      }
+
+      console.log("Loaded theme preference:", savedTheme);
+      return savedTheme;
+    } else {
+      darkModeBtn.classList.remove("auto");
+      console.log("No saved theme found.");
+      return null;
+    }
+  } catch (error) {
+    console.error("Failed to load theme preference:", error);
+    return null;
+  }
+}
+
+async function saveThemePreference() {
+  const selectedTheme = themeSelector.value;
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ theme: selectedTheme }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("Theme preference saved:", selectedTheme);
+        resolve();
+      }
+    });
+  });
+}
 
 function showOfflineMessage() {
   const currencyContainer = document.getElementById("currency-container");
@@ -1313,53 +1440,6 @@ function initializeInputStyles() {
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //🟣++++++++++++++++++++++++++++ APPLICATION ++++++++++++++++++++++++++++
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// document.addEventListener("DOMContentLoaded", async () => {
-//   // Initial check with proper online status
-//   const isOnline = navigator.onLine;
-//   const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
-
-//   updateLastUpdateElement(isOnline, lastUpdated);
-
-//   // Listen for network changes
-//   window.addEventListener("online", () => {
-//     updateLastUpdateElement(true, localStorage.getItem(LAST_UPDATED_KEY));
-//   });
-
-//   window.addEventListener("offline", () => {
-//     updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
-//   });
-
-//   // Load user preference from localStorage
-//   loadDarkMode();
-
-//   // Toggle dark mode
-//   darkModeBtn.addEventListener("click", () => {
-//     root.classList.toggle("dark-mode");
-//     darkModeBtn.classList.toggle("active");
-
-//     saveDarkMode(); // Save user preference to localStorage
-//   });
-
-//   loadCheckboxState();
-//   initializeApp(); // Initialize the app
-
-//   checkCurrencyCount();
-//   updateAddButtonVisibility();
-//   initializeInputStyles(); // Initialize input styles
-
-//   //Donation Tab functionality
-
-//   donationButton.addEventListener("click", handleDonationButtonClick);
-
-//   saveCheckboxState();
-//   await updateExchangeRates(); // Load exchange rates first
-//   // Initial check
-//   updateLastUpdateElement(
-//     navigator.onLine,
-//     localStorage.getItem(LAST_UPDATED_KEY)
-//   );
-// });
-
 document.addEventListener("DOMContentLoaded", async () => {
   // Initial check with proper online status
   const isOnline = navigator.onLine;
@@ -1378,12 +1458,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Load user preference from localStorage and chrome.storage
   loadDarkMode();
+  loadThemePreference();
+
+  loadSavedFormat();
+  loadSavedFiatDecimal();
+  loadSavedCryptoDecimal();
 
   // Toggle dark mode
   darkModeBtn.addEventListener("click", () => {
     root.classList.toggle("dark-mode");
     darkModeBtn.classList.toggle("active");
-    saveDarkMode(); // Save user preference to both localStorage and chrome.storage
+    saveDarkMode();
+    themeSelector.value = "manual";
+    darkModeBtn.classList.remove("auto");
+    localStorage.setItem("theme", themeSelector.value);
+    chrome.storage.local.set({ ["theme"]: themeSelector.value });
+    // Save user preference to both localStorage and chrome.storage
   });
 
   loadCheckboxState();
@@ -1403,6 +1493,72 @@ document.addEventListener("DOMContentLoaded", async () => {
     navigator.onLine,
     localStorage.getItem(LAST_UPDATED_KEY)
   );
+
+  formatSelector.addEventListener("change", function () {
+    saveNumberFormat();
+  });
+
+  fiatDecimalSelector.addEventListener("change", function () {
+    saveFiatDecimal();
+  });
+
+  cryptoDecimalSelector.addEventListener("change", function () {
+    saveCryptoDecimal();
+  });
+
+  themeSelector.addEventListener("change", function () {
+    saveThemePreference();
+
+    // Immediately apply the theme change
+    const selectedTheme = themeSelector.value;
+
+    if (selectedTheme === "auto") {
+      darkModeBtn.classList.add("auto");
+
+      // Detect system preference immediately
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
+      const preferredTheme = prefersDark ? "dark" : "light";
+
+      // Apply the theme
+      root.classList.toggle("dark-mode", preferredTheme === "dark");
+      darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+      // Save the actual theme being used
+      localStorage.setItem("darkMode", preferredTheme);
+      chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+    } else {
+      darkModeBtn.classList.remove("auto");
+
+      // For light/dark modes, apply directly
+      root.classList.toggle("dark-mode", selectedTheme === "dark");
+      darkModeBtn.classList.toggle("active", selectedTheme === "dark");
+
+      // Save the theme
+      localStorage.setItem("darkMode", selectedTheme);
+      chrome.storage.local.set({ ["darkMode"]: selectedTheme });
+    }
+  });
+
+  // Add this near your other event listeners
+  window
+    .matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", (e) => {
+      // Only respond if we're in auto mode
+      if (themeSelector.value === "auto") {
+        const prefersDark = e.matches;
+        const preferredTheme = prefersDark ? "dark" : "light";
+
+        root.classList.toggle("dark-mode", preferredTheme === "dark");
+        darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+        // Save the actual theme being used
+        localStorage.setItem("darkMode", preferredTheme);
+        chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+      }
+    });
+  loadDarkMode();
 });
 
 addCurrencyBtn.addEventListener("click", async () => {
