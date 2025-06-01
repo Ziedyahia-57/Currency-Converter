@@ -40,6 +40,7 @@ async function loadSavedFormat() {
 
 async function saveNumberFormat() {
   return new Promise((resolve, reject) => {
+    localStorage.setItem("numberFormat", formatSelector.value);
     chrome.storage.local.set({ numberFormat: formatSelector.value }, () => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
@@ -63,6 +64,7 @@ async function loadSavedFiatDecimal() {
 
 async function saveFiatDecimal() {
   return new Promise((resolve, reject) => {
+    localStorage.setItem("fiatDecimals", fiatDecimalSelector.value);
     chrome.storage.local.set(
       { fiatDecimals: fiatDecimalSelector.value },
       () => {
@@ -89,6 +91,7 @@ async function loadSavedCryptoDecimal() {
 
 async function saveCryptoDecimal() {
   return new Promise((resolve, reject) => {
+    localStorage.setItem("cryptoDecimals", cryptoDecimalSelector.value);
     chrome.storage.local.set(
       { cryptoDecimals: cryptoDecimalSelector.value },
       () => {
@@ -140,6 +143,7 @@ async function loadThemePreference() {
 async function saveThemePreference() {
   const selectedTheme = themeSelector.value;
   return new Promise((resolve, reject) => {
+    localStorage.setItem("theme", selectedTheme);
     chrome.storage.local.set({ theme: selectedTheme }, () => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
@@ -1477,16 +1481,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   loadCheckboxState();
-  initializeApp(); // Initialize the app
-
   checkCurrencyCount();
   updateAddButtonVisibility();
   initializeInputStyles(); // Initialize input styles
+  initializeApp(); // Initialize the app
 
   // Donation Tab functionality
   donationButton.addEventListener("click", handleDonationButtonClick);
 
   saveCheckboxState();
+
   await updateExchangeRates(); // Load exchange rates first
   // Initial check
   updateLastUpdateElement(

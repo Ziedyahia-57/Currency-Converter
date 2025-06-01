@@ -458,7 +458,11 @@ body {
   border: 2px solid var(--primary-color);
 }
 .currency-converter-ex #dark-mode-btn.auto {
-  border: 2px solid cyan;
+  border: 2px solid #0dc4e1;
+  fill: #0dc4e1;
+}
+.currency-converter-ex #dark-mode-btn.auto:hover {
+  background: #0dc4e1 !important;
 }
 
 .currency-converter-ex .donation-tab {
