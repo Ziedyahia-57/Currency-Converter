@@ -144,7 +144,14 @@
               <p class="section-title">Formatting</p>
             </div>
             <div class="row">
-              <p class="option-name">Number Formatting</p>
+              <p class="option-name">
+                Number Formatting<span
+                  class="custom hidden"
+                  id="custom-format"
+                  title="custom"
+                  >*</span
+                >
+              </p>
               <select id="format">
                 <option value="comma-dot" selected>1,000.00 (default)</option>
                 <option value="dot-comma">1.000,00</option>
@@ -155,7 +162,14 @@
               </select>
             </div>
             <div class="row">
-              <p class="option-name">FIAT Rounding</p>
+              <p class="option-name">
+                FIAT Rounding<span
+                  class="custom hidden"
+                  id="custom-fiat-decimal"
+                  title="custom"
+                  >*</span
+                >
+              </p>
               <select id="fiat-round">
                 <option value="0">Integer Only</option>
                 <option value="2" selected>2 Decimals (default)</option>
@@ -168,16 +182,23 @@
               </select>
             </div>
             <div class="row">
-              <p class="option-name">Crypto Rounding</p>
+              <p class="option-name">
+                Bitcoin Rounding<span
+                  class="custom hidden"
+                  id="custom-crypto-decimal"
+                  title="custom"
+                  >*</span
+                >
+              </p>
               <select id="crypto-round">
                 <option value="0">Integer Only</option>
-                <option value="2">2 Decimals (default)</option>
+                <option value="2">2 Decimals</option>
                 <option value="3">3 Decimals</option>
                 <option value="4">4 Decimals</option>
                 <option value="5">5 Decimals</option>
                 <option value="6">6 Decimals</option>
                 <option value="7">7 Decimals</option>
-                <option value="8" selected="">8 Decimals (default)</option>
+                <option value="8" selected>8 Decimals (default)</option>
               </select>
             </div>
           </div>
@@ -186,10 +207,17 @@
               <p class="section-title">Appearance</p>
             </div>
             <div class="row">
-              <p class="option-name">Theme</p>
+              <p class="option-name">
+                Theme<span
+                  class="custom hidden"
+                  id="custom-theme"
+                  title="custom"
+                  >*</span
+                >
+              </p>
               <select id="theme">
-                <option value="manual" selected>Manual (default)</option>
-                <option value="auto">Browser Theme</option>
+                <option value="manual">Manual</option>
+                <option value="auto" selected>Browser (default)</option>
               </select>
             </div>
           </div>

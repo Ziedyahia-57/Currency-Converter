@@ -18,6 +18,11 @@ const formatSelector = document.getElementById("format");
 const fiatDecimalSelector = document.getElementById("fiat-round");
 const cryptoDecimalSelector = document.getElementById("crypto-round");
 const themeSelector = document.getElementById("theme");
+const restoreBtn = document.getElementById("restore");
+const customTheme = document.getElementById("custom-theme");
+const customCryptoDecimals = document.getElementById("custom-crypto-decimal");
+const customFiatDecimals = document.getElementById("custom-fiat-decimal");
+const customFormat = document.getElementById("custom-format");
 
 let errorLogged = false; // Global flag to track error logging
 
@@ -27,6 +32,40 @@ const LAST_UPDATED_KEY = "lastUpdated";
 
 let currencies = [];
 let exchangeRates = {};
+
+async function checkCustomSettings() {
+  const formatSettings = await chrome.storage.local.get("numberFormat");
+  const fiatDecimalsSettings = await chrome.storage.local.get("fiatDecimals");
+  const cryptoDecimalsSettings = await chrome.storage.local.get(
+    "cryptoDecimals"
+  );
+  const themeSettings = await chrome.storage.local.get("theme");
+
+  if (formatSettings.numberFormat !== "comma-dot") {
+    console.log("formatSettings: ", formatSettings.numberFormat);
+    customFormat.classList.remove("hidden");
+  }
+  console.log("fiatDecimalsSettings: ", fiatDecimalsSettings.fiatDecimals);
+  if (fiatDecimalsSettings.fiatDecimals != 2) {
+    console.log("fiatDecimalsSettings: ", fiatDecimalsSettings.fiatDecimals);
+    customFiatDecimals.classList.remove("hidden");
+  }
+  console.log(
+    "cryptoDecimalsSettings: ",
+    cryptoDecimalsSettings.cryptoDecimals
+  );
+  if (cryptoDecimalsSettings.cryptoDecimals != 8) {
+    console.log(
+      "cryptoDecimalsSettings: ",
+      cryptoDecimalsSettings.cryptoDecimals
+    );
+    customCryptoDecimals.classList.remove("hidden");
+  }
+  if (themeSettings.theme !== "auto") {
+    console.log("themeSettings: ", themeSettings.theme);
+    customTheme.classList.remove("hidden");
+  }
+}
 
 async function loadSavedFormat() {
   const result = await chrome.storage.local.get("numberFormat");
@@ -1404,6 +1443,47 @@ hideDonationTab.addEventListener("click", () => {
   closeDonationTab();
 });
 
+restoreBtn.addEventListener("click", () => {
+  // Reset all settings to defaults
+  themeSelector.value = "auto";
+  formatSelector.value = "comma-dot";
+  fiatDecimalSelector.value = "2";
+  cryptoDecimalSelector.value = "8";
+
+  // Save all settings
+  localStorage.setItem("theme", themeSelector.value);
+  chrome.storage.local.set({ ["theme"]: themeSelector.value });
+
+  localStorage.setItem("numberFormat", formatSelector.value);
+  chrome.storage.local.set({ ["numberFormat"]: formatSelector.value });
+
+  localStorage.setItem("fiatDecimals", fiatDecimalSelector.value);
+  chrome.storage.local.set({ ["fiatDecimals"]: fiatDecimalSelector.value });
+
+  localStorage.setItem("cryptoDecimals", cryptoDecimalSelector.value);
+  chrome.storage.local.set({ ["cryptoDecimals"]: cryptoDecimalSelector.value });
+
+  // Manually update UI for immediate effect
+  customTheme.classList.add("hidden");
+  customFormat.classList.add("hidden");
+  customFiatDecimals.classList.add("hidden");
+  customCryptoDecimals.classList.add("hidden");
+
+  // Manually apply the theme change
+  darkModeBtn.classList.add("auto");
+
+  // Check system preference and apply immediately
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const preferredTheme = prefersDark ? "dark" : "light";
+
+  root.classList.toggle("dark-mode", preferredTheme === "dark");
+  darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+  // Save the actual theme being used
+  localStorage.setItem("darkMode", preferredTheme);
+  chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+});
+
 hideSettingsTab.addEventListener("click", () => {
   closeSettingsTab();
 });
@@ -1445,6 +1525,8 @@ function initializeInputStyles() {
 //🟣++++++++++++++++++++++++++++ APPLICATION ++++++++++++++++++++++++++++
 //🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 document.addEventListener("DOMContentLoaded", async () => {
+  checkCustomSettings();
+
   // Initial check with proper online status
   const isOnline = navigator.onLine;
   const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
@@ -1462,8 +1544,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Load user preference from localStorage and chrome.storage
   loadDarkMode();
-  loadThemePreference();
 
+  loadThemePreference();
   loadSavedFormat();
   loadSavedFiatDecimal();
   loadSavedCryptoDecimal();
@@ -1500,14 +1582,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   formatSelector.addEventListener("change", function () {
     saveNumberFormat();
+
+    if (formatSelector.value !== "comma-dot") {
+      customFormat.classList.remove("hidden");
+    } else {
+      customFormat.classList.add("hidden");
+    }
   });
 
   fiatDecimalSelector.addEventListener("change", function () {
     saveFiatDecimal();
+
+    if (fiatDecimalSelector.value != 2) {
+      customFiatDecimals.classList.remove("hidden");
+    } else {
+      customFiatDecimals.classList.add("hidden");
+    }
   });
 
   cryptoDecimalSelector.addEventListener("change", function () {
     saveCryptoDecimal();
+
+    if (cryptoDecimalSelector.value != 8) {
+      customCryptoDecimals.classList.remove("hidden");
+    } else {
+      customCryptoDecimals.classList.add("hidden");
+    }
   });
 
   themeSelector.addEventListener("change", function () {
@@ -1542,6 +1642,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Save the theme
       localStorage.setItem("darkMode", selectedTheme);
       chrome.storage.local.set({ ["darkMode"]: selectedTheme });
+    }
+
+    if (themeSelector.value !== "auto") {
+      customTheme.classList.remove("hidden");
+    } else {
+      customTheme.classList.add("hidden");
     }
   });
 

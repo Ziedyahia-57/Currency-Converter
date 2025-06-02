@@ -769,3 +769,9 @@ body {
   background: transparent;
   border: none;
 }
+
+.currency-converter-ex span.custom {
+  color: var(--primary-color);
+  font-weight: 500;
+  margin: 0 0 0 2px;
+}
