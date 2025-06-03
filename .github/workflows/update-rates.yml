@@ -1,24 +1,67 @@
-- name: Fetch exchange rates
-  id: fetch
-  env:
-    API_KEY: ${{ secrets.EXCHANGERATE_API_KEY }}
-  run: |
-    # Fetch with error handling
-    if ! curl -sSf --retry 3 --max-time 10 \
-      "https://api.exchangerate.host/live?access_key=$API_KEY" > response.json; then
-      echo "::error::Failed to fetch from API"
-      exit 1
-    fi
+name: Update Currency Rates
 
-    # Process response - remove USD prefix and add USD=1
-    if ! jq -e '
-      if .success == true then {
-        disclaimer: "Data sourced from exchangerate.host",
-        timestamp: (.timestamp|todate),
-        rates: { USD: 1 } + (.quotes | with_entries(.key |= sub("^USD"; "")))
-      } else error("API error: \(.error.type)") end
-    ' response.json > data.json; then
-      echo "::error::Invalid API response structure"
-      cat response.json
-      exit 1
-    fi
+on:
+  schedule:
+    - cron: '0 12 * * *'  # Daily at 12:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-rates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: sudo apt-get install -y jq curl
+
+      - name: Fetch exchange rates
+        id: fetch
+        env:
+          API_KEY: ${{ secrets.EXCHANGERATE_API_KEY }}
+        run: |
+          # Fetch with error handling
+          if ! curl -sSf --retry 3 --max-time 10 \
+            "https://api.exchangerate.host/live?access_key=$API_KEY" > response.json; then
+            echo "::error::Failed to fetch from API"
+            exit 1
+          fi
+
+          # Process response - remove USD prefix from currency codes
+          if ! jq -e '
+            if .success == true then {
+              disclaimer: "Data sourced from exchangerate.host",
+              timestamp: (.timestamp|todate),
+              rates: .quotes | with_entries(.key |= sub("^USD"; ""))
+            } else error("API error: \(.error.type)") end
+          ' response.json > data.json; then
+            echo "::error::Invalid API response structure"
+            cat response.json
+            exit 1
+          fi
+
+      - name: Commit changes
+        if: always()
+        run: |
+          if [[ -f data.json ]] && jq -e '.rates' data.json >/dev/null; then
+            git config --global user.name "GitHub Actions"
+            git config --global user.email "actions@github.com"
+            git add data.json
+            
+            if [ -n "$(git status --porcelain)" ]; then
+              git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+              git push
+              echo "::notice::Rates updated successfully"
+            else
+              echo "::notice::No rate changes detected"
+            fi
+          else
+            echo "::error::Invalid or empty rates data"
+            [[ -f response.json ]] && cat response.json
+            exit 1
+          fi
