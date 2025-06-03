@@ -39,18 +39,20 @@ jobs:
 
           # Simple processing that works with exchangerate.host's format
           jq -e '
+            (map(select(.symbol and .current_price) | select(.symbol != "btc"))[0:10]) as $top10 |
             {
-              disclaimer: "Data sourced from exchangerate.host",
-              timestamp: ((.date // now | tostring) + "T00:00:00Z"),
-              base: (.base // "USD"),
-              rates: ({"USD": 1} + (.rates // {}))
-              }
-            ' traditional_response.json > traditional_rates.json || {
-              echo "::error::Failed to process exchange rates"
-              echo "Problematic response:"
-              cat traditional_response.json
-              exit 1
+              disclaimer: "Data sourced from CoinGecko (top 10 cryptos excluding BTC)",
+              timestamp: (now|todate),
+              base: "USD",
+              rates: reduce $top10[] as $coin ({}; .[($coin.symbol|ascii_upcase)] = $coin.current_price)
             }
+          ' crypto_response.json > crypto_rates.json || {
+            echo "::error::Failed to process crypto rates"
+            echo "Problematic response:"
+            cat crypto_response.json
+            exit 1
+          }
+
 
           echo "Successfully processed traditional rates:"
           cat traditional_rates.json
