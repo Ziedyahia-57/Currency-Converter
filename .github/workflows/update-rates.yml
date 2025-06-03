@@ -11,7 +11,7 @@ permissions:
 jobs:
   update-rates:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     
     steps:
       - name: Checkout repository
@@ -23,8 +23,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -y -q jq curl || {
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq curl || {
             echo "::error::Failed to install dependencies"
             exit 1
           }
@@ -33,73 +33,137 @@ jobs:
         id: fetch-traditional
         run: |
           API_URL="https://api.exchangerate.host/latest?base=USD"
-          echo "Fetching rates from: $API_URL"
-
-          curl -sSf --retry 3 --retry-delay 5 --max-time 10 "$API_URL" > traditional_response.json || {
+          echo "::group::Fetching traditional rates from $API_URL"
+          
+          curl -sSf --retry 3 --retry-delay 5 --max-time 15 \
+            -H "User-Agent: GitHub Actions Currency Updater" \
+            "$API_URL" > traditional_response.json || {
             echo "::error::Failed to fetch exchange rates"
             exit 1
           }
 
-          echo "Traditional API Response:"
-          head -n 50 traditional_response.json
+          echo "Raw API response (first 100 chars):"
+          head -c 100 traditional_response.json
+          echo -e "\n::endgroup::"
 
+          echo "::group::Processing traditional rates"
           jq -e '
-            {
-              disclaimer: "Data sourced from exchangerate.host",
-              timestamp: ((.date // (now | todateiso8601)) + "T00:00:00Z"),
-              base: (.base // "USD"),
-              rates: ({"USD": 1} + (.rates // {}))
-            }
+            if (.rates | length) > 0 then
+              {
+                disclaimer: "Data sourced from exchangerate.host",
+                timestamp: ((.date // (now | todateiso8601)) + "T00:00:00Z"),
+                base: (.base // "USD"),
+                rates: ({"USD": 1} + (.rates // {}))
+              }
+            else
+              error("No rates found in API response")
+            end
           ' traditional_response.json > traditional_rates.json || {
             echo "::error::Failed to process exchange rates"
+            echo "Problematic response:"
+            cat traditional_response.json
             exit 1
           }
-
-          echo "Traditional currencies count:"
-          jq '.rates | length' traditional_rates.json
+          
+          echo "Processed $(jq '.rates | length' traditional_rates.json) currencies"
+          echo "::endgroup::"
 
       - name: Fetch cryptocurrency rates (excluding BTC)
         id: fetch-crypto
         run: |
-          echo "Fetching top cryptos from CoinGecko (excluding BTC)..."
-          curl -sSf --retry 3 --retry-delay 5 --max-time 10 \
-            "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=11&page=1&sparkline=false" > crypto_response.json || {
+          echo "::group::Fetching crypto rates (excluding BTC)"
+          echo "Waiting 5s to avoid rate limits..."
+          sleep 5
+
+          API_URL="https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=12&page=1&sparkline=false"
+          echo "Fetching from CoinGecko: $API_URL"
+          
+          curl -sSf --retry 5 --retry-delay 10 --max-time 20 \
+            -H "User-Agent: GitHub Actions Currency Updater" \
+            "$API_URL" > crypto_response.json || {
             echo "::error::Failed to fetch crypto rates"
             exit 1
           }
 
-          echo "Crypto API Response (first 5 items):"
-          jq '.[0:5]' crypto_response.json
+          echo "Raw API response (first 200 chars):"
+          head -c 200 crypto_response.json
+          echo -e "\n::endgroup::"
 
+          echo "::group::Processing crypto data"
           jq -e '
-            (map(select(.symbol and .current_price and (.symbol != "btc"))[0:10]) as $top10 |
-            {
-              disclaimer: "Data sourced from CoinGecko (top 10 cryptos excluding BTC)",
-              timestamp: (now | todateiso8601),
-              base: "USD",
-              rates: reduce $top10[] as $coin ({}; .[($coin.symbol | ascii_upcase)] = $coin.current_price)
-            }
+            def safe_upcase: try ascii_upcase catch null;
+            
+            (map(select(
+              .symbol? and 
+              (.symbol|type == "string") and
+              .current_price? and
+              (.current_price|type == "number") and
+              (.symbol != "btc")
+            )[0:10]) as $top10 |
+            
+            if ($top10 | length) < 5 then
+              error("Insufficient valid cryptos after filtering (found \($top10|length))")
+            else
+              {
+                disclaimer: "Data sourced from CoinGecko (top 10 cryptos excluding BTC)",
+                timestamp: (now | todateiso8601),
+                base: "USD",
+                rates: reduce $top10[] as $coin ({}; 
+                  .[($coin.symbol | safe_upcase // "INVALID")] = $coin.current_price
+                )
+              }
+            end
           ' crypto_response.json > crypto_rates.json || {
             echo "::error::Failed to process crypto rates"
+            echo "Debug info:"
+            jq '.[] | {id, symbol, current_price}' crypto_response.json || cat crypto_response.json
             exit 1
           }
 
-          echo "Processed crypto currencies (excluding BTC):"
+          echo "Processed $(jq '.rates | length' crypto_rates.json) cryptos:"
           jq '.rates | keys' crypto_rates.json
+          echo "::endgroup::"
 
       - name: Validate responses
         run: |
-          jq -e '.' traditional_rates.json > /dev/null || exit 1
-          jq -e '.' crypto_rates.json > /dev/null || exit 1
+          echo "::group::Validating responses"
+          # Check files exist and contain valid JSON
+          jq -e '.' traditional_rates.json > /dev/null || {
+            echo "::error::Invalid traditional_rates.json"
+            exit 1
+          }
+          
+          jq -e '.' crypto_rates.json > /dev/null || {
+            echo "::error::Invalid crypto_rates.json"
+            exit 1
+          }
           
           # Verify BTC is not present
-          if jq -e '.rates.BTC' crypto_rates.json > /dev/null; then
+          if jq -e '.rates | has("BTC")' crypto_rates.json > /dev/null; then
             echo "::error::BTC was found in crypto rates when it should be excluded"
+            jq '.rates.BTC' crypto_rates.json
             exit 1
           fi
 
+          # Minimum counts
+          TRADITIONAL_COUNT=$(jq '.rates | length' traditional_rates.json)
+          CRYPTO_COUNT=$(jq '.rates | length' crypto_rates.json)
+          
+          if [ "$TRADITIONAL_COUNT" -lt 10 ]; then
+            echo "::error::Too few traditional currencies: $TRADITIONAL_COUNT"
+            exit 1
+          fi
+          
+          if [ "$CRYPTO_COUNT" -lt 5 ]; then
+            echo "::error::Too few cryptocurrencies: $CRYPTO_COUNT"
+            exit 1
+          fi
+          echo "Validation passed"
+          echo "::endgroup::"
+
       - name: Combine rates
         run: |
+          echo "::group::Combining rates"
           jq -s '
             .[0] as $traditional |
             .[1] as $crypto |
@@ -115,20 +179,29 @@ jobs:
                 btc_excluded: true
               }
             }
-          ' traditional_rates.json crypto_rates.json > rates.json
+          ' traditional_rates.json crypto_rates.json > rates.json || {
+            echo "::error::Failed to combine rates"
+            exit 1
+          }
 
-          echo "Final rates count:"
+          echo "Final combined rates:"
           jq '.rates | length' rates.json
+          echo "::endgroup::"
 
       - name: Commit and push changes
         run: |
+          echo "::group::Git operations"
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+          
           git add rates.json
-
+          
           if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ') [BTC excluded]"
+            git commit -m "Auto-update rates [$(date -u +'%Y-%m-%dT%H:%MZ')] (BTC excluded)"
+            git pull --rebase
             git push origin HEAD:main
+            echo "Changes pushed successfully"
           else
             echo "No changes to commit"
           fi
+          echo "::endgroup::"
