@@ -29,10 +29,12 @@ jobs:
 
       - name: Fetch traditional exchange rates
         id: fetch-traditional
+        env:
+          EXCHANGERATE_API_KEY: ${{ secrets.EXCHANGERATE_API_KEY }}
         run: |
           set -euo pipefail
-          API_URL="https://api.exchangerate.host/live?access_key=$API_KEY"
-          echo "::group::Fetching traditional rates from $API_URL"
+          API_URL="https://api.exchangerate.host/live?access_key=$EXCHANGERATE_API_KEY"
+          echo "::group::Fetching traditional rates"
           curl -sSf --retry 3 --retry-delay 5 --max-time 15 \
             -H "User-Agent: GitHub Actions Currency Updater" \
             "$API_URL" > traditional_response.json
@@ -104,18 +106,15 @@ jobs:
         run: |
           set -euo pipefail
           echo "::group::Validating responses"
-          # Check files exist and contain valid JSON
           jq -e '.' traditional_rates.json > /dev/null
           jq -e '.' crypto_rates.json > /dev/null
 
-          # Verify BTC is not present (case sensitive since all symbols are upcased)
           if jq -e '.rates | has("BTC")' crypto_rates.json > /dev/null; then
             echo "::error::BTC was found in crypto rates when it should be excluded"
             jq '.rates.BTC' crypto_rates.json
             exit 1
           fi
 
-          # Minimum counts
           TRADITIONAL_COUNT=$(jq '.rates | length' traditional_rates.json)
           CRYPTO_COUNT=$(jq '.rates | length' crypto_rates.json)
 
