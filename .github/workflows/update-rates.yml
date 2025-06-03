@@ -20,48 +20,90 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install -y jq curl
 
-      - name: Fetch exchange rates
-        id: fetch
+      - name: Fetch traditional exchange rates
+        id: fetch-traditional
         env:
           API_KEY: ${{ secrets.EXCHANGERATE_API_KEY }}
         run: |
           # Fetch with error handling
           if ! curl -sSf --retry 3 --max-time 10 \
-            "https://api.exchangerate.host/live?access_key=$API_KEY" > response.json; then
-            echo "::error::Failed to fetch from API"
+            "https://api.exchangerate.host/live?access_key=$API_KEY" > traditional_response.json; then
+            echo "::error::Failed to fetch from exchangerate.host API"
             exit 1
           fi
 
-          # Process response - remove USD prefix from currency codes
+          # Process response - remove USD prefix and add USD=1.0
           if ! jq -e '
             if .success == true then {
               disclaimer: "Data sourced from exchangerate.host",
               timestamp: (.timestamp|todate),
-              rates: .quotes | with_entries(.key |= sub("^USD"; ""))
+              base: "USD",
+              rates: ({"USD": 1} + (.quotes | with_entries(.key |= sub("^USD"; "")))
             } else error("API error: \(.error.type)") end
-          ' response.json > data.json; then
-            echo "::error::Invalid API response structure"
-            cat response.json
+          ' traditional_response.json > traditional_rates.json; then
+            echo "::error::Invalid exchangerate.host API response structure"
+            cat traditional_response.json
             exit 1
           fi
 
-      - name: Commit changes
-        if: always()
+      - name: Fetch cryptocurrency rates
+        id: fetch-crypto
         run: |
-          if [[ -f data.json ]] && jq -e '.rates' data.json >/dev/null; then
-            git config --global user.name "GitHub Actions"
-            git config --global user.email "actions@github.com"
-            git add data.json
-            
-            if [ -n "$(git status --porcelain)" ]; then
-              git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-              git push
-              echo "::notice::Rates updated successfully"
-            else
-              echo "::notice::No rate changes detected"
-            fi
-          else
-            echo "::error::Invalid or empty rates data"
-            [[ -f response.json ]] && cat response.json
+          # Fetch top 20 cryptos (we'll filter out BTC later)
+          if ! curl -sSf --retry 3 --max-time 10 \
+            "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1" > crypto_response.json; then
+            echo "::error::Failed to fetch from CoinGecko API"
             exit 1
+          fi
+
+          # Process response - get top 10 cryptos excluding BTC, all vs USD
+          if ! jq -e '
+            map(select(.symbol != "btc")) | .[0:10] | 
+            {
+              disclaimer: "Data sourced from CoinGecko (top 10 cryptos by market cap excluding BTC)",
+              timestamp: (now|todate),
+              base: "USD",
+              rates: reduce .[] as $coin ({}; .[$coin.symbol] = $coin.current_price)
+            }
+          ' crypto_response.json > crypto_rates.json; then
+            echo "::error::Invalid CoinGecko API response structure"
+            cat crypto_response.json
+            exit 1
+          fi
+
+      - name: Combine rates into single file
+        run: |
+          # Merge both rate sets into one unified object
+          jq -s '
+            .[0] as $traditional | 
+            .[1] as $crypto |
+            {
+              disclaimer: "Combined currency rates from exchangerate.host (traditional) and CoinGecko (crypto)",
+              timestamp: (now|todate),
+              base: "USD",
+              last_updated: (now|todate),
+              rates: ($traditional.rates + $crypto.rates),
+              metadata: {
+                traditional_currencies_count: ($traditional.rates|length),
+                cryptocurrencies_count: ($crypto.rates|length),
+                sources: [
+                  $traditional.disclaimer,
+                  $crypto.disclaimer
+                ]
+              }
+            }
+          ' traditional_rates.json crypto_rates.json > rates.json
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add rates.json
+            
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git push
+            echo "::notice::Rates updated successfully"
+          else
+            echo "::notice::No rate changes detected"
           fi
