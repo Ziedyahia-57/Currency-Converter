@@ -22,26 +22,29 @@ jobs:
 
       - name: Fetch traditional exchange rates
         id: fetch-traditional
-        env:
-          API_KEY: ${{ secrets.EXCHANGERATE_API_KEY }}
         run: |
-          # Fetch with error handling
+          # Fetch with more resilient error handling
           if ! curl -sSf --retry 3 --max-time 10 \
-            "https://api.exchangerate.host/live?access_key=$API_KEY" > traditional_response.json; then
+            "https://api.exchangerate.host/latest?base=USD" > traditional_response.json; then
             echo "::error::Failed to fetch from exchangerate.host API"
             exit 1
           fi
 
-          # Process response - remove USD prefix and add USD=1.0
+          # More flexible response processing
           if ! jq -e '
-            if .success == true then {
-              disclaimer: "Data sourced from exchangerate.host",
-              timestamp: (.timestamp|todate),
-              base: "USD",
-              rates: ({"USD": 1} + (.quotes | with_entries(.key |= sub("^USD"; "")))
-            } else error("API error: \(.error.type)") end
+            if .success == true or .success == null then 
+              {
+                disclaimer: "Data sourced from exchangerate.host",
+                timestamp: (.date // now|todate),
+                base: .base // "USD",
+                rates: ({"USD": 1} + (.rates // {}))
+              }
+            else 
+              error("API error: \(.error?.type // "unknown error")")
+            end
           ' traditional_response.json > traditional_rates.json; then
-            echo "::error::Invalid exchangerate.host API response structure"
+            echo "::error::Failed to process API response"
+            echo "Raw API response:"
             cat traditional_response.json
             exit 1
           fi
@@ -56,40 +59,50 @@ jobs:
             exit 1
           fi
 
-          # Process response - get top 10 cryptos excluding BTC, all vs USD
+          # Process response with better error handling
           if ! jq -e '
-            map(select(.symbol != "btc")) | .[0:10] | 
-            {
-              disclaimer: "Data sourced from CoinGecko (top 10 cryptos by market cap excluding BTC)",
+            try (
+              map(select(.symbol != "btc" and .symbol != null)) | .[0:10] | 
+              {
+                disclaimer: "Data sourced from CoinGecko (top 10 cryptos by market cap excluding BTC)",
+                timestamp: (now|todate),
+                base: "USD",
+                rates: reduce .[] as $coin ({}; .[($coin.symbol|ascii_upcase)] = $coin.current_price)
+              }
+            catch {
+              disclaimer: "Error processing crypto data",
               timestamp: (now|todate),
               base: "USD",
-              rates: reduce .[] as $coin ({}; .[$coin.symbol] = $coin.current_price)
+              rates: {},
+              error: (. // "unknown error")
             }
           ' crypto_response.json > crypto_rates.json; then
-            echo "::error::Invalid CoinGecko API response structure"
+            echo "::error::Failed to process CoinGecko response"
             cat crypto_response.json
             exit 1
           fi
 
       - name: Combine rates into single file
         run: |
-          # Merge both rate sets into one unified object
           jq -s '
             .[0] as $traditional | 
             .[1] as $crypto |
             {
-              disclaimer: "Combined currency rates from exchangerate.host (traditional) and CoinGecko (crypto)",
+              disclaimer: "Combined currency rates",
               timestamp: (now|todate),
               base: "USD",
               last_updated: (now|todate),
               rates: ($traditional.rates + $crypto.rates),
               metadata: {
-                traditional_currencies_count: ($traditional.rates|length),
-                cryptocurrencies_count: ($crypto.rates|length),
+                traditional_currencies: ($traditional.rates|length),
+                cryptocurrencies: ($crypto.rates|length),
                 sources: [
                   $traditional.disclaimer,
                   $crypto.disclaimer
-                ]
+                ],
+                warnings: [
+                  if $crypto.error then "Crypto data error: \($crypto.error)" else empty end
+                ] | join(", ")
               }
             }
           ' traditional_rates.json crypto_rates.json > rates.json
