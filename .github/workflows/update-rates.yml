@@ -41,16 +41,16 @@ jobs:
           jq -e '
             {
               disclaimer: "Data sourced from exchangerate.host",
-              timestamp: (.date // now|todate),
-              base: .base // "USD",
+              timestamp: ((.date // now | tostring) + "T00:00:00Z"),
+              base: (.base // "USD"),
               rates: ({"USD": 1} + (.rates // {}))
+              }
+            ' traditional_response.json > traditional_rates.json || {
+              echo "::error::Failed to process exchange rates"
+              echo "Problematic response:"
+              cat traditional_response.json
+              exit 1
             }
-          ' traditional_response.json > traditional_rates.json || {
-            echo "::error::Failed to process exchange rates"
-            echo "Problematic response:"
-            cat traditional_response.json
-            exit 1
-          }
 
           echo "Successfully processed traditional rates:"
           cat traditional_rates.json
