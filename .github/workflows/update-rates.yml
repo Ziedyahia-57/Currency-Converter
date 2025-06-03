@@ -32,12 +32,12 @@ jobs:
             exit 1
           fi
 
-          # Process response - remove USD prefix from currency codes
+          # Process response - remove USD prefix from currency codes and add USD=1
           if ! jq -e '
             if .success == true then {
               disclaimer: "Data sourced from exchangerate.host",
               timestamp: (.timestamp|todate),
-              rates: .quotes | with_entries(.key |= sub("^USD"; ""))
+              rates: { USD: 1 } + (.quotes | with_entries(.key |= sub("^USD"; "")))
             } else error("API error: \(.error.type)") end
           ' response.json > data.json; then
             echo "::error::Invalid API response structure"
