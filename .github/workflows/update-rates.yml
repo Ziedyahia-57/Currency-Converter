@@ -25,63 +25,43 @@ jobs:
         env:
           API_KEY: ${{ secrets.EXCHANGERATE_API_KEY }}
         run: |
-          # Enhanced fetch with better error handling
-          echo "Fetching exchange rates..."
-          if ! response=$(curl -sSf --retry 3 --max-time 10 \
-            "https://api.exchangerate.host/live?access_key=$API_KEY"); then
+          # Fetch with error handling
+          if ! curl -sSf --retry 3 --max-time 10 \
+            "https://api.exchangerate.host/live?access_key=$API_KEY" > response.json; then
             echo "::error::Failed to fetch from API"
-            echo "Curl exit code: $?"
             exit 1
           fi
 
-          echo "$response" > response.json
-          
-          # Validate basic response structure first
-          if ! jq -e '.success' response.json >/dev/null; then
-            echo "::error::Invalid API response - missing success field"
-            echo "API Response:"
-            cat response.json
-            exit 1
-          fi
-
-          # Process response with better error handling
+          # Process response - remove USD prefix and add USD:1
           if ! jq -e '
             if .success == true then {
               disclaimer: "Data sourced from exchangerate.host",
               timestamp: (.timestamp|todate),
-              rates: { USD: 1 } + (.quotes | with_entries(.key |= sub("^USD"; "")))
-            } else error("API error: \(.error.type // "unknown error")") end
+              rates: .quotes | with_entries(.key |= sub("^USD"; "")) | .USD = 1
+            } else error("API error: \(.error.type)") end
           ' response.json > data.json; then
-            echo "::error::Failed to process API response"
-            echo "Original response:"
+            echo "::error::Invalid API response structure"
             cat response.json
             exit 1
           fi
 
-          echo "Successfully processed rates:"
-          jq . data.json
-
       - name: Commit changes
+        if: always()
         run: |
-          if [[ ! -f data.json ]]; then
-            echo "::error::data.json file not found"
-            exit 1
-          fi
-
-          if ! jq -e '.rates' data.json >/dev/null; then
-            echo "::error::Invalid rates data in data.json"
-            cat data.json
-            exit 1
-          fi
-
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add data.json
+          if [[ -f data.json ]] && jq -e '.rates' data.json >/dev/null; then
+            git config --global user.name "GitHub Actions"
+            git config --global user.email "actions@github.com"
+            git add data.json
             
-          if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            git push
-            echo "::notice::Rates updated successfully"
+            if [ -n "$(git status --porcelain)" ]; then
+              git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+              git push
+              echo "::notice::Rates updated successfully"
+            else
+              echo "::notice::No rate changes detected"
+            fi
           else
-            echo "::notice::No rate changes detected"
+            echo "::error::Invalid or empty rates data"
+            [[ -f response.json ]] && cat response.json
+            exit 1
           fi
