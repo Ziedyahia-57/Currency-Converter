@@ -32,12 +32,19 @@ jobs:
             exit 1
           fi
 
-          # Process response - remove USD prefix and add USD:1
+          # Process response - clean rates and add USD:1 properly
           if ! jq -e '
             if .success == true then {
               disclaimer: "Data sourced from exchangerate.host",
               timestamp: (.timestamp|todate),
-              rates: .quotes | with_entries(.key |= sub("^USD"; "")) | .USD = 1
+              rates: (
+                .quotes | with_entries(
+                  if .key == "USDUSD" then empty
+                  elif (.key | startswith("USD")) then .key |= sub("^USD"; "")
+                  else empty
+                  end
+                ) | .USD = 1
+              )
             } else error("API error: \(.error.type)") end
           ' response.json > data.json; then
             echo "::error::Invalid API response structure"
@@ -45,23 +52,23 @@ jobs:
             exit 1
           fi
 
-      - name: Commit changes
-        if: always()
-        run: |
-          if [[ -f data.json ]] && jq -e '.rates' data.json >/dev/null; then
-            git config --global user.name "GitHub Actions"
-            git config --global user.email "actions@github.com"
-            git add data.json
-            
-            if [ -n "$(git status --porcelain)" ]; then
-              git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-              git push
-              echo "::notice::Rates updated successfully"
-            else
-              echo "::notice::No rate changes detected"
-            fi
-          else
-            echo "::error::Invalid or empty rates data"
-            [[ -f response.json ]] && cat response.json
+          # Validate the output
+          if ! jq -e '.rates.USD == 1 and (.rates | length) > 1' data.json >/dev/null; then
+            echo "::error::Invalid rates data format"
+            cat data.json
             exit 1
+          fi
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add data.json
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git push
+            echo "::notice::Rates updated successfully"
+          else
+            echo "::notice::No rate changes detected"
           fi
