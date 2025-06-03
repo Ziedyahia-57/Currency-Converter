@@ -31,7 +31,7 @@ jobs:
         id: fetch-traditional
         run: |
           set -euo pipefail
-          API_URL="https://api.exchangerate.host/latest?base=USD"
+          API_URL="https://api.exchangerate.host/live?access_key=$API_KEY""
           echo "::group::Fetching traditional rates from $API_URL"
           curl -sSf --retry 3 --retry-delay 5 --max-time 15 \
             -H "User-Agent: GitHub Actions Currency Updater" \
