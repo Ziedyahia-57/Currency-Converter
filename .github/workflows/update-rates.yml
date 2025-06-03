@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Install dependencies
         run: sudo apt-get install -y jq curl
@@ -23,89 +23,60 @@ jobs:
       - name: Fetch traditional exchange rates
         id: fetch-traditional
         run: |
-          # Try multiple API endpoints with fallback
-          if ! curl -sSf --retry 3 --max-time 10 \
-            "https://api.exchangerate.host/latest?base=USD" > traditional_response.json; then
-            echo "::warning::Failed primary API endpoint, trying fallback..."
-            if ! curl -sSf --retry 3 --max-time 10 \
-              "https://api.exchangerate-api.com/v4/latest/USD" > traditional_response.json; then
-              echo "::error::All API endpoints failed"
-              exit 1
-            fi
-          fi
+          # Use the most reliable free endpoint
+          API_URL="https://api.exchangerate.host/latest?base=USD"
+          
+          echo "Fetching rates from: $API_URL"
+          curl -sSf --retry 3 --max-time 10 "$API_URL" > traditional_response.json || {
+            echo "::error::Failed to fetch exchange rates"
+            exit 1
+          }
 
           # Debug: Show API response
           echo "API Response:"
           cat traditional_response.json
           echo ""
 
-          # More resilient processing with multiple format support
-          if ! jq -e '
-            # Try different response formats
-            if .rates then 
-              {"USD": 1} + (.rates | with_entries(select(.value|type == "number")))
-            elif .quotes then 
-              {"USD": 1} + (.quotes | with_entries(.key |= sub("^USD"; "")))
-            else
-              error("Unsupported response format")
-            end | {
-              disclaimer: "Data sourced from exchangerate API",
-              timestamp: (.timestamp // .date // now | todate),
-              base: "USD",
-              rates: .
+          # Simple processing that works with exchangerate.host's format
+          jq -e '
+            {
+              disclaimer: "Data sourced from exchangerate.host",
+              timestamp: (.date // now|todate),
+              base: .base // "USD",
+              rates: ({"USD": 1} + (.rates // {}))
             }
-          ' traditional_response.json > traditional_rates.json; then
-            echo "::error::Failed to process traditional rates"
-            echo "Raw response:"
+          ' traditional_response.json > traditional_rates.json || {
+            echo "::error::Failed to process exchange rates"
+            echo "Problematic response:"
             cat traditional_response.json
             exit 1
-          fi
+          }
+
+          echo "Successfully processed traditional rates:"
+          cat traditional_rates.json
 
       - name: Fetch cryptocurrency rates
         id: fetch-crypto
         run: |
-          # Fetch with multiple fallback options
-          if ! curl -sSf --retry 3 --max-time 10 \
-            "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1" > crypto_response.json; then
-            echo "::warning::Primary CoinGecko failed, trying alternative..."
-            if ! curl -sSf --retry 3 --max-time 10 \
-              "https://api.coincap.io/v2/assets?limit=20" > crypto_response.json; then
-              echo "::error::All crypto API endpoints failed"
-              exit 1
-            fi
-          fi
+          curl -sSf --retry 3 --max-time 10 \
+            "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=11&page=1" > crypto_response.json || {
+            echo "::error::Failed to fetch crypto rates"
+            exit 1
+          }
 
-          # Debug: Show API response
-          echo "Crypto API Response:"
-          head -c 1000 crypto_response.json  # Show first 1000 chars to avoid huge logs
-          echo ""
-
-          # Process with multiple format support
-          if ! jq -e '
-            def try_coingecko:
-              if (. | type) == "array" then
-                map(select(.symbol? and .symbol != "btc" and .current_price?))[0:10] |
-                reduce .[] as $coin ({}; .[($coin.symbol|ascii_upcase)] = $coin.current_price)
-              else empty end;
-            
-            def try_coincap:
-              if .data? then
-                .data | map(select(.symbol? and .symbol != "BTC" and .priceUsd?))[0:10] |
-                reduce .[] as $coin ({}; .[$coin.symbol] = ($coin.priceUsd | tonumber))
-              else empty end;
-            
-            (try_coingecko // try_coincap // {}) | {
-              disclaimer: "Data sourced from crypto API",
+          # Get top 10 non-BTC cryptos
+          jq -e '
+            [.[] | select(.symbol != "btc")][0:10] |
+            {
+              disclaimer: "Data sourced from CoinGecko (top 10 cryptos excluding BTC)",
               timestamp: (now|todate),
               base: "USD",
-              rates: .
+              rates: reduce .[] as $coin ({}; .[($coin.symbol|ascii_upcase)] = $coin.current_price)
             }
-          ' crypto_response.json > crypto_rates.json; then
+          ' crypto_response.json > crypto_rates.json || {
             echo "::error::Failed to process crypto rates"
-            echo "Raw response start:"
-            head -c 500 crypto_response.json
             exit 1
-          fi
+          }
 
       - name: Combine rates
         run: |
@@ -116,30 +87,20 @@ jobs:
               disclaimer: "Combined currency rates",
               timestamp: (now|todate),
               base: "USD",
-              last_updated: (now|todate),
               rates: ($traditional.rates + $crypto.rates),
               metadata: {
-                traditional_count: ($traditional.rates|length),
-                crypto_count: ($crypto.rates|length),
-                sources: [
-                  $traditional.disclaimer,
-                  $crypto.disclaimer
-                ]
+                last_updated: (now|todate),
+                traditional_currencies: ($traditional.rates|length),
+                cryptocurrencies: ($crypto.rates|length)
               }
             }
           ' traditional_rates.json crypto_rates.json > rates.json
 
-          # Debug: Show final output
-          echo "Final rates.json:"
+          echo "Final rates:"
           cat rates.json
 
       - name: Commit changes
         run: |
-          if [ ! -f rates.json ]; then
-            echo "::error::rates.json not found"
-            exit 1
-          fi
-
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add rates.json
@@ -147,7 +108,6 @@ jobs:
           if [ -n "$(git status --porcelain)" ]; then
             git commit -m "Update rates: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             git push
-            echo "::notice::Rates updated successfully"
           else
-            echo "::notice::No rate changes detected"
+            echo "No changes to commit"
           fi
