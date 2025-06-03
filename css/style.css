@@ -685,6 +685,8 @@ body {
 .currency-converter-ex select#format,
 .currency-converter-ex select#fiat-round,
 .currency-converter-ex select#crypto-round,
+.currency-converter-ex select#time,
+.currency-converter-ex select#date,
 .currency-converter-ex select#theme {
   height: 26px;
   display: flex;
@@ -774,4 +776,14 @@ body {
   color: var(--primary-color);
   font-weight: 500;
   margin: 0 0 0 2px;
+}
+
+.currency-converter-ex .content {
+  overflow-y: overlay;
+  scrollbar-color: #6e6e6e73 transparent;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  display: block;
+  width: -webkit-fill-available;
+  height: 340px;
 }

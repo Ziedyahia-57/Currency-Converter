@@ -139,92 +139,131 @@
             </button>
             Settings
           </h3>
-          <div class="settings-content">
-            <div class="title-row">
-              <p class="section-title">Formatting</p>
+          <div class="content">
+            <div class="settings-content">
+              <div class="title-row">
+                <p class="section-title">Input Settings</p>
+              </div>
+              <div class="row">
+                <p class="option-name">
+                  Number Formatting<span
+                    class="custom hidden"
+                    id="custom-format"
+                    title="custom"
+                    >*</span
+                  >
+                </p>
+                <select id="format">
+                  <option value="comma-dot" selected="">
+                    1,000.00 (default)
+                  </option>
+                  <option value="dot-comma">1.000,00</option>
+                  <option value="space-dot">1 000.00</option>
+                  <option value="space-comma">1 000,00</option>
+                  <option value="none-dot">1000.00</option>
+                  <option value="none-comma">1000,00</option>
+                </select>
+              </div>
+              <div class="row">
+                <p class="option-name">
+                  FIAT Rounding<span
+                    class="custom"
+                    id="custom-fiat-decimal"
+                    title="custom"
+                    >*</span
+                  >
+                </p>
+                <select id="fiat-round">
+                  <option value="0">Integer Only</option>
+                  <option value="2" selected="">2 Decimals (default)</option>
+                  <option value="3">3 Decimals</option>
+                  <option value="4">4 Decimals</option>
+                  <option value="5">5 Decimals</option>
+                  <option value="6">6 Decimals</option>
+                  <option value="7">7 Decimals</option>
+                  <option value="8">8 Decimals</option>
+                </select>
+              </div>
+              <div class="row">
+                <p class="option-name">
+                  Bitcoin Rounding<span
+                    class="custom hidden"
+                    id="custom-crypto-decimal"
+                    title="custom"
+                    >*</span
+                  >
+                </p>
+                <select id="crypto-round">
+                  <option value="0">Integer Only</option>
+                  <option value="2">2 Decimals</option>
+                  <option value="3">3 Decimals</option>
+                  <option value="4">4 Decimals</option>
+                  <option value="5">5 Decimals</option>
+                  <option value="6">6 Decimals</option>
+                  <option value="7">7 Decimals</option>
+                  <option value="8" selected="">8 Decimals (default)</option>
+                </select>
+              </div>
             </div>
-            <div class="row">
-              <p class="option-name">
-                Number Formatting<span
-                  class="custom hidden"
-                  id="custom-format"
-                  title="custom"
-                  >*</span
-                >
-              </p>
-              <select id="format">
-                <option value="comma-dot" selected>1,000.00 (default)</option>
-                <option value="dot-comma">1.000,00</option>
-                <option value="space-dot">1 000.00</option>
-                <option value="space-comma">1 000,00</option>
-                <option value="none-dot">1000.00</option>
-                <option value="none-comma">1000,00</option>
-              </select>
+            <div class="settings-content">
+              <div class="title-row">
+                <p class="section-title">Appearance</p>
+              </div>
+              <div class="row">
+                <p class="option-name">
+                  Theme<span
+                    class="custom hidden"
+                    id="custom-theme"
+                    title="custom"
+                    >*</span
+                  >
+                </p>
+                <select id="theme">
+                  <option value="manual">Manual</option>
+                  <option value="auto" selected="">Browser (default)</option>
+                </select>
+              </div>
             </div>
-            <div class="row">
-              <p class="option-name">
-                FIAT Rounding<span
-                  class="custom hidden"
-                  id="custom-fiat-decimal"
-                  title="custom"
-                  >*</span
-                >
-              </p>
-              <select id="fiat-round">
-                <option value="0">Integer Only</option>
-                <option value="2" selected>2 Decimals (default)</option>
-                <option value="3">3 Decimals</option>
-                <option value="4">4 Decimals</option>
-                <option value="5">5 Decimals</option>
-                <option value="6">6 Decimals</option>
-                <option value="7">7 Decimals</option>
-                <option value="8">8 Decimals</option>
-              </select>
+            <div class="settings-content">
+              <div class="title-row">
+                <p class="section-title">Date &amp; Time Format</p>
+              </div>
+              <div class="row">
+                <p class="option-name">
+                  Time<span
+                    class="custom hidden"
+                    id="custom-theme"
+                    title="custom"
+                    >*</span
+                  >
+                </p>
+                <select id="time">
+                  <option value="ampm" selected>AM/PM</option>
+                  <option value="24h" selected="">24H</option>
+                </select>
+              </div>
+              <div class="row">
+                <p class="option-name">
+                  Date<span
+                    class="custom hidden"
+                    id="custom-theme"
+                    title="custom"
+                    >*</span
+                  >
+                </p>
+                <select id="date">
+                  <option value="dd/mm/yyyy">DD/MM/YYYY (European)</option>
+                  <option value="mm/dd/yyyy">MM/DD/YYYY (US)</option>
+                  <option value="yyyy/mm/dd">YYYY/MM/DD (ISO)</option>
+                  <option value="yyyy/dd/mm">YYYY/DD/MM (Custom)</option>
+                </select>
+              </div>
             </div>
-            <div class="row">
-              <p class="option-name">
-                Bitcoin Rounding<span
-                  class="custom hidden"
-                  id="custom-crypto-decimal"
-                  title="custom"
-                  >*</span
-                >
-              </p>
-              <select id="crypto-round">
-                <option value="0">Integer Only</option>
-                <option value="2">2 Decimals</option>
-                <option value="3">3 Decimals</option>
-                <option value="4">4 Decimals</option>
-                <option value="5">5 Decimals</option>
-                <option value="6">6 Decimals</option>
-                <option value="7">7 Decimals</option>
-                <option value="8" selected>8 Decimals (default)</option>
-              </select>
-            </div>
-          </div>
-          <div class="settings-content">
-            <div class="title-row">
-              <p class="section-title">Appearance</p>
-            </div>
-            <div class="row">
-              <p class="option-name">
-                Theme<span
-                  class="custom hidden"
-                  id="custom-theme"
-                  title="custom"
-                  >*</span
-                >
-              </p>
-              <select id="theme">
-                <option value="manual">Manual</option>
-                <option value="auto" selected>Browser (default)</option>
-              </select>
-            </div>
-          </div>
-          <div class="settings-content">
-            <div class="row">
-              <p class="option-name">Default Settings?</p>
-              <button id="restore">Restore</button>
+            <div class="settings-content">
+              <div class="row">
+                <p class="option-name">Default Settings?</p>
+                <button id="restore">Restore</button>
+              </div>
             </div>
           </div>
         </div>
