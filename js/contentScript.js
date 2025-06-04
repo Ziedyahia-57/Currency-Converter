@@ -796,7 +796,10 @@ function initialize() {
 
     const popup = createPopup();
     chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === "local" && changes.darkMode) {
+      if (
+        (namespace === "local" && changes.darkMode) ||
+        root.classList.contains("dark-mode")
+      ) {
         chrome.storage.local.get(["darkMode"], (result) => {
           const root = document.documentElement;
           if (result.darkMode === "dark") {
