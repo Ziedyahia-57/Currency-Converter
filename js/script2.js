@@ -1564,6 +1564,8 @@ async function initializeApp() {
 //🟣+                                                        LOAD APP                                                      +*/
 //🟣++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 document.addEventListener("DOMContentLoaded", async () => {
+  loadDarkMode();
+
   checkCustomSettings();
 
   // Initial check with proper online status
