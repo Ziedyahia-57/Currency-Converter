@@ -1565,6 +1565,8 @@ async function initializeApp() {
 //🟣++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 document.addEventListener("DOMContentLoaded", async () => {
   loadDarkMode();
+  window.addEventListener("load", adjustContentHeight);
+  window.addEventListener("resize", adjustContentHeight);
 
   checkCustomSettings();
 
@@ -1695,3 +1697,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   loadDarkMode();
 });
+
+function adjustContentHeight() {
+  const windowHeight = window.innerHeight;
+  let contentHeight;
+
+  // Use the specific mappings you provided
+  if (windowHeight <= 411) {
+    contentHeight = 340;
+  } else if (windowHeight <= 427) {
+    contentHeight = 356;
+  } else if (windowHeight <= 445) {
+    contentHeight = 374;
+  } else {
+    // For larger windows, maintain the same ratio (windowHeight - 71)
+    contentHeight = windowHeight - 71;
+  }
+
+  document.querySelector(
+    ".currency-converter-ex .content"
+  ).style.height = `${contentHeight}px`;
+}
