@@ -394,6 +394,12 @@ restoreBtn.addEventListener("click", () => {
   localStorage.setItem("time", timeSelector.value);
   chrome.storage.local.set({ ["time"]: timeSelector.value });
 
+  // Update last updated time
+  updateLastUpdateElement(
+    navigator.onLine,
+    localStorage.getItem(LAST_UPDATED_KEY)
+  );
+
   // Manually update UI for immediate effect
   customTheme.classList.add("hidden");
   customFormat.classList.add("hidden");
@@ -461,6 +467,11 @@ async function checkCustomSettings() {
       cryptoDecimalsSettings.cryptoDecimals
     );
     customCryptoDecimals.classList.remove("hidden");
+  }
+
+  if (themeSettings.theme && themeSettings.theme !== "auto") {
+    console.log("themeSettings: ", themeSettings.theme);
+    customTheme.classList.remove("hidden");
   }
 
   if (dateSettings.date && dateSettings.date !== "dd/mm/yyyy") {
@@ -737,39 +748,120 @@ darkModeBtn.addEventListener("click", () => {
 //🟠------------------------------------------------------------*/
 //🟠                         DATE FETCH                         */
 //🟠------------------------------------------------------------*/
-function updateLastUpdateElement(isOnline, lastUpdated) {
-  let dateText = `--/--/----`; // Default state
-  let timeText = "--:--"; // Default state
+// function updateLastUpdateElement(isOnline, lastUpdated) {
+//   let dateText = `--/--/----`; // Default state
+//   let timeText = "--:--"; // Default state
 
+//   if (!lastUpdated) {
+//     lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+//   }
+
+//   if (lastUpdated) {
+//     try {
+//       const date = new Date(lastUpdated);
+
+//       // Get user's saved formats
+//       const dateFormat = localStorage.getItem("date") || "dd/mm/yyyy";
+//       const timeFormat = localStorage.getItem("time") || "ampm";
+
+//       // Format date according to user preference
+//       switch (dateFormat) {
+//         case "mm/dd/yyyy":
+//           dateText = `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+//             date.getDate()
+//           ).padStart(2, "0")}/${date.getFullYear()}`;
+//           break;
+//         case "yyyy/mm/dd":
+//           dateText = `${date.getFullYear()}/${String(
+//             date.getMonth() + 1
+//           ).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+//           break;
+//         default: // "dd/mm/yyyy"
+//           dateText = `${String(date.getDate()).padStart(2, "0")}/${String(
+//             date.getMonth() + 1
+//           ).padStart(2, "0")}/${date.getFullYear()}`;
+//       }
+
+//       // Format time according to user preference
+//       let hours = date.getHours();
+//       const minutes = String(date.getMinutes()).padStart(2, "0");
+
+//       if (timeFormat === "24h") {
+//         timeText = `${String(hours).padStart(2, "0")}:${minutes}`;
+//       } else {
+//         // "ampm"
+//         const ampm = hours >= 12 ? "PM" : "AM";
+//         hours = hours % 12 || 12; // Convert 0 to 12 (12 AM)
+//         timeText = `${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+//       }
+//     } catch (error) {
+//       console.error("Error formatting date/time:", error);
+//       dateText = "Error";
+//       timeText = "!";
+//     }
+//   }
+
+//   lastUpdateElement.innerHTML = `
+//     <span class="${isOnline ? "green" : "red"}">● ${
+//     isOnline ? "Online" : "Offline"
+//   }</span>
+//     - Last Updated: <span class="date">${dateText}</span> at <span class="date">${timeText}</span>
+//   `;
+// }
+function formatDateTime(dateString) {
+  if (!dateString) return { dateText: "--/--/----", timeText: "--:--" };
+
+  try {
+    const date = new Date(dateString);
+    const dateFormat = localStorage.getItem("date") || "dd/mm/yyyy";
+    const timeFormat = localStorage.getItem("time") || "ampm";
+
+    // Format date
+    let dateText;
+    switch (dateFormat) {
+      case "mm/dd/yyyy":
+        dateText = `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+          date.getDate()
+        ).padStart(2, "0")}/${date.getFullYear()}`;
+        break;
+      case "yyyy/mm/dd":
+        dateText = `${date.getFullYear()}/${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+        break;
+      default: // "dd/mm/yyyy"
+        dateText = `${String(date.getDate()).padStart(2, "0")}/${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}/${date.getFullYear()}`;
+    }
+
+    // Format time
+    let timeText;
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    if (timeFormat === "24h") {
+      timeText = `${String(hours).padStart(2, "0")}:${minutes}`;
+    } else {
+      // "ampm"
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12; // Convert 0 to 12 (12 AM)
+      timeText = `${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+    }
+
+    return { dateText, timeText };
+  } catch (error) {
+    console.error("Error formatting date/time:", error);
+    return { dateText: "Error", timeText: "!" };
+  }
+}
+
+function updateLastUpdateElement(isOnline, lastUpdated) {
   if (!lastUpdated) {
     lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
   }
-  if (lastUpdated) {
-    try {
-      // dateText = new Date(lastUpdated).toLocaleString();
-      const date = new Date(lastUpdated);
 
-      // Day (DD), Month (MM), Year (YYYY)
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
-      const year = date.getFullYear();
-
-      // Hours (12-hour format) + AM/PM
-      let hours = date.getHours();
-      const ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12 || 12; // Convert 0 to 12 (12 AM)
-      const formattedHours = String(hours).padStart(2, "0");
-
-      // Minutes (MM)
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-
-      dateText = `${day}/${month}/${year}`;
-      timeText = `${formattedHours}:${minutes} ${ampm}`;
-    } catch {
-      dateText = "Error"; // Fallback if date parsing fails
-      timeText = "!"; // Fallback if date parsing fails
-    }
-  }
+  const { dateText, timeText } = formatDateTime(lastUpdated);
 
   lastUpdateElement.innerHTML = `
     <span class="${isOnline ? "green" : "red"}">● ${
@@ -1823,6 +1915,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   dateSelector.addEventListener("change", function () {
     saveDateFormat();
+    updateLastUpdateElement(
+      navigator.onLine,
+      localStorage.getItem(LAST_UPDATED_KEY)
+    );
 
     if (dateSelector.value !== "dd/mm/yyyy") {
       customDate.classList.remove("hidden");
@@ -1833,6 +1929,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   timeSelector.addEventListener("change", function () {
     saveTimeFormat();
+    updateLastUpdateElement(
+      navigator.onLine,
+      localStorage.getItem(LAST_UPDATED_KEY)
+    );
 
     if (timeSelector.value !== "ampm") {
       customTime.classList.remove("hidden");
