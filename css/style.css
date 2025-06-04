@@ -785,5 +785,7 @@ body {
   scrollbar-gutter: stable;
   display: block;
   width: -webkit-fill-available;
-  height: 340px;
+  height: fit-content;
+  max-height: 374px;
+  min-height: 340px;
 }

@@ -1581,25 +1581,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
   });
 
-  // Load user preference from localStorage and chrome.storage
-  loadDarkMode();
-
   loadThemePreference();
   loadNumberFormat();
   loadFiatDecimal();
   loadCryptoDecimal();
-
-  // Toggle dark mode
-  darkModeBtn.addEventListener("click", () => {
-    root.classList.toggle("dark-mode");
-    darkModeBtn.classList.toggle("active");
-    saveDarkMode();
-    themeSelector.value = "manual";
-    darkModeBtn.classList.remove("auto");
-    localStorage.setItem("theme", themeSelector.value);
-    chrome.storage.local.set({ ["theme"]: themeSelector.value });
-    // Save user preference to both localStorage and chrome.storage
-  });
 
   loadCheckboxState();
   checkCurrencyCount();
@@ -1656,6 +1641,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     const selectedTheme = themeSelector.value;
 
     if (selectedTheme === "auto") {
+      // Load user preference from localStorage and chrome.storage
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          if (themeSelector.value === "auto") {
+            // Only respond if we're in auto mode
+            const prefersDark = e.matches;
+            const preferredTheme = prefersDark ? "dark" : "light";
+
+            root.classList.toggle("dark-mode", preferredTheme === "dark");
+            darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+            // Save the actual theme being used
+            localStorage.setItem("darkMode", preferredTheme);
+            chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+          }
+        });
       darkModeBtn.classList.add("auto");
 
       // Detect system preference immediately
@@ -1689,23 +1691,5 @@ document.addEventListener("DOMContentLoaded", async () => {
       customTheme.classList.add("hidden");
     }
   });
-
-  // Add this near your other event listeners
-  window
-    .matchMedia("(prefers-color-scheme: dark)")
-    .addEventListener("change", (e) => {
-      // Only respond if we're in auto mode
-      if (themeSelector.value === "auto") {
-        const prefersDark = e.matches;
-        const preferredTheme = prefersDark ? "dark" : "light";
-
-        root.classList.toggle("dark-mode", preferredTheme === "dark");
-        darkModeBtn.classList.toggle("active", preferredTheme === "dark");
-
-        // Save the actual theme being used
-        localStorage.setItem("darkMode", preferredTheme);
-        chrome.storage.local.set({ ["darkMode"]: preferredTheme });
-      }
-    });
   loadDarkMode();
 });
