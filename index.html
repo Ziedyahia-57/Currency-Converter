@@ -251,27 +251,29 @@
                 <p class="option-name">
                   Time<span
                     class="custom hidden"
-                    id="custom-theme"
+                    id="custom-time"
                     title="custom"
                     >*</span
                   >
                 </p>
                 <select id="time">
-                  <option value="ampm" selected>AM/PM</option>
-                  <option value="24h" selected="">24H</option>
+                  <option value="ampm" selected>12-Hour Clock</option>
+                  <option value="24h">24-Hour Clock</option>
                 </select>
               </div>
               <div class="row">
                 <p class="option-name">
                   Date<span
                     class="custom hidden"
-                    id="custom-theme"
+                    id="custom-date"
                     title="custom"
                     >*</span
                   >
                 </p>
                 <select id="date">
-                  <option value="dd/mm/yyyy">DD/MM/YYYY (European)</option>
+                  <option value="dd/mm/yyyy" selected>
+                    DD/MM/YYYY (default)
+                  </option>
                   <option value="mm/dd/yyyy">MM/DD/YYYY (US)</option>
                   <option value="yyyy/mm/dd">YYYY/MM/DD (ISO)</option>
                 </select>

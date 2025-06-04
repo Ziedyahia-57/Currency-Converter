@@ -733,6 +733,7 @@ body {
   border-radius: 4px;
   background: #191c23;
   margin: 4px;
+  box-shadow: 0 -2px 0px var(--primary-light);
 }
 
 .currency-converter-ex .settings-tab {
@@ -768,7 +769,7 @@ body {
 }
 .currency-converter-ex button#restore:hover {
   cursor: pointer;
-  background: #ff000042;
+  background: #ff03032b;
   color: red;
   transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

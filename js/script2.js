@@ -18,11 +18,15 @@ const formatSelector = document.getElementById("format");
 const fiatDecimalSelector = document.getElementById("fiat-round");
 const cryptoDecimalSelector = document.getElementById("crypto-round");
 const themeSelector = document.getElementById("theme");
+const dateSelector = document.getElementById("date");
+const timeSelector = document.getElementById("time");
 const restoreBtn = document.getElementById("restore");
 const customTheme = document.getElementById("custom-theme");
 const customCryptoDecimals = document.getElementById("custom-crypto-decimal");
 const customFiatDecimals = document.getElementById("custom-fiat-decimal");
 const customFormat = document.getElementById("custom-format");
+const customDate = document.getElementById("custom-date");
+const customTime = document.getElementById("custom-time");
 const lastUpdateElement = document.querySelector(".last-update");
 const darkModeBtn = document.getElementById("dark-mode-btn");
 const root = document.documentElement;
@@ -277,6 +281,66 @@ function checkAutoTheme() {
 }
 
 //⚪------------------------------------------------------------*/
+//⚪                        DATE FORMAT                         */
+//⚪------------------------------------------------------------*/
+async function saveDateFormat() {
+  //🟣 Save user's date preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("date", dateSelector.value);
+    chrome.storage.local.set({ date: dateSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("date Format saved:", dateSelector.value);
+        resolve();
+      }
+    });
+  });
+}
+async function loadDateFormat() {
+  //🟣 Load user's date preference
+
+  const result = await chrome.storage.local.get("date");
+  const savedFormat = result.date;
+  if (savedFormat) {
+    dateSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                        TIME FORMAT                         */
+//⚪------------------------------------------------------------*/
+async function saveTimeFormat() {
+  //🟣 Save user's time preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("time", timeSelector.value);
+    chrome.storage.local.set({ time: timeSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("time Format saved:", timeSelector.value);
+        resolve();
+      }
+    });
+  });
+}
+async function loadTimeFormat() {
+  //🟣 Load user's time preference
+
+  const result = await chrome.storage.local.get("time");
+  const savedFormat = result.time;
+  if (savedFormat) {
+    timeSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
 //⚪                        RESTORE BUTTON                      */
 //⚪------------------------------------------------------------*/
 // restoreBtn.addEventListener("click", () => {
@@ -308,6 +372,8 @@ restoreBtn.addEventListener("click", () => {
   formatSelector.value = "comma-dot";
   fiatDecimalSelector.value = "2";
   cryptoDecimalSelector.value = "8";
+  dateSelector.value = "dd/mm/yyyy";
+  timeSelector.value = "ampm";
 
   // Save all settings
   localStorage.setItem("theme", themeSelector.value);
@@ -322,11 +388,19 @@ restoreBtn.addEventListener("click", () => {
   localStorage.setItem("cryptoDecimals", cryptoDecimalSelector.value);
   chrome.storage.local.set({ ["cryptoDecimals"]: cryptoDecimalSelector.value });
 
+  localStorage.setItem("date", dateSelector.value);
+  chrome.storage.local.set({ ["date"]: dateSelector.value });
+
+  localStorage.setItem("time", timeSelector.value);
+  chrome.storage.local.set({ ["time"]: timeSelector.value });
+
   // Manually update UI for immediate effect
   customTheme.classList.add("hidden");
   customFormat.classList.add("hidden");
   customFiatDecimals.classList.add("hidden");
   customCryptoDecimals.classList.add("hidden");
+  customDate.classList.add("hidden");
+  customTime.classList.add("hidden");
 
   // Manually apply the theme change
   darkModeBtn.classList.add("auto");
@@ -355,6 +429,8 @@ async function checkCustomSettings() {
     "cryptoDecimals"
   );
   const themeSettings = await chrome.storage.local.get("theme");
+  const dateSettings = await chrome.storage.local.get("date");
+  const timeSettings = await chrome.storage.local.get("time");
 
   if (
     formatSettings.numberFormat &&
@@ -363,11 +439,7 @@ async function checkCustomSettings() {
     console.log("formatSettings: ", formatSettings.numberFormat);
     customFormat.classList.remove("hidden");
   }
-  console.log(
-    "fiatDecimalsSettings: ",
-    fiatDecimalsSettings.fiatDecimals,
-    typeof fiatDecimalsSettings.fiatDecimals
-  );
+
   if (
     fiatDecimalsSettings.fiatDecimals &&
     fiatDecimalsSettings.fiatDecimals != 2
@@ -379,6 +451,7 @@ async function checkCustomSettings() {
     "cryptoDecimalsSettings: ",
     cryptoDecimalsSettings.cryptoDecimals
   );
+
   if (
     cryptoDecimalsSettings.cryptoDecimals &&
     cryptoDecimalsSettings.cryptoDecimals != 8
@@ -389,9 +462,15 @@ async function checkCustomSettings() {
     );
     customCryptoDecimals.classList.remove("hidden");
   }
-  if (themeSettings.theme && themeSettings.theme !== "auto") {
-    console.log("themeSettings: ", themeSettings.theme);
-    customTheme.classList.remove("hidden");
+
+  if (dateSettings.date && dateSettings.date !== "dd/mm/yyyy") {
+    console.log("dateSettings: ", dateSettings.date);
+    customDate.classList.remove("hidden");
+  }
+
+  if (timeSettings.time && timeSettings.time !== "ampm") {
+    console.log("timeSettings: ", timeSettings.time);
+    customTime.classList.remove("hidden");
   }
 }
 
@@ -1693,6 +1772,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadNumberFormat();
   loadFiatDecimal();
   loadCryptoDecimal();
+  loadTimeFormat();
+  loadDateFormat();
 
   loadCheckboxState();
   checkCurrencyCount();
@@ -1737,6 +1818,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       customCryptoDecimals.classList.remove("hidden");
     } else {
       customCryptoDecimals.classList.add("hidden");
+    }
+  });
+
+  dateSelector.addEventListener("change", function () {
+    saveDateFormat();
+
+    if (dateSelector.value !== "dd/mm/yyyy") {
+      customDate.classList.remove("hidden");
+    } else {
+      customDate.classList.add("hidden");
+    }
+  });
+
+  timeSelector.addEventListener("change", function () {
+    saveTimeFormat();
+
+    if (timeSelector.value !== "ampm") {
+      customTime.classList.remove("hidden");
+    } else {
+      customTime.classList.add("hidden");
     }
   });
 
@@ -1817,8 +1918,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
   }
-
   loadDarkMode();
+
   initializeApp(); // Initialize the app
   await updateExchangeRates(); // Load exchange rates first
 });
