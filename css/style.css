@@ -649,7 +649,7 @@ body {
   fill: var(--font-color);
   cursor: pointer;
 }
-.currency-converter-ex .settings-btn:hover {
+.currency-converter-ex .settings-btn:hover svg {
   fill: var(--primary-color);
   transition: fill 0.3s;
 }
@@ -668,10 +668,16 @@ body {
 }
 .currency-converter-ex .title-row {
   display: flex;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   margin: 0px 10px;
   align-items: center;
   height: 28px;
+}
+.currency-converter-ex .title-row svg {
+  fill: var(--font-color2);
+  height: 14px;
+  width: 14px;
+  margin-right: 4px;
 }
 
 .currency-converter-ex .option-name {
@@ -757,7 +763,7 @@ body {
 .currency-converter-ex p.section-title {
   color: var(--font-color2);
   font-size: 16px;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .currency-converter-ex #settings-btn {
