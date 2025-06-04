@@ -1,6 +1,8 @@
 /* General Styles */
 :root {
-  --primary-color: #25d46e; /**/
+  /* --primary-color: #25d46e;  */
+  --primary-color: #00d4aa;
+  --primary-hover: #00b892;
   --fill-color: #c1c6cb; /**/
   --font-color: #6d777e; /**/
   --gray: #f1f1f1; /**/
@@ -10,8 +12,14 @@
   --border-dark: #dcdcdc;
   --shadow: #a6a6a682;
   --drag-border: #acacadcc;
-  --drag-background: #00ca8e3f;
+  --drag-background: #07b8835e;
   --font-color2: #4f4f4f;
+
+  --primary-light: #00d4aa20;
+
+  --drag-border: #00d4aa80;
+  /* --drag-background: #00d4aa15; */
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 /* Dark mode colors */
@@ -24,11 +32,12 @@
   --fill-color: #6d777e; /**/
   --dark-background: #004cff; /**/
 
-  --shadow: #31313182;
   --drag-border: #535353cc;
   --drag-background: #00ca8e3f;
 
   --font-color2: #ffffff; /**/
+
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
 
   /* --gray: #1f1e23;
     --dark-gray: #0f0f11;
@@ -110,7 +119,8 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  transition: transform 0.2s linear, background 0.2s linear;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: transparent solid 1px;
   border-radius: 8px;
   margin: 5px 0px 5px 9px;
@@ -152,11 +162,13 @@ body {
   margin: 4px;
   fill: var(--fill-color);
   background: transparent;
+  z-index: 1;
 }
 
 .currency-converter-ex .currency-input button:hover {
   fill: #fb0c04;
-  transition: fill 0.3s, fill 0.3s;
+  transition: fill 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    fill 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Add Currency */
@@ -170,7 +182,8 @@ body {
 }
 
 .currency-converter-ex .add-currency button:hover {
-  transition: background ease-in-out 0.2s, fill ease-in-out 0.2s;
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    fill 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--primary-color) !important;
   fill: white !important;
 }
@@ -225,7 +238,7 @@ body {
   right: -300px;
   width: 380px;
   box-shadow: -3px 0 10px rgba(0, 0, 0, 0.2);
-  transition: left 0.3s ease-in-out;
+  transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   height: 100%;
   overflow: hidden;
   background: var(--light-gray);
@@ -360,7 +373,7 @@ body {
 }
 
 .currency-converter-ex .green {
-  color: #00d26a;
+  color: #03d59b;
   font-weight: bold;
   background: var(--dark-gray);
   padding: 1px 4px;
@@ -415,7 +428,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  transition: 0.2s;
+  transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 16px;
   background-color: var(--dark-gray);
 }
@@ -429,7 +442,7 @@ body {
   left: 2px;
   bottom: 2px;
   background-color: white;
-  transition: 0.2s;
+  transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 50%;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
@@ -458,7 +471,7 @@ body {
   border: 2px solid var(--primary-color);
 }
 .currency-converter-ex #dark-mode-btn.auto {
-  border: 2px solid #0dc4e1;
+  border: 2px #0dc4e1 dotted;
   fill: #0dc4e1;
 }
 .currency-converter-ex #dark-mode-btn.auto:hover {
@@ -530,7 +543,7 @@ body {
   outline: 0;
   background: var(--primary-color);
   color: white;
-  transition: 0.3s;
+  transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .currency-converter-ex .button-64 span {
@@ -539,7 +552,7 @@ body {
   border-radius: 6px;
   width: 100%;
   height: 100%;
-  transition: 0.3s;
+  transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .currency-converter-ex .button-64:hover span {
@@ -651,7 +664,7 @@ body {
 }
 .currency-converter-ex .settings-btn:hover svg {
   fill: var(--primary-color);
-  transition: fill 0.3s;
+  transition: fill 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* .currency-input {
@@ -668,13 +681,12 @@ body {
 }
 .currency-converter-ex .title-row {
   display: flex;
-  /* justify-content: space-between; */
   margin: 0px 10px;
   align-items: center;
   height: 28px;
 }
 .currency-converter-ex .title-row svg {
-  fill: var(--font-color2);
+  fill: var(--primary-color);
   height: 14px;
   width: 14px;
   margin-right: 4px;
@@ -701,7 +713,8 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  transition: transform 0.2s linear, background 0.2s linear;
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: transparent solid 1px;
   border-radius: 8px;
   margin: 5px;
@@ -710,12 +723,6 @@ body {
   width: 155px;
   color: var(--font-color);
   font-family: Roboto flex;
-}
-
-.currency-converter-ex select:hover {
-  border-color: var(--primary-color);
-  color: white;
-  cursor: pointer;
 }
 
 .currency-converter-ex .settings-content {
@@ -746,7 +753,7 @@ body {
   color: var(--font-color);
   font-family: "Roboto flex";
   text-align: center;
-  transition: color 0.2s linear;
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-width: 1px;
   border-style: solid;
   border-color: transparent;
@@ -756,8 +763,10 @@ body {
   padding: 4px;
 }
 .currency-converter-ex button#restore:hover {
-  color: rgb(251, 12, 4);
   cursor: pointer;
+  background: #ff000042;
+  color: red;
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .currency-converter-ex p.section-title {
@@ -794,4 +803,111 @@ body {
   height: fit-content;
   max-height: 374px;
   min-height: 340px;
+}
+
+.currency-converter-ex .currency-input {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  /* overflow: hidden; */
+}
+
+.currency-converter-ex .currency-input::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-light), transparent);
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.currency-converter-ex .currency-input:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.currency-converter-ex .currency-input:hover::before {
+  opacity: 1;
+}
+
+.currency-converter-ex .currency-input:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.currency-converter-ex .currency-input input {
+  /* width: 100%; */
+  /* padding: 12px 16px; */
+  font-size: 16px;
+  font-weight: 500;
+  text-align: left;
+  background: transparent;
+  border: none;
+  z-index: 1;
+  position: relative;
+}
+
+.currency-converter-ex .currency-input input:focus-visible {
+  outline: none;
+}
+.currency-converter-ex .currency-input.loading {
+  position: relative;
+}
+
+.currency-converter-ex .currency-input.loading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--primary-light),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+.currency-converter-ex .currency-input::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-light), transparent);
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.currency-converter-ex select:hover,
+.currency-converter-ex select:focus {
+  border-color: var(--primary-color);
+  /* outline: none; */
+  box-shadow: 0 0 0 1px var(--primary-color);
+}
+.currency-converter-ex button:focus-visible,
+.currency-converter-ex select:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+.currency-converter-ex select:hover {
+  border-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
 }

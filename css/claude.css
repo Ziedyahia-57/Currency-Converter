@@ -1,0 +1,940 @@
+/* General Styles */
+:root {
+  --primary-color: #00d4aa;
+  --primary-hover: #00b892;
+  --primary-light: #00d4aa20;
+  --accent-color: #6366f1;
+  --accent-hover: #5855f0;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+
+  --fill-color: #9ca3af;
+  --font-color: #6b7280;
+  --font-color-primary: #374151;
+  --font-color-secondary: #9ca3af;
+
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --bg-input: #ffffff;
+
+  --border-light: #e5e7eb;
+  --border-medium: #d1d5db;
+  --border-dark: #9ca3af;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  --drag-border: #00d4aa80;
+  --drag-background: #00d4aa15;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+/* Dark mode colors */
+:root.dark-mode {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --bg-input: #1f2937;
+
+  --font-color: #d1d5db;
+  --font-color-primary: #f9fafb;
+  --font-color-secondary: #9ca3af;
+  --fill-color: #6b7280;
+
+  --border-light: #374151;
+  --border-medium: #4b5563;
+  --border-dark: #6b7280;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3),
+    0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3),
+    0 8px 10px -6px rgb(0 0 0 / 0.3);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-tertiary);
+}
+
+.currency-converter-ex .popup-container {
+  font-family: "Inter", "Roboto Flex", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  color: var(--font-color) !important;
+  width: 340px;
+  overflow: hidden;
+  height: auto;
+  min-height: 420px;
+  position: relative;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-light);
+}
+
+/* Header */
+.currency-converter-ex .header {
+  display: flex;
+  align-items: center;
+  color: var(--font-color-primary);
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 18px;
+  height: auto;
+  width: calc(100% - 40px);
+  background: linear-gradient(
+    135deg,
+    var(--bg-primary) 0%,
+    var(--bg-secondary) 100%
+  );
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  position: relative;
+}
+
+.currency-converter-ex .header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.currency-converter-ex .header img {
+  width: 28px;
+  height: 28px;
+  margin-right: 12px;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.1));
+}
+
+.currency-converter-ex #currency-container {
+  min-height: 260px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--bg-primary);
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 12px 0;
+  scrollbar-color: var(--border-medium) transparent;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+.currency-converter-ex #currency-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.currency-converter-ex #currency-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.currency-converter-ex #currency-container::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 3px;
+}
+
+.currency-converter-ex #currency-container::-webkit-scrollbar-thumb:hover {
+  background: var(--border-dark);
+}
+
+/* Currency Input */
+.currency-converter-ex .currency-input {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 48px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  margin: 6px 16px;
+  background: var(--bg-input);
+  padding: 0;
+  width: calc(100% - 32px);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.currency-converter-ex .currency-input::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-light), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.currency-converter-ex .currency-input:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.currency-converter-ex .currency-input:hover::before {
+  opacity: 1;
+}
+
+.currency-converter-ex .currency-input:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.currency-converter-ex .currency-input input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--font-color-primary);
+  z-index: 1;
+  position: relative;
+}
+
+.currency-converter-ex .currency-input input::placeholder {
+  color: var(--font-color-secondary);
+  font-weight: 400;
+}
+
+.currency-converter-ex .currency-input input:focus-visible {
+  outline: none;
+}
+
+.currency-converter-ex .currency-input button {
+  text-align: center;
+  color: var(--font-color-secondary);
+  border: none;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: bold;
+  height: 32px;
+  width: 32px;
+  margin: 8px;
+  fill: var(--fill-color);
+  background: var(--bg-secondary);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  position: relative;
+}
+
+.currency-converter-ex .currency-input button:hover {
+  fill: var(--error-color);
+  background: #fef2f2;
+  transform: scale(1.1);
+}
+
+.currency-converter-ex .currency-input button svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Currency Info Section */
+.currency-converter-ex .currency-info {
+  display: flex;
+  width: 140px;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  padding: 8px;
+  height: 32px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-light);
+}
+
+/* Add Currency Section */
+.currency-converter-ex .add-currency {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-light);
+  gap: 12px;
+}
+
+.currency-converter-ex .add-currency button {
+  display: flex;
+  cursor: pointer;
+  height: 40px;
+  width: 40px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-input);
+  fill: var(--fill-color);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.currency-converter-ex .add-currency button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--primary-color);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+  z-index: 0;
+}
+
+.currency-converter-ex .add-currency button:hover::before {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.currency-converter-ex .add-currency button:hover {
+  border-color: var(--primary-color);
+  fill: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.currency-converter-ex .add-currency button svg {
+  width: 18px;
+  height: 18px;
+  z-index: 1;
+  position: relative;
+}
+
+/* Toggle Switch */
+.currency-converter-ex .switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.currency-converter-ex .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.currency-converter-ex .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 24px;
+}
+
+.currency-converter-ex .slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+}
+
+.currency-converter-ex input:checked + .slider {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-hover)
+  );
+  border-color: var(--primary-color);
+}
+
+.currency-converter-ex input:checked + .slider::before {
+  transform: translateX(20px);
+  box-shadow: var(--shadow-md);
+}
+
+.currency-converter-ex .convert-select {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--font-color-primary);
+  margin-left: 8px;
+}
+
+/* Text Field */
+.currency-converter-ex .text-field {
+  color: var(--font-color);
+  font-style: italic;
+  padding: 12px 16px;
+  font-size: 14px;
+  overflow-x: auto;
+  white-space: nowrap;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  margin: 12px 16px;
+  border: 1px solid var(--border-light);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) transparent;
+}
+
+.currency-converter-ex .text-field::-webkit-scrollbar {
+  height: 4px;
+}
+
+.currency-converter-ex .text-field::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.currency-converter-ex .text-field::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 2px;
+}
+
+/* Container */
+.currency-converter-ex .container {
+  height: fit-content;
+  width: 100%;
+  position: relative;
+  background: var(--bg-primary);
+  z-index: 2;
+}
+
+/* Last Update */
+.currency-converter-ex .last-update {
+  min-height: 32px;
+  padding: 12px 16px;
+  color: var(--font-color-secondary);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-light);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+/* Status Colors */
+.currency-converter-ex .green {
+  color: var(--success-color);
+  font-weight: 600;
+  background: #f0fdf4;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #bbf7d0;
+}
+
+.currency-converter-ex .red {
+  color: var(--error-color);
+  font-weight: 600;
+  background: #fef2f2;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #fecaca;
+}
+
+.currency-converter-ex .orange {
+  color: var(--warning-color);
+  font-weight: 600;
+  background: #fffbeb;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #fed7aa;
+}
+
+.currency-converter-ex .date {
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  border: 1px solid var(--border-light);
+}
+
+/* Dark mode status colors */
+:root.dark-mode .currency-converter-ex .green {
+  background: #064e3b;
+  border-color: #065f46;
+}
+
+:root.dark-mode .currency-converter-ex .red {
+  background: #7f1d1d;
+  border-color: #991b1b;
+}
+
+:root.dark-mode .currency-converter-ex .orange {
+  background: #78350f;
+  border-color: #92400e;
+}
+
+/* Tabs */
+.currency-converter-ex .currency-tab,
+.currency-converter-ex .donation-tab,
+.currency-converter-ex .settings-tab {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  z-index: 3;
+  overflow: hidden;
+}
+
+.currency-converter-ex .currency-tab.hidden,
+.currency-converter-ex .donation-tab.hidden,
+.currency-converter-ex .settings-tab.hidden {
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.currency-converter-ex .title {
+  padding: 20px;
+  margin: 0;
+  display: flex;
+  height: auto;
+  align-items: center;
+  color: var(--font-color-primary);
+  background: linear-gradient(
+    135deg,
+    var(--bg-primary) 0%,
+    var(--bg-secondary) 100%
+  );
+  border-bottom: 1px solid var(--border-light);
+  font-weight: 600;
+  font-size: 18px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.currency-converter-ex .hide-tab {
+  width: 36px;
+  height: 36px;
+  fill: var(--font-color);
+  cursor: pointer;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  margin-right: 16px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.currency-converter-ex .hide-tab:hover {
+  background: var(--primary-color);
+  fill: white;
+  border-color: var(--primary-color);
+  transform: translateX(-2px);
+}
+
+.currency-converter-ex .hide-tab svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Currency List */
+.currency-converter-ex #currency-list {
+  overflow-y: auto;
+  height: calc(100% - 80px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) transparent;
+}
+
+.currency-converter-ex .currency-option {
+  padding: 16px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.currency-converter-ex .currency-option:hover {
+  background: var(--bg-secondary);
+  transform: translateX(4px);
+}
+
+.currency-converter-ex .currency-active {
+  background: var(--primary-light);
+  border-left: 3px solid var(--primary-color);
+}
+
+/* Settings */
+.currency-converter-ex .settings-content {
+  background: var(--bg-primary);
+  margin: 8px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  padding: 16px;
+}
+
+.currency-converter-ex .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.currency-converter-ex .title-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.currency-converter-ex .title-row svg {
+  fill: var(--primary-color);
+  height: 18px;
+  width: 18px;
+  margin-right: 8px;
+}
+
+.currency-converter-ex .section-title {
+  color: var(--font-color-primary);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.currency-converter-ex .option-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--font-color-primary);
+}
+
+.currency-converter-ex select {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--font-color-primary);
+  font-family: inherit;
+  font-size: 14px;
+  min-width: 160px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.currency-converter-ex select:hover,
+.currency-converter-ex select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Buttons */
+.currency-converter-ex button#restore {
+  height: 36px;
+  padding: 0 16px;
+  color: var(--error-color);
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid var(--error-color);
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.currency-converter-ex button#restore:hover {
+  background: var(--error-color);
+  color: white;
+}
+
+/* Settings Button */
+.currency-converter-ex #settings-btn {
+  display: flex;
+  cursor: pointer;
+  height: 36px;
+  width: 36px;
+  justify-content: center;
+  align-items: center;
+  fill: var(--fill-color);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.currency-converter-ex #settings-btn:hover {
+  fill: var(--primary-color);
+  background: var(--primary-light);
+  border-color: var(--primary-color);
+}
+
+.currency-converter-ex #settings-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Dark Mode Button States */
+.currency-converter-ex #dark-mode-btn.active {
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+  fill: var(--primary-color);
+}
+
+.currency-converter-ex #dark-mode-btn.auto {
+  border-color: var(--accent-color);
+  background: #6366f120;
+  fill: var(--accent-color);
+}
+
+.currency-converter-ex #dark-mode-btn.auto:hover {
+  background: var(--accent-color) !important;
+  fill: white !important;
+}
+
+/* Support Button Animation */
+.currency-converter-ex #support-dev-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.currency-converter-ex #support-dev-btn::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border: 2px solid var(--primary-color);
+  opacity: 0;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.currency-converter-ex #support-dev-btn::after {
+  animation: ripple 3s ease-out infinite;
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(8);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(15);
+    opacity: 0;
+  }
+}
+
+/* Donation Content */
+.currency-converter-ex .donation-content {
+  padding: 24px;
+  text-align: center;
+}
+
+.currency-converter-ex .donation-icon {
+  font-size: 48px;
+  margin: 24px 0;
+}
+
+.currency-converter-ex .desc-title {
+  font-weight: 700;
+  color: var(--font-color-primary);
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.currency-converter-ex .desc-text {
+  color: var(--font-color);
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.currency-converter-ex .donation-choice {
+  display: flex;
+  gap: 12px;
+  margin: 24px 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.currency-converter-ex .button-64 {
+  align-items: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--font-color-primary);
+  display: flex;
+  font-size: 14px;
+  font-weight: 500;
+  justify-content: center;
+  padding: 12px 24px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.currency-converter-ex .button-64::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--primary-light),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.currency-converter-ex .button-64:hover::before {
+  left: 100%;
+}
+
+.currency-converter-ex .button-64:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Flags */
+.currency-converter-ex .fi {
+  margin: 0 8px 0 0;
+  font-size: 20px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Scrollbar Improvements */
+.currency-converter-ex .content {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) transparent;
+  height: calc(100% - 80px);
+}
+
+.currency-converter-ex .content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.currency-converter-ex .content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.currency-converter-ex .content::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 3px;
+}
+
+.currency-converter-ex .content::-webkit-scrollbar-thumb:hover {
+  background: var(--border-dark);
+}
+
+/* Custom indicator */
+.currency-converter-ex span.custom {
+  color: var(--primary-color);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 380px) {
+  .currency-converter-ex .popup-container {
+    width: 320px;
+  }
+
+  .currency-converter-ex .currency-input {
+    margin: 6px 12px;
+    width: calc(100% - 24px);
+  }
+
+  .currency-converter-ex .text-field {
+    margin: 12px 12px;
+  }
+}
+
+/* Loading states and micro-interactions */
+.currency-converter-ex .currency-input.loading {
+  position: relative;
+}
+
+.currency-converter-ex .currency-input.loading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--primary-light),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Focus improvements for accessibility */
+.currency-converter-ex button:focus-visible,
+.currency-converter-ex select:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Improve contrast in dark mode */
+:root.dark-mode .currency-converter-ex .currency-input input {
+  color: var(--font-color-primary);
+}
+
+:root.dark-mode .currency-converter-ex .text-field {
+  color: var(--font-color);
+}

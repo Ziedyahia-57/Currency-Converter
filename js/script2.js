@@ -277,6 +277,7 @@ restoreBtn.addEventListener("click", () => {
 
   // Manually apply the theme change
   darkModeBtn.classList.add("auto");
+  darkModeBtn.title = "Dark Mode - Auto";
 
   // Check system preference and apply immediately
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -558,6 +559,14 @@ async function loadDarkMode() {
     root.classList.remove("dark-mode");
     darkModeBtn.classList.remove("active");
   }
+  // Update title based on current state (after all class changes)
+  if (darkModeBtn.classList.contains("auto")) {
+    darkModeBtn.title = "Dark Mode - Auto";
+  } else if (darkModeBtn.classList.contains("active")) {
+    darkModeBtn.title = "Dark Mode - ON";
+  } else {
+    darkModeBtn.title = "Dark Mode - OFF";
+  }
 }
 darkModeBtn.addEventListener("click", () => {
   //🟣 Toggle dark mode
@@ -569,7 +578,16 @@ darkModeBtn.addEventListener("click", () => {
 
   // Update theme selector to manual
   themeSelector.value = "manual";
+  customTheme.classList.remove("hidden");
   chrome.storage.local.set({ ["theme"]: themeSelector.value });
+  // Update title based on current state (after all class changes)
+  if (darkModeBtn.classList.contains("auto")) {
+    darkModeBtn.title = "Dark Mode - Auto";
+  } else if (darkModeBtn.classList.contains("active")) {
+    darkModeBtn.title = "Dark Mode - ON";
+  } else {
+    darkModeBtn.title = "Dark Mode - OFF";
+  }
 });
 
 //⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -1669,6 +1687,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const selectedTheme = themeSelector.value;
 
     if (selectedTheme === "auto") {
+      darkModeBtn.title = "Dark Mode - Auto";
+
       // Load user preference from localStorage and chrome.storage
       window
         .matchMedia("(prefers-color-scheme: dark)")
@@ -1703,6 +1723,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       chrome.storage.local.set({ ["darkMode"]: preferredTheme });
     } else {
       darkModeBtn.classList.remove("auto");
+      // Update title based on current state (after all class changes)
+      if (darkModeBtn.classList.contains("active")) {
+        darkModeBtn.title = "Dark Mode - ON";
+      } else {
+        darkModeBtn.title = "Dark Mode - OFF";
+      }
 
       // For light/dark modes, apply directly
       root.classList.toggle("dark-mode", selectedTheme === "dark");
