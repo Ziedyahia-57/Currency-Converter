@@ -186,18 +186,64 @@ async function loadThemePreference() {
         localStorage.setItem("darkMode", preferredTheme);
         chrome.storage.local.set({ ["darkMode"]: preferredTheme });
         darkModeBtn.classList.add("auto");
+        darkModeBtn.title = "Dark Mode - Auto";
       }
-
       console.log("Loaded theme preference:", savedTheme);
       return savedTheme;
     } else {
-      darkModeBtn.classList.remove("auto");
-      console.log("No saved theme found.");
-      return null;
+      // No saved theme found - use system preference as default
+      console.log("No saved theme found. Using system preference.");
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
+      let preferredTheme = prefersDark ? "dark" : "light";
+
+      // Set the theme selector to auto and apply system preference
+      themeSelector.value = "auto";
+      darkModeBtn.classList.add("auto");
+      darkModeBtn.title = "Dark Mode - Auto";
+
+      // Apply the theme
+      root.classList.toggle("dark-mode", preferredTheme === "dark");
+      darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+      // Save the preferences
+      localStorage.setItem("theme", "auto");
+      localStorage.setItem("darkMode", preferredTheme);
+      chrome.storage.local.set({
+        theme: "auto",
+        darkMode: preferredTheme,
+      });
+
+      return "auto";
     }
   } catch (error) {
     console.error("Failed to load theme preference:", error);
-    return null;
+
+    // Fallback to system preference on error
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    let preferredTheme = prefersDark ? "dark" : "light";
+
+    // Set the theme selector to auto and apply system preference
+    themeSelector.value = "auto";
+    darkModeBtn.classList.add("auto");
+    darkModeBtn.title = "Dark Mode - Auto";
+
+    // Apply the theme
+    root.classList.toggle("dark-mode", preferredTheme === "dark");
+    darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+    // Save the preferences
+    localStorage.setItem("theme", "auto");
+    localStorage.setItem("darkMode", preferredTheme);
+    chrome.storage.local.set({
+      theme: "auto",
+      darkMode: preferredTheme,
+    });
+
+    return "auto";
   }
 }
 function checkAutoTheme() {
@@ -216,10 +262,17 @@ function checkAutoTheme() {
     console.log("Preferred theme based on system setting:", preferredTheme);
 
     darkModeBtn.classList.add("auto");
+    darkModeBtn.title = "Dark Mode - Auto";
+
     customTheme.classList.add("hidden");
   } else {
     darkModeBtn.classList.remove("auto");
     customTheme.classList.remove("hidden");
+    if (darkModeBtn.classList.contains("active")) {
+      darkModeBtn.title = "Dark Mode - ON";
+    } else {
+      darkModeBtn.title = "Dark Mode - OFF";
+    }
   }
 }
 
@@ -303,7 +356,10 @@ async function checkCustomSettings() {
   );
   const themeSettings = await chrome.storage.local.get("theme");
 
-  if (formatSettings.numberFormat !== "comma-dot") {
+  if (
+    formatSettings.numberFormat &&
+    formatSettings.numberFormat !== "comma-dot"
+  ) {
     console.log("formatSettings: ", formatSettings.numberFormat);
     customFormat.classList.remove("hidden");
   }
@@ -312,7 +368,10 @@ async function checkCustomSettings() {
     fiatDecimalsSettings.fiatDecimals,
     typeof fiatDecimalsSettings.fiatDecimals
   );
-  if (fiatDecimalsSettings.fiatDecimals != 2) {
+  if (
+    fiatDecimalsSettings.fiatDecimals &&
+    fiatDecimalsSettings.fiatDecimals != 2
+  ) {
     console.log("fiatDecimalsSettings: ", fiatDecimalsSettings.fiatDecimals);
     customFiatDecimals.classList.remove("hidden");
   }
@@ -320,14 +379,17 @@ async function checkCustomSettings() {
     "cryptoDecimalsSettings: ",
     cryptoDecimalsSettings.cryptoDecimals
   );
-  if (cryptoDecimalsSettings.cryptoDecimals != 8) {
+  if (
+    cryptoDecimalsSettings.cryptoDecimals &&
+    cryptoDecimalsSettings.cryptoDecimals != 8
+  ) {
     console.log(
       "cryptoDecimalsSettings: ",
       cryptoDecimalsSettings.cryptoDecimals
     );
     customCryptoDecimals.classList.remove("hidden");
   }
-  if (themeSettings.theme !== "auto") {
+  if (themeSettings.theme && themeSettings.theme !== "auto") {
     console.log("themeSettings: ", themeSettings.theme);
     customTheme.classList.remove("hidden");
   }
@@ -862,7 +924,7 @@ function updateHighlight(newItem) {
   highlightedCurrency = newItem;
   highlightedCurrency.classList.add("currency-active");
   highlightedCurrency.scrollIntoView({
-    behavior: "smooth",
+    behavior: "auto",
     block: "nearest",
   });
 }
@@ -1636,14 +1698,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkCurrencyCount();
   updateAddButtonVisibility();
   initializeInputStyles(); // Initialize input styles
-  initializeApp(); // Initialize the app
 
   // Donation Tab functionality
   donationButton.addEventListener("click", handleDonationButtonClick);
 
   saveCheckboxState();
 
-  await updateExchangeRates(); // Load exchange rates first
   // Initial check
   updateLastUpdateElement(
     navigator.onLine,
@@ -1688,25 +1748,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (selectedTheme === "auto") {
       darkModeBtn.title = "Dark Mode - Auto";
-
-      // Load user preference from localStorage and chrome.storage
-      window
-        .matchMedia("(prefers-color-scheme: dark)")
-        .addEventListener("change", (e) => {
-          if (themeSelector.value === "auto") {
-            // Only respond if we're in auto mode
-            const prefersDark = e.matches;
-            const preferredTheme = prefersDark ? "dark" : "light";
-
-            root.classList.toggle("dark-mode", preferredTheme === "dark");
-            darkModeBtn.classList.toggle("active", preferredTheme === "dark");
-
-            // Save the actual theme being used
-            localStorage.setItem("darkMode", preferredTheme);
-            chrome.storage.local.set({ ["darkMode"]: preferredTheme });
-          }
-        });
       darkModeBtn.classList.add("auto");
+      darkModeBtn.title = "Dark Mode - Auto";
 
       // Detect system preference immediately
       const prefersDark = window.matchMedia(
@@ -1721,29 +1764,61 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Save the actual theme being used
       localStorage.setItem("darkMode", preferredTheme);
       chrome.storage.local.set({ ["darkMode"]: preferredTheme });
-    } else {
-      darkModeBtn.classList.remove("auto");
-      // Update title based on current state (after all class changes)
-      if (darkModeBtn.classList.contains("active")) {
-        darkModeBtn.title = "Dark Mode - ON";
-      } else {
-        darkModeBtn.title = "Dark Mode - OFF";
+
+      // Add event listener for future changes (only if online)
+      if (navigator.onLine) {
+        window
+          .matchMedia("(prefers-color-scheme: dark)")
+          .addEventListener("change", systemThemeChangeHandler);
       }
+    } else {
+      // Remove auto class and event listener when switching to manual mode
+      darkModeBtn.classList.remove("auto");
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .removeEventListener("change", systemThemeChangeHandler);
 
       // For light/dark modes, apply directly
-      root.classList.toggle("dark-mode", selectedTheme === "dark");
-      darkModeBtn.classList.toggle("active", selectedTheme === "dark");
+      const isDark = selectedTheme === "dark";
+      root.classList.toggle("dark-mode", isDark);
+      darkModeBtn.classList.toggle("active", isDark);
+      darkModeBtn.title = `Dark Mode - ${isDark ? "ON" : "OFF"}`;
 
       // Save the theme
       localStorage.setItem("darkMode", selectedTheme);
       chrome.storage.local.set({ ["darkMode"]: selectedTheme });
     }
 
+    // Update custom theme indicator
     if (themeSelector.value !== "auto") {
       customTheme.classList.remove("hidden");
     } else {
       customTheme.classList.add("hidden");
     }
   });
+  function systemThemeChangeHandler(e) {
+    if (themeSelector.value === "auto") {
+      const prefersDark = e.matches;
+      const preferredTheme = prefersDark ? "dark" : "light";
+
+      root.classList.toggle("dark-mode", preferredTheme === "dark");
+      darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+      localStorage.setItem("darkMode", preferredTheme);
+      chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+      darkModeBtn.title = "Dark Mode - Auto";
+    }
+    if (themeSelector.value === "manual") {
+      darkModeBtn.classList.remove("auto");
+      if (darkModeBtn.classList.contains("active")) {
+        darkModeBtn.title = "Dark Mode - ON";
+      } else {
+        darkModeBtn.title = "Dark Mode - OFF";
+      }
+    }
+  }
+
   loadDarkMode();
+  initializeApp(); // Initialize the app
+  await updateExchangeRates(); // Load exchange rates first
 });

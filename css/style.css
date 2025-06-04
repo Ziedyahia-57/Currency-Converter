@@ -15,7 +15,7 @@
   --drag-background: #07b8835e;
   --font-color2: #4f4f4f;
 
-  --primary-light: #00d4aa20;
+  --primary-light: #00d4aa52;
 
   --drag-border: #00d4aa80;
   /* --drag-background: #00d4aa15; */
@@ -34,6 +34,7 @@
 
   --drag-border: #535353cc;
   --drag-background: #00ca8e3f;
+  --primary-light: #00d4aa20;
 
   --font-color2: #ffffff; /**/
 
@@ -274,10 +275,13 @@ body {
   -ms-user-select: none;
   user-select: none;
   border-bottom: var(--border-dark) solid 1px;
+  transition: border 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.05s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .currency-converter-ex .currency-active {
-  background-color: var(--gray);
+  background: var(--primary-light);
+  border-left: 2px solid var(--primary-color);
 }
 
 .flag {
