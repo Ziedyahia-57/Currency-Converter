@@ -10,7 +10,7 @@
   --border-dark: #dcdcdc;
   --shadow: #a6a6a682;
   --drag-border: #acacadcc;
-  --drag-background: #d6d6d6cc;
+  --drag-background: #00ca8e3f;
   --font-color2: #4f4f4f;
 }
 
@@ -22,11 +22,11 @@
   --border-dark: #00000040; /**/
   --font-color: #c1c6cb; /**/
   --fill-color: #6d777e; /**/
-  --dark-background: #191c23; /**/
+  --dark-background: #004cff; /**/
 
   --shadow: #31313182;
   --drag-border: #535353cc;
-  --drag-background: #3f3f3fcc;
+  --drag-background: #00ca8e3f;
 
   --font-color2: #ffffff; /**/
 
