@@ -1501,29 +1501,6 @@ function updateAddButtonVisibility() {
 //     input.value = formatNumberWithCommas(value, input);
 //   });
 // });
-document.querySelectorAll(".currency-input input").forEach((input) => {
-  input.addEventListener("input", async (event) => {
-    const rawValue = event.target.value.replace(/,/g, "");
-    const currency = event.target.dataset.currency;
-    const decimalPlaces = await getDecimalPlaces(currency);
-
-    // If input is cleared, update immediately
-    if (rawValue === "") {
-      updateCurrencyValues(currency);
-      return;
-    }
-
-    // Rest of your validation and formatting code...
-    if (!/^\d*\.?\d*$/.test(rawValue)) {
-      event.target.value = event.target.dataset.previousValue || "0";
-      return;
-    }
-
-    event.target.dataset.previousValue = rawValue;
-    formatNumberWithCommas(rawValue, event.target);
-    updateCurrencyValues(currency);
-  });
-});
 
 //🟢------------------------------------------------------------*/
 //🟢                        DOTS & COMMAS                       */
@@ -1612,29 +1589,45 @@ function formatNumberWithCommas(value, inputElement) {
 
 // Now update the event listeners to use dynamic decimals
 document.querySelectorAll(".currency-input input").forEach((input) => {
-  // Remove commas on input
+  // Store previous value for validation
+  let previousValue = input.value;
+
+  // Handle input events
   input.addEventListener("input", async (event) => {
     const rawValue = event.target.value.replace(/,/g, "");
     const currency = event.target.dataset.currency;
     const decimalPlaces = await getDecimalPlaces(currency);
 
-    // Validate input
-    if (!/^\d*\.?\d*$/.test(rawValue)) {
-      event.target.value = event.target.dataset.previousValue || "0";
+    // If input is cleared, update immediately
+    if (rawValue === "") {
+      updateCurrencyValues(currency);
+      previousValue = "";
       return;
     }
 
-    // Format the number
+    // Validate input
+    if (!/^\d*\.?\d*$/.test(rawValue)) {
+      event.target.value = previousValue || "0";
+      return;
+    }
+
+    // Store raw value and format
+    previousValue = rawValue;
     formatNumberWithCommas(rawValue, event.target);
-    updateCurrencyValues(event.target.dataset.currency);
+    updateCurrencyValues(currency);
   });
 
-  // Format number with commas on blur
+  // Handle blur event for final formatting
   input.addEventListener("blur", async () => {
     const currency = input.dataset.currency;
     const decimalPlaces = await getDecimalPlaces(currency);
     let value = input.value.replace(/,/g, "");
 
+    if (value === "") {
+      value = "0";
+    }
+
+    // Ensure proper decimal places
     if (value.indexOf(".") === -1) {
       value += "." + "0".repeat(decimalPlaces);
     } else {
@@ -1646,6 +1639,8 @@ document.querySelectorAll(".currency-input input").forEach((input) => {
     }
 
     input.value = formatNumberWithCommas(value, input);
+    previousValue = value;
+    updateCurrencyValues(currency);
   });
 });
 
