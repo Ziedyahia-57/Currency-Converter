@@ -1298,160 +1298,192 @@ function loadCurrencyOrder() {
 //🟠------------------------------------------------------------*/
 //🟠                       ADD A CURRENCY                       */
 //🟠------------------------------------------------------------*/
-async function addCurrency(currency, shouldSave = true) {
-  if (currencies.includes(currency)) return;
+// async function addCurrency(currency, shouldSave = true) {
+//   if (currencies.includes(currency)) return;
 
-  // Get decimal places for this currency
-  const decimalPlaces = await getDecimalPlaces(currency);
-  const initialDecimalPart = "0".repeat(decimalPlaces);
+//   // Get decimal places for this currency
+//   const decimalPlaces = await getDecimalPlaces(currency);
+//   const initialDecimalPart = "0".repeat(decimalPlaces);
 
-  currencies.push(currency);
-  const currencyDiv = document.createElement("div");
-  currencyDiv.classList.add("currency-input");
-  currencyDiv.setAttribute("draggable", "true");
+//   currencies.push(currency);
+//   const currencyDiv = document.createElement("div");
+//   currencyDiv.classList.add("currency-input");
+//   currencyDiv.setAttribute("draggable", "true");
 
-  // Get the country code for the currency
-  const countryCode = currencyToCountry[currency] || "??"; // "??" is a fallback for unknown currencies
+//   // Get the country code for the currency
+//   const countryCode = currencyToCountry[currency] || "??"; // "??" is a fallback for unknown currencies
 
-  currencyDiv.innerHTML = `
-        <div class="currency-info">
-            <div class="flag"><span class="fi fi-${countryCode}"></span></div>
-            <label>${currency}</label>
-        </div>
-        <input type="text" data-currency="${currency}" value="0.${initialDecimalPart}" data-previous-value="0">
-        <button class="remove-btn" title="Remove"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
-    `;
+//   currencyDiv.innerHTML = `
+//         <div class="currency-info">
+//             <div class="flag"><span class="fi fi-${countryCode}"></span></div>
+//             <label>${currency}</label>
+//         </div>
+//         <input type="text" data-currency="${currency}" value="0.${initialDecimalPart}" data-previous-value="0">
+//         <button class="remove-btn" title="Remove"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
+//     `;
 
-  currencyContainer.appendChild(currencyDiv);
+//   currencyContainer.appendChild(currencyDiv);
 
-  const inputField = currencyDiv.querySelector("input");
+//   const inputField = currencyDiv.querySelector("input");
 
-  try {
-    // Set initial value with correct decimal places
-    const initialValue = `0.${initialDecimalPart}`;
-    inputField.value = formatNumberWithCommas(initialValue, inputField);
-  } catch (error) {
-    console.error("Error initializing currency input:", error);
-    inputField.value = `0.${initialDecimalPart}`;
-  }
+//   try {
+//     // Set initial value with correct decimal places
+//     const initialValue = `0.${initialDecimalPart}`;
+//     inputField.value = formatNumberWithCommas(initialValue, inputField);
+//   } catch (error) {
+//     console.error("Error initializing currency input:", error);
+//     inputField.value = `0.${initialDecimalPart}`;
+//   }
 
-  // Find the first non-zero input to use as base for conversion
-  let baseInput = document.querySelector(
-    `.currency-input input:not([value="0"]):not([value^="0."])` //⚠️
-  );
+//   // Find the first non-zero input to use as base for conversion
+//   let baseInput = document.querySelector(
+//     `.currency-input input:not([value="0"]):not([value^="0."])` //⚠️
+//   );
 
-  // If no non-zero input found, use the first input
-  if (!baseInput) {
-    baseInput = document.querySelector(".currency-input input");
-  }
+//   // If no non-zero input found, use the first input
+//   if (!baseInput) {
+//     baseInput = document.querySelector(".currency-input input");
+//   }
 
-  // If we have a base input with a value, convert to the new currency
-  if (baseInput && baseInput.value && exchangeRates) {
-    const baseCurrency = baseInput.dataset.currency;
-    const baseValue = parseFloat(baseInput.value.replace(/,/g, "") || 0);
+//   // If we have a base input with a value, convert to the new currency
+//   if (baseInput && baseInput.value && exchangeRates) {
+//     const baseCurrency = baseInput.dataset.currency;
+//     const baseValue = parseFloat(baseInput.value.replace(/,/g, "") || 0);
 
-    let convertedValue;
-    if (baseCurrency === "USD") {
-      convertedValue = baseValue * exchangeRates[currency];
-    } else if (currency === "USD") {
-      convertedValue = baseValue / exchangeRates[baseCurrency];
-    } else {
-      convertedValue =
-        baseValue * (exchangeRates[currency] / exchangeRates[baseCurrency]);
-    }
+//     let convertedValue;
+//     if (baseCurrency === "USD") {
+//       convertedValue = baseValue * exchangeRates[currency];
+//     } else if (currency === "USD") {
+//       convertedValue = baseValue / exchangeRates[baseCurrency];
+//     } else {
+//       convertedValue =
+//         baseValue * (exchangeRates[currency] / exchangeRates[baseCurrency]);
+//     }
 
-    // Format with correct decimal places
-    const formattedValue = convertedValue.toFixed(decimalPlaces);
-    inputField.value = formatNumberWithCommas(formattedValue);
-  }
-  // Input event handler - allows any number of decimals during input
-  inputField.addEventListener("input", (event) => {
-    const rawValue = event.target.value.replace(/,/g, "");
+//     // Format with correct decimal places
+//     const formattedValue = convertedValue.toFixed(decimalPlaces);
+//     inputField.value = formatNumberWithCommas(formattedValue);
+//   }
+//   // Input event handler - allows any number of decimals during input
+//   inputField.addEventListener("input", (event) => {
+//     const rawValue = event.target.value.replace(/,/g, "");
 
-    // Basic validation - allow numbers and single decimal point
-    if (!/^\d*\.?\d*$/.test(rawValue)) {
-      event.target.value = event.target.dataset.previousValue || "0";
-      return;
-    }
+//     // Basic validation - allow numbers and single decimal point
+//     if (!/^\d*\.?\d*$/.test(rawValue)) {
+//       event.target.value = event.target.dataset.previousValue || "0";
+//       return;
+//     }
 
-    event.target.dataset.previousValue = rawValue;
-    formatNumberWithCommas(rawValue, event.target);
-    updateCurrencyValues(event.target.dataset.currency);
-  });
+//     event.target.dataset.previousValue = rawValue;
+//     formatNumberWithCommas(rawValue, event.target);
+//     updateCurrencyValues(event.target.dataset.currency);
+//   });
 
-  // inputField.addEventListener("blur", async () => {
-  //   const currency = inputField.dataset.currency;
-  //   const decimalPlaces = await getDecimalPlaces(currency);
-  //   let value = inputField.value.replace(/,/g, "");
+//   inputField.addEventListener("blur", async () => {
+//     const currency = inputField.dataset.currency;
+//     const decimalPlaces = await getDecimalPlaces(currency);
+//     let value = inputField.value.replace(/,/g, "");
 
-  //   // Handle empty string case
-  //   if (value === "") {
-  //     inputField.value = `0.${"0".repeat(decimalPlaces)}`;
-  //     return;
-  //   }
+//     // Handle empty value
+//     if (value === "") {
+//       value = "0";
+//     }
 
-  //   if (value.indexOf(".") === -1) {
-  //     value += `.${"0".repeat(decimalPlaces)}`;
-  //   } else {
-  //     const parts = value.split(".");
-  //     if (parts[1].length < decimalPlaces) {
-  //       parts[1] = parts[1].padEnd(decimalPlaces, "0");
-  //     } else if (parts[1].length > decimalPlaces) {
-  //       parts[1] = parts[1].substring(0, decimalPlaces);
-  //     }
-  //     value = parts.join(".");
-  //   }
+//     // Add decimal places if needed
+//     if (value.indexOf(".") === -1) {
+//       value += "." + "0".repeat(decimalPlaces);
+//     } else {
+//       const parts = value.split(".");
+//       // Don't truncate decimals here - just pad if needed
+//       if (parts[1].length < decimalPlaces) {
+//         parts[1] = parts[1].padEnd(decimalPlaces, "0");
+//       }
+//       value = parts.join(".");
+//     }
 
-  //   inputField.value = formatNumberWithCommas(value, inputField);
-  // });
+//     inputField.value = formatNumberWithCommas(value);
+//   });
 
-  // Focus event handler
+//   inputField.addEventListener("focus", (event) => {
+//     event.target.select();
+//   });
 
-  inputField.addEventListener("blur", async () => {
-    const currency = inputField.dataset.currency;
-    const decimalPlaces = await getDecimalPlaces(currency);
-    let value = inputField.value.replace(/,/g, "");
+//   // Remove currency
+//   currencyDiv.querySelector(".remove-btn").addEventListener("click", () => {
+//     currencyDiv.remove();
+//     currencies = currencies.filter((c) => c !== currency);
+//     checkCurrencyCount();
+//     updateAddButtonVisibility();
+//     saveCurrencyOrder();
+//   });
 
-    // Handle empty value
-    if (value === "") {
-      value = "0";
-    }
+//   checkCurrencyCount();
+//   updateAddButtonVisibility();
 
-    // Add decimal places if needed
-    if (value.indexOf(".") === -1) {
-      value += "." + "0".repeat(decimalPlaces);
-    } else {
-      const parts = value.split(".");
-      // Don't truncate decimals here - just pad if needed
-      if (parts[1].length < decimalPlaces) {
-        parts[1] = parts[1].padEnd(decimalPlaces, "0");
-      }
-      value = parts.join(".");
-    }
+//   if (shouldSave) {
+//     saveCurrencyOrder();
+//   }
 
-    inputField.value = formatNumberWithCommas(value);
-  });
+//   document.querySelectorAll(".currency-input input").forEach((input) => {
+//     let previousValue = input.value;
+//     console.log("*****previousValue:", previousValue, typeof previousValue);
 
-  inputField.addEventListener("focus", (event) => {
-    event.target.select();
-  });
+//     // Handle input events
+//     input.addEventListener("input", async (event) => {
+//       const rawValue = event.target.value.replace(/,/g, ""); // Remove commas (thousands sep)
+//       const currency = event.target.dataset.currency;
+//       const decimalPlaces = await getDecimalPlaces(currency);
 
-  // Remove currency
-  currencyDiv.querySelector(".remove-btn").addEventListener("click", () => {
-    currencyDiv.remove();
-    currencies = currencies.filter((c) => c !== currency);
-    checkCurrencyCount();
-    updateAddButtonVisibility();
-    saveCurrencyOrder();
-  });
+//       console.log("*****rawValue:", rawValue, typeof rawValue);
+//       console.log("*****currency:", currency, typeof currency);
 
-  checkCurrencyCount();
-  updateAddButtonVisibility();
+//       // If input is cleared, update immediately
+//       if (rawValue === "") {
+//         updateCurrencyValues(currency);
+//         previousValue = "";
+//         return;
+//       }
 
-  if (shouldSave) {
-    saveCurrencyOrder();
-  }
-}
+//       // Validate input (only digits and optional single dot)
+//       if (!/^\d*\.?\d*$/.test(rawValue)) {
+//         event.target.value = previousValue || "0";
+//         return;
+//       }
+
+//       // Store raw value and format
+//       previousValue = rawValue;
+//       formatNumberWithCommas(rawValue, event.target); // Assumes formatting uses "," and "."
+//       updateCurrencyValues(currency);
+//     });
+
+//     // Handle blur event for final formatting
+//     input.addEventListener("blur", async () => {
+//       const currency = input.dataset.currency;
+//       const decimalPlaces = await getDecimalPlaces(currency);
+//       let value = input.value.replace(/,/g, ""); // Remove commas
+
+//       if (value === "") {
+//         value = "0";
+//       }
+
+//       // Ensure proper decimal places
+//       if (value.indexOf(".") === -1) {
+//         value += "." + "0".repeat(decimalPlaces);
+//       } else {
+//         const parts = value.split(".");
+//         if (parts[1].length < decimalPlaces) {
+//           parts[1] = parts[1].padEnd(decimalPlaces, "0");
+//         }
+//         value = parts.join(".");
+//       }
+
+//       input.value = formatNumberWithCommas(value, input); // Format with "," and "."
+//       previousValue = value;
+//       updateCurrencyValues(currency);
+//     });
+//   });
+// }
+
 function checkCurrencyCount() {
   //🟣 add the "x" button if more than 2 currencies exist
   const currencyInputs = document.querySelectorAll(".currency-input");
@@ -1505,144 +1537,125 @@ function updateAddButtonVisibility() {
 //🟢------------------------------------------------------------*/
 //🟢                        DOTS & COMMAS                       */
 //🟢------------------------------------------------------------*/
-function formatNumberWithCommas(value, inputElement) {
-  // Return early if inputElement is not valid
-  if (!inputElement || typeof inputElement.selectionStart !== "number") {
-    // Fallback to simple formatting without cursor control
-    value = value.replace(/[^\d.]/g, ""); //🟢Removes everything except digits (\d) and the decimal point (.).
-    let [integerPart, decimalPart] = value.split(".");
-    integerPart = integerPart.replace(/^0+/, "") || "0";
-    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ","); //🟢Adds commas as thousand separators
-
-    if (decimalPart !== undefined) {
-      decimalPart = decimalPart.substring(0); //🟠Changed "substring(0,2)"
-      return `${integerPart}.${decimalPart}`; //🟢Returns the formatted value with commas and decimal point
-    }
-    return integerPart;
-  }
-
-  // Store cursor position if we have a valid input element
-  const cursorPos = inputElement.selectionStart;
-  const originalValue = inputElement.value;
-  const isAddingDecimal =
-    originalValue.length < value.length && value.charAt(cursorPos) === "."; //🟢Checks if the user is adding a decimal point
-
-  // Clean the input value
-  let cleanValue = value.replace(/[^\d.]/g, ""); //🟢Removes everything except digits (\d) and the decimal point (.).
-
-  // Handle decimal part
-  let [integerPart, decimalPart] = cleanValue.split("."); //🟢split the value to decimal and integer
-  integerPart = integerPart.replace(/^0+/, "") || "0";
-
-  // Add thousand separators
-  integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ","); //🟢Adds commas to thousands
-
-  // Format decimal part if exists
-  if (decimalPart !== undefined) {
-    decimalPart = decimalPart.substring(0);
-    cleanValue = `${integerPart}.${decimalPart}`; //🟢
-  } else {
-    cleanValue = integerPart;
-  }
-
-  // Calculate new cursor position
-  let newCursorPos = cursorPos;
-
-  // Adjust for added comma
-  if (cleanValue.length > originalValue.length) {
-    const addedChars = cleanValue.length - originalValue.length;
-    newCursorPos += addedChars;
-  }
-  // Special handling for decimal point
-  else if (isAddingDecimal) {
-    newCursorPos += 1;
-  }
-
-  // Update input value
-  inputElement.value = cleanValue;
-
-  // Restore cursor position
-  setTimeout(() => {
-    inputElement.setSelectionRange(newCursorPos, newCursorPos);
-  }, 0);
-
-  return cleanValue;
-}
+//!!!!!
 // function formatNumberWithCommas(value, inputElement) {
-//   const currency = inputElement?.dataset.currency || "USD";
-//   const decimalPlaces = getDecimalPlaces(currency);
+//   // Return early if inputElement is not valid
+//   if (!inputElement || typeof inputElement.selectionStart !== "number") {
+//     // Fallback to simple formatting without cursor control
+//     value = value.replace(/[^\d.]/g, ""); //🟢Removes everything except digits (\d) and the decimal point (.).
+//     let [integerPart, decimalPart] = value.split(".");
+//     integerPart = integerPart.replace(/^0+/, "") || "0";
+//     integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ","); //🟢Adds commas as thousand separators
 
-//   let [integerPart, decimalPart = ""] = value.split(".");
-
-//   // Ensure decimal part has the correct number of digits
-//   if (decimalPart.length > decimalPlaces) {
-//     decimalPart = decimalPart.substring(0, decimalPlaces);
-//   } else if (decimalPart.length < decimalPlaces && decimalPart.length > 0) {
-//     decimalPart = decimalPart.padEnd(decimalPlaces, "0");
+//     if (decimalPart !== undefined) {
+//       decimalPart = decimalPart.substring(0); //🟠Changed "substring(0,2)"
+//       return `${integerPart}.${decimalPart}`; //🟢Returns the formatted value with commas and decimal point
+//     }
+//     return integerPart;
 //   }
 
-//   // Format integer part with commas
-//   integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+//   // Store cursor position if we have a valid input element
+//   const cursorPos = inputElement.selectionStart;
+//   const originalValue = inputElement.value;
+//   const isAddingDecimal =
+//     originalValue.length < value.length && value.charAt(cursorPos) === "."; //🟢Checks if the user is adding a decimal point
 
-//   return decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+//   // Clean the input value
+//   let cleanValue = value.replace(/[^\d.]/g, ""); //🟢Removes everything except digits (\d) and the decimal point (.).
+
+//   // Handle decimal part
+//   let [integerPart, decimalPart] = cleanValue.split("."); //🟢split the value to decimal and integer
+//   integerPart = integerPart.replace(/^0+/, "") || "0";
+
+//   // Add thousand separators
+//   integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ","); //🟢Adds commas to thousands
+
+//   // Format decimal part if exists
+//   if (decimalPart !== undefined) {
+//     decimalPart = decimalPart.substring(0);
+//     cleanValue = `${integerPart}.${decimalPart}`; //🟢
+//   } else {
+//     cleanValue = integerPart;
+//   }
+
+//   // Calculate new cursor position
+//   let newCursorPos = cursorPos;
+
+//   // Adjust for added comma
+//   if (cleanValue.length > originalValue.length) {
+//     const addedChars = cleanValue.length - originalValue.length;
+//     newCursorPos += addedChars;
+//   }
+//   // Special handling for decimal point
+//   else if (isAddingDecimal) {
+//     newCursorPos += 1;
+//   }
+
+//   // Update input value
+//   inputElement.value = cleanValue;
+
+//   // Restore cursor position
+//   setTimeout(() => {
+//     inputElement.setSelectionRange(newCursorPos, newCursorPos);
+//   }, 0);
+
+//   return cleanValue;
 // }
+// document.querySelectorAll(".currency-input input").forEach((input) => {
+//   // Store previous value for validation
+//   let previousValue = input.value;
 
-// Now update the event listeners to use dynamic decimals
-document.querySelectorAll(".currency-input input").forEach((input) => {
-  // Store previous value for validation
-  let previousValue = input.value;
+//   // Handle input events
+//   input.addEventListener("input", async (event) => {
+//     const rawValue = event.target.value.replace(/,/g, "");
+//     const currency = event.target.dataset.currency;
+//     const decimalPlaces = await getDecimalPlaces(currency);
 
-  // Handle input events
-  input.addEventListener("input", async (event) => {
-    const rawValue = event.target.value.replace(/,/g, "");
-    const currency = event.target.dataset.currency;
-    const decimalPlaces = await getDecimalPlaces(currency);
+//     // If input is cleared, update immediately
+//     if (rawValue === "") {
+//       updateCurrencyValues(currency);
+//       previousValue = "";
+//       return;
+//     }
 
-    // If input is cleared, update immediately
-    if (rawValue === "") {
-      updateCurrencyValues(currency);
-      previousValue = "";
-      return;
-    }
+//     // Validate input
+//     if (!/^\d*\.?\d*$/.test(rawValue)) {
+//       event.target.value = previousValue || "0";
+//       return;
+//     }
 
-    // Validate input
-    if (!/^\d*\.?\d*$/.test(rawValue)) {
-      event.target.value = previousValue || "0";
-      return;
-    }
+//     // Store raw value and format
+//     previousValue = rawValue;
+//     formatNumberWithCommas(rawValue, event.target);
+//     updateCurrencyValues(currency);
+//   });
 
-    // Store raw value and format
-    previousValue = rawValue;
-    formatNumberWithCommas(rawValue, event.target);
-    updateCurrencyValues(currency);
-  });
+//   // Handle blur event for final formatting
+//   input.addEventListener("blur", async () => {
+//     const currency = input.dataset.currency;
+//     const decimalPlaces = await getDecimalPlaces(currency);
+//     let value = input.value.replace(/,/g, "");
 
-  // Handle blur event for final formatting
-  input.addEventListener("blur", async () => {
-    const currency = input.dataset.currency;
-    const decimalPlaces = await getDecimalPlaces(currency);
-    let value = input.value.replace(/,/g, "");
+//     if (value === "") {
+//       value = "0";
+//     }
 
-    if (value === "") {
-      value = "0";
-    }
+//     // Ensure proper decimal places
+//     if (value.indexOf(".") === -1) {
+//       value += "." + "0".repeat(decimalPlaces);
+//     } else {
+//       const parts = value.split(".");
+//       if (parts[1].length < decimalPlaces) {
+//         parts[1] = parts[1].padEnd(decimalPlaces, "0");
+//       }
+//       value = parts.join(".");
+//     }
 
-    // Ensure proper decimal places
-    if (value.indexOf(".") === -1) {
-      value += "." + "0".repeat(decimalPlaces);
-    } else {
-      const parts = value.split(".");
-      if (parts[1].length < decimalPlaces) {
-        parts[1] = parts[1].padEnd(decimalPlaces, "0");
-      }
-      value = parts.join(".");
-    }
-
-    input.value = formatNumberWithCommas(value, input);
-    previousValue = value;
-    updateCurrencyValues(currency);
-  });
-});
+//     input.value = formatNumberWithCommas(value, input);
+//     previousValue = value;
+//     updateCurrencyValues(currency);
+//   });
+// });
 
 //⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 //⚪+                                                   CURRENCY CONVERSION                                                +*/
@@ -1650,58 +1663,7 @@ document.querySelectorAll(".currency-input input").forEach((input) => {
 //🟢------------------------------------------------------------*/
 //🟢                    CURRENCY CONVERSION                     */
 //🟢------------------------------------------------------------*/
-// function updateCurrencyValues(changedCurrency) {
-//   if (!exchangeRates) {
-//     console.error("No exchange rates available for conversion.");
-//     return;
-//   }
-
-//   // Get all currency inputs
-//   const currencyInputs = Array.from(
-//     document.querySelectorAll(".currency-input input")
-//   );
-
-//   // Find the changed input
-//   const changedInput = currencyInputs.find(
-//     (input) => input.dataset.currency === changedCurrency
-//   );
-//   if (!changedInput) return;
-
-//   // Get the raw value (without commas) from the changed input
-//   const rawValue = changedInput.value.replace(/,/g, ""); //🟢Removes commas from the input value
-//   const numericValue = parseFloat(rawValue) || 0;
-
-//   // Update all other currencies based on the changed input
-//   currencyInputs.forEach((input) => {
-//     if (input.dataset.currency !== changedCurrency) {
-//       // Calculate the converted value
-//       let convertedValue;
-
-//       if (changedCurrency === "USD") {
-//         // If USD was changed, directly use its rate
-//         convertedValue = numericValue * exchangeRates[input.dataset.currency];
-//       } else if (input.dataset.currency === "USD") {
-//         // If converting to USD, divide by the rate
-//         convertedValue = numericValue / exchangeRates[changedCurrency];
-//       } else {
-//         // For other currency pairs
-//         convertedValue =
-//           numericValue *
-//           (exchangeRates[input.dataset.currency] /
-//             exchangeRates[changedCurrency]);
-//       }
-
-//       // Format based on currency type (BTC gets 8 decimals, others get 2)
-//       const roundedValue =
-//         input.dataset.currency === "BTC"
-//           ? convertedValue.toFixed(8)
-//           : convertedValue.toFixed(2);
-
-//       // Update the input field
-//       input.value = formatNumberWithCommas(roundedValue);
-//     }
-//   });
-// }
+//!!!!!
 // async function updateCurrencyValues(changedCurrency) {
 //   const changedInput = document.querySelector(
 //     `input[data-currency="${changedCurrency}"]`
@@ -1709,6 +1671,23 @@ document.querySelectorAll(".currency-input input").forEach((input) => {
 //   if (!changedInput) return;
 
 //   const rawValue = changedInput.value.replace(/,/g, "");
+
+//   // If input is empty or cleared, set all other inputs to 0 with proper decimal places
+//   if (rawValue === "") {
+//     document
+//       .querySelectorAll(".currency-input input")
+//       .forEach(async (input) => {
+//         if (input.dataset.currency === changedCurrency) return;
+
+//         const targetCurrency = input.dataset.currency;
+//         const decimalPlaces = await getDecimalPlaces(targetCurrency);
+//         const zeroValue = `0.${"0".repeat(decimalPlaces)}`;
+
+//         input.value = formatNumberWithCommas(zeroValue, input);
+//       });
+//     return;
+//   }
+
 //   const value = parseFloat(rawValue) || 0;
 //   const baseCurrency = changedCurrency;
 
@@ -1733,54 +1712,6 @@ document.querySelectorAll(".currency-input input").forEach((input) => {
 //     input.value = formatNumberWithCommas(formattedValue, input);
 //   });
 // }
-async function updateCurrencyValues(changedCurrency) {
-  const changedInput = document.querySelector(
-    `input[data-currency="${changedCurrency}"]`
-  );
-  if (!changedInput) return;
-
-  const rawValue = changedInput.value.replace(/,/g, "");
-
-  // If input is empty or cleared, set all other inputs to 0 with proper decimal places
-  if (rawValue === "") {
-    document
-      .querySelectorAll(".currency-input input")
-      .forEach(async (input) => {
-        if (input.dataset.currency === changedCurrency) return;
-
-        const targetCurrency = input.dataset.currency;
-        const decimalPlaces = await getDecimalPlaces(targetCurrency);
-        const zeroValue = `0.${"0".repeat(decimalPlaces)}`;
-
-        input.value = formatNumberWithCommas(zeroValue, input);
-      });
-    return;
-  }
-
-  const value = parseFloat(rawValue) || 0;
-  const baseCurrency = changedCurrency;
-
-  // Update all other currency inputs
-  document.querySelectorAll(".currency-input input").forEach(async (input) => {
-    if (input.dataset.currency === changedCurrency) return;
-
-    const targetCurrency = input.dataset.currency;
-    const decimalPlaces = await getDecimalPlaces(targetCurrency);
-
-    let convertedValue;
-    if (baseCurrency === "USD") {
-      convertedValue = value * exchangeRates[targetCurrency];
-    } else if (targetCurrency === "USD") {
-      convertedValue = value / exchangeRates[baseCurrency];
-    } else {
-      convertedValue =
-        value * (exchangeRates[targetCurrency] / exchangeRates[baseCurrency]);
-    }
-
-    const formattedValue = convertedValue.toFixed(decimalPlaces);
-    input.value = formatNumberWithCommas(formattedValue, input);
-  });
-}
 
 //⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 //⚪+                                               NUMBERS TO WORDS CONVERSION                                            +*/
@@ -1863,7 +1794,7 @@ addCurrencyBtn.addEventListener("click", async () => {
 //⚪------------------------------------------------------------*/
 document.getElementById("donation-content").innerHTML = updateDonationContent();
 
-currencyTab.addEventListener("click", (event) => {
+currencyTab.addEventListener("click", async (event) => {
   if (!(event.target instanceof HTMLInputElement)) return; // Ignore clicks on non-input elements
   if (!event.target.value) return; // Ignore empty values
 
@@ -1875,7 +1806,7 @@ currencyTab.addEventListener("click", (event) => {
   } // Regex to allow only digits and one decimal point
 
   event.target.dataset.previousValue = rawValue;
-  event.target.value = formatNumberWithCommas(rawValue);
+  event.target.value = await formatNumberWithCommas(rawValue);
   updateCurrencyValues(
     parseFloat(rawValue) || 0,
     event.target.dataset.currency
@@ -2001,14 +1932,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     localStorage.getItem(LAST_UPDATED_KEY)
   );
 
-  formatSelector.addEventListener("change", function () {
-    saveNumberFormat();
+  formatSelector.addEventListener("change", async function () {
+    await saveNumberFormat();
 
     if (formatSelector.value !== "comma-dot") {
       customFormat.classList.remove("hidden");
     } else {
       customFormat.classList.add("hidden");
     }
+
+    // Reformat all inputs with new separators but preserve values
+    const inputs = document.querySelectorAll(".currency-input input");
+    for (const input of inputs) {
+      const currency = input.dataset.currency;
+      const separators = await getNumberFormatSeparators();
+
+      // Get current value without formatting
+      let rawValue = input.value
+        .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
+        .replace(separators.decimal, ".");
+
+      // Ensure proper decimal places
+      const decimalPlaces = await getDecimalPlaces(currency);
+      let formattedValue = parseFloat(rawValue)
+        .toFixed(decimalPlaces)
+        .replace(".", separators.decimal);
+
+      // Apply new formatting
+      input.value = await formatNumberWithCommas(formattedValue, input);
+      input.dataset.previousValue = rawValue;
+    }
+    await resetInputsWithNewFormat();
   });
 
   fiatDecimalSelector.addEventListener("change", async function () {
@@ -2020,7 +1974,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       customFiatDecimals.classList.add("hidden");
     }
 
-    // Update all fiat currency inputs
+    // Update all fiat currency inputs while preserving values
     await updateAllCurrencyDecimals();
   });
 
@@ -2033,7 +1987,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       customCryptoDecimals.classList.add("hidden");
     }
 
-    // Update all crypto currency inputs (just BTC in this case)
+    // Update all crypto currency inputs while preserving values
     await updateAllCurrencyDecimals();
   });
 
@@ -2172,7 +2126,7 @@ async function updateAllCurrencyDecimals() {
 
   // Get the first non-zero input to use as base
   let baseInput = document.querySelector(
-    '.currency-input input:not([value="0"]):not([value^="0."])'
+    '.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])'
   );
 
   // If no non-zero input found, use the first input
@@ -2182,7 +2136,13 @@ async function updateAllCurrencyDecimals() {
 
   if (baseInput) {
     const baseCurrency = baseInput.dataset.currency;
-    const baseValue = parseFloat(baseInput.value.replace(/,/g, "") || 0);
+    const separators = await getNumberFormatSeparators();
+
+    // Get the raw value (remove thousand separators and standardize decimal)
+    let rawValue = baseInput.value
+      .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
+      .replace(separators.decimal, ".");
+    const baseValue = parseFloat(rawValue) || 0;
 
     // Update all inputs with new decimal places
     for (const input of inputs) {
@@ -2191,8 +2151,10 @@ async function updateAllCurrencyDecimals() {
 
       // For the base input, just reformat with new decimals
       if (input === baseInput) {
-        const formattedValue = baseValue.toFixed(decimalPlaces);
-        input.value = formatNumberWithCommas(formattedValue);
+        const formattedValue = baseValue
+          .toFixed(decimalPlaces)
+          .replace(".", separators.decimal);
+        input.value = await formatNumberWithCommas(formattedValue, input);
         continue;
       }
 
@@ -2207,8 +2169,473 @@ async function updateAllCurrencyDecimals() {
           baseValue * (exchangeRates[currency] / exchangeRates[baseCurrency]);
       }
 
-      const formattedValue = convertedValue.toFixed(decimalPlaces);
-      input.value = formatNumberWithCommas(formattedValue);
+      const formattedValue = convertedValue
+        .toFixed(decimalPlaces)
+        .replace(".", separators.decimal);
+      input.value = await formatNumberWithCommas(formattedValue, input);
     }
+  }
+}
+
+//////////////////////////
+//////////////////////////
+//////////////////////////
+//////////////////////////
+//////////////////////////
+//////////////////////////
+//////////////////////////
+
+async function getNumberFormatSeparators() {
+  try {
+    // Get the numberFormat from chrome.storage.local
+    const result = await chrome.storage.local.get("numberFormat");
+    const numberFormat = result.numberFormat;
+
+    // Define the separator mappings
+    const separatorMap = {
+      "comma-dot": { thousand: ",", decimal: "." },
+      "dot-comma": { thousand: ".", decimal: "," },
+      "space-dot": { thousand: " ", decimal: "." },
+      "space-comma": { thousand: " ", decimal: "," },
+      "none-dot": { thousand: "", decimal: "." },
+      "none-comma": { thousand: "", decimal: "," },
+    };
+
+    // Get the separators from the map or use defaults (comma and dot)
+    const separators = separatorMap[numberFormat] || {
+      thousand: ",",
+      decimal: ".",
+    };
+
+    return separators;
+  } catch (error) {
+    console.error("Error retrieving numberFormat:", error);
+    // Return default separators (comma and dot) in case of error
+    return { thousand: ",", decimal: "." };
+  }
+}
+
+async function formatNumberWithCommas(value, inputElement) {
+  try {
+    const separators = await getNumberFormatSeparators();
+
+    // Get current cursor position and original value
+    const cursorPos = inputElement?.selectionStart ?? 0;
+    const originalValue = inputElement?.value || "";
+
+    // Clean the input value
+    const decimalChar = separators.decimal === "." ? "\\." : separators.decimal;
+    const cleanRegex = new RegExp(`[^\\d${decimalChar}]`, "g");
+    let cleanValue = value.replace(cleanRegex, "");
+
+    // Handle multiple decimal points
+    const decimalSplit = cleanValue.split(separators.decimal);
+    if (decimalSplit.length > 2) {
+      cleanValue =
+        decimalSplit[0] + separators.decimal + decimalSplit.slice(1).join("");
+    }
+
+    // Split into parts
+    let [integerPart, decimalPart] = cleanValue.split(separators.decimal);
+    integerPart = integerPart.replace(/^0+/, "") || "0";
+
+    // Format integer part with thousand separators
+    const formattedInteger = integerPart.replace(
+      /\B(?=(\d{3})+(?!\d))/g,
+      separators.thousand
+    );
+
+    // Reconstruct full formatted value
+    let formattedValue = formattedInteger;
+    if (decimalPart !== undefined) {
+      formattedValue += separators.decimal + decimalPart;
+    }
+
+    if (inputElement) {
+      // Calculate new cursor position
+      let newCursorPos = calculateNewCursorPosition(
+        originalValue,
+        formattedValue,
+        cursorPos,
+        separators
+      );
+
+      // Update input value
+      inputElement.value = formattedValue;
+
+      // Restore cursor position immediately (remove setTimeout)
+      inputElement.setSelectionRange(newCursorPos, newCursorPos);
+    }
+
+    return formattedValue;
+  } catch (error) {
+    console.error("Error formatting number:", error);
+    return value;
+  }
+}
+
+function calculateNewCursorPosition(
+  originalValue,
+  formattedValue,
+  cursorPos,
+  separators
+) {
+  // Handle edge cases
+  if (cursorPos <= 0) return 0;
+  if (cursorPos >= originalValue.length) return formattedValue.length;
+
+  // Check if we just added a decimal separator
+  const isAddingDecimal =
+    originalValue.length < formattedValue.length &&
+    originalValue.slice(0, cursorPos - 1) + separators.decimal ===
+      originalValue.slice(0, cursorPos);
+
+  if (isAddingDecimal) {
+    const decimalIndex = formattedValue.indexOf(separators.decimal);
+    return decimalIndex >= 0 ? decimalIndex + 1 : cursorPos;
+  }
+
+  // Count characters before cursor position in original value
+  let charCount = 0;
+  let digitCount = 0;
+
+  for (let i = 0; i < cursorPos && i < originalValue.length; i++) {
+    const char = originalValue[i];
+    if (/\d/.test(char)) {
+      digitCount++;
+    }
+    charCount++;
+  }
+
+  // Find the equivalent position in formatted value
+  let newPos = 0;
+  let currentDigitCount = 0;
+
+  for (let i = 0; i < formattedValue.length; i++) {
+    const char = formattedValue[i];
+
+    if (/\d/.test(char)) {
+      currentDigitCount++;
+      if (currentDigitCount >= digitCount) {
+        newPos = i + 1;
+        break;
+      }
+    }
+
+    // If we haven't found enough digits and we're at the end
+    if (i === formattedValue.length - 1) {
+      newPos = formattedValue.length;
+    }
+  }
+
+  // Ensure position is within bounds
+  return Math.min(Math.max(newPos, 0), formattedValue.length);
+}
+
+// Alternative simpler approach - tracks relative position
+function calculateNewCursorPositionSimple(
+  originalValue,
+  formattedValue,
+  cursorPos,
+  separators
+) {
+  // Get the part of the string before the cursor
+  const beforeCursor = originalValue.slice(0, cursorPos);
+
+  // Count digits before cursor in original string
+  const digitsBefore = (beforeCursor.match(/\d/g) || []).length;
+
+  // Find position after the same number of digits in formatted string
+  let digitCount = 0;
+  for (let i = 0; i < formattedValue.length; i++) {
+    if (/\d/.test(formattedValue[i])) {
+      digitCount++;
+      if (digitCount === digitsBefore) {
+        return i + 1;
+      }
+    }
+  }
+
+  // If we didn't find the position, place at end
+  return formattedValue.length;
+}
+
+// Helper function to find digit position
+function getDigitPosition(str, cursorPos) {
+  let digitCount = 0;
+  for (let i = 0; i < cursorPos; i++) {
+    if (str[i].match(/\d/)) digitCount++;
+  }
+  return digitCount;
+}
+
+// Helper function to find new cursor position
+function findNewCursorPosition(original, formatted, cursorPos, thousandSep) {
+  // Get the text before cursor in original
+  const beforeCursor = original.substring(0, cursorPos);
+
+  // Count how many digits are before cursor
+  const digitCount = (beforeCursor.match(/\d/g) || []).length;
+
+  // Find position in formatted string with same number of digits before
+  let newPos = 0;
+  let digitsFound = 0;
+
+  for (let i = 0; i < formatted.length; i++) {
+    if (digitsFound >= digitCount) break;
+    if (formatted[i].match(/\d/)) digitsFound++;
+    newPos = i + 1;
+  }
+
+  // Adjust for thousand separators that might be added right before cursor
+  if (newPos > 0 && formatted[newPos - 1] === thousandSep) {
+    newPos--;
+  }
+
+  return newPos;
+}
+
+async function addCurrency(currency, shouldSave = true) {
+  if (currencies.includes(currency)) return;
+
+  // Get decimal places for this currency
+  const decimalPlaces = await getDecimalPlaces(currency);
+  const initialDecimalPart = "0".repeat(decimalPlaces);
+
+  currencies.push(currency);
+  const currencyDiv = document.createElement("div");
+  currencyDiv.classList.add("currency-input");
+  currencyDiv.setAttribute("draggable", "true");
+
+  // Get the country code for the currency
+  const countryCode = currencyToCountry[currency] || "??";
+
+  // Create initial value based on current format
+  const separators = await getNumberFormatSeparators();
+  const initialValue = `0${separators.decimal}${initialDecimalPart}`;
+
+  currencyDiv.innerHTML = `
+        <div class="currency-info">
+            <div class="flag"><span class="fi fi-${countryCode}"></span></div>
+            <label>${currency}</label>
+        </div>
+        <input type="text" data-currency="${currency}" value="${initialValue}" data-previous-value="0">
+        <button class="remove-btn" title="Remove"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
+    `;
+
+  currencyContainer.appendChild(currencyDiv);
+  const inputField = currencyDiv.querySelector("input");
+
+  // Format initial value
+  inputField.value = await formatNumberWithCommas(initialValue, inputField);
+
+  // Event handlers - modified to get fresh separators on each call
+  inputField.addEventListener("input", async (event) => {
+    const separators = await getNumberFormatSeparators();
+    let rawValue = event.target.value.replace(
+      new RegExp(`[${separators.thousand}]`, "g"),
+      ""
+    );
+
+    // Validation
+    const decimalRegex =
+      separators.decimal === "." ? /^\d*\.?\d*$/ : /^\d*,?\d*$/;
+    if (!decimalRegex.test(rawValue)) {
+      event.target.value = event.target.dataset.previousValue || "0";
+      return;
+    }
+
+    event.target.dataset.previousValue = rawValue;
+    await formatNumberWithCommas(rawValue, event.target);
+    updateCurrencyValues(event.target.dataset.currency);
+  });
+
+  inputField.addEventListener("blur", async () => {
+    const currency = inputField.dataset.currency;
+    const decimalPlaces = await getDecimalPlaces(currency);
+    const separators = await getNumberFormatSeparators();
+
+    let value = inputField.value.replace(
+      new RegExp(`[${separators.thousand}]`, "g"),
+      ""
+    );
+    if (value === "") value = "0";
+
+    // Ensure proper decimal places
+    if (!value.includes(separators.decimal)) {
+      value += separators.decimal + "0".repeat(decimalPlaces);
+    } else {
+      const parts = value.split(separators.decimal);
+      if (parts[1].length < decimalPlaces) {
+        parts[1] = parts[1].padEnd(decimalPlaces, "0");
+      }
+      value = parts.join(separators.decimal);
+    }
+
+    inputField.value = await formatNumberWithCommas(value, inputField);
+  });
+
+  inputField.addEventListener("focus", (event) => {
+    event.target.select();
+  });
+
+  // Remove currency
+  currencyDiv.querySelector(".remove-btn").addEventListener("click", () => {
+    currencyDiv.remove();
+    currencies = currencies.filter((c) => c !== currency);
+    checkCurrencyCount();
+    updateAddButtonVisibility();
+    saveCurrencyOrder();
+  });
+
+  checkCurrencyCount();
+  updateAddButtonVisibility();
+
+  if (shouldSave) {
+    saveCurrencyOrder();
+  }
+
+  // Add event listeners to all inputs (including the new one)
+  document.querySelectorAll(".currency-input input").forEach((input) => {
+    let previousValue = input.value;
+
+    // Handle input events
+    input.addEventListener("input", async (event) => {
+      const separators = await getNumberFormatSeparators(); // Get fresh separators
+      let rawValue = event.target.value.replace(
+        new RegExp(`[${separators.thousand}]`, "g"),
+        ""
+      );
+      const currency = event.target.dataset.currency;
+      const decimalPlaces = await getDecimalPlaces(currency);
+
+      // If input is cleared, update immediately
+      if (rawValue === "") {
+        updateCurrencyValues(currency);
+        previousValue = "";
+        return;
+      }
+
+      // Validate input
+      const decimalRegex =
+        separators.decimal === "." ? /^\d*\.?\d*$/ : /^\d*,?\d*$/;
+      if (!decimalRegex.test(rawValue)) {
+        event.target.value = previousValue || "0";
+        return;
+      }
+
+      // Store raw value and format
+      previousValue = rawValue;
+      await formatNumberWithCommas(rawValue, event.target);
+      updateCurrencyValues(currency);
+    });
+
+    // Handle blur event for final formatting
+    input.addEventListener("blur", async () => {
+      const separators = await getNumberFormatSeparators(); // Get fresh separators
+      const currency = input.dataset.currency;
+      const decimalPlaces = await getDecimalPlaces(currency);
+
+      let value = input.value.replace(
+        new RegExp(`[${separators.thousand}]`, "g"),
+        ""
+      );
+      if (value === "") {
+        value = "0";
+      }
+
+      // Ensure proper decimal places
+      if (!value.includes(separators.decimal)) {
+        value += separators.decimal + "0".repeat(decimalPlaces);
+      } else {
+        const parts = value.split(separators.decimal);
+        if (parts[1].length < decimalPlaces) {
+          parts[1] = parts[1].padEnd(decimalPlaces, "0");
+        }
+        value = parts.join(separators.decimal);
+      }
+
+      input.value = await formatNumberWithCommas(value, input);
+      previousValue = value;
+      updateCurrencyValues(currency);
+    });
+  });
+}
+
+async function updateCurrencyValues(changedCurrency) {
+  const separators = await getNumberFormatSeparators();
+
+  const changedInput = document.querySelector(
+    `input[data-currency="${changedCurrency}"]`
+  );
+  if (!changedInput) return;
+
+  // Get raw value by removing thousand separators and converting to standard format (dot as decimal)
+  let rawValue = changedInput.value
+    .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
+    .replace(separators.decimal, ".");
+
+  // If input is empty or cleared, set all other inputs to 0 with proper decimal places
+  if (rawValue === "") {
+    document
+      .querySelectorAll(".currency-input input")
+      .forEach(async (input) => {
+        if (input.dataset.currency === changedCurrency) return;
+
+        const targetCurrency = input.dataset.currency;
+        const decimalPlaces = await getDecimalPlaces(targetCurrency);
+        const zeroValue = `0${separators.decimal}${"0".repeat(decimalPlaces)}`;
+
+        input.value = await formatNumberWithCommas(zeroValue, input);
+      });
+    return;
+  }
+
+  const value = parseFloat(rawValue) || 0;
+  const baseCurrency = changedCurrency;
+
+  // Update all other currency inputs
+  document.querySelectorAll(".currency-input input").forEach(async (input) => {
+    if (input.dataset.currency === changedCurrency) return;
+
+    const targetCurrency = input.dataset.currency;
+    const decimalPlaces = await getDecimalPlaces(targetCurrency);
+
+    let convertedValue;
+    if (baseCurrency === "USD") {
+      convertedValue = value * exchangeRates[targetCurrency];
+    } else if (targetCurrency === "USD") {
+      convertedValue = value / exchangeRates[baseCurrency];
+    } else {
+      convertedValue =
+        value * (exchangeRates[targetCurrency] / exchangeRates[baseCurrency]);
+    }
+
+    // Convert to string with proper decimal places
+    let formattedValue = convertedValue.toFixed(decimalPlaces);
+
+    // If the decimal separator is comma, replace the dot with comma
+    if (separators.decimal === ",") {
+      formattedValue = formattedValue.replace(".", ",");
+    }
+
+    // Format with thousand separators
+    input.value = await formatNumberWithCommas(formattedValue, input);
+  });
+}
+
+async function resetInputsWithNewFormat() {
+  const separators = await getNumberFormatSeparators();
+  const inputs = document.querySelectorAll(".currency-input input");
+
+  for (const input of inputs) {
+    const currency = input.dataset.currency;
+    const decimalPlaces = await getDecimalPlaces(currency);
+    const decimalPart = "0".repeat(decimalPlaces);
+    const zeroValue = `0${separators.decimal}${decimalPart}`;
+
+    // Format and set the value
+    input.value = await formatNumberWithCommas(zeroValue, input);
+    input.dataset.previousValue = zeroValue;
   }
 }

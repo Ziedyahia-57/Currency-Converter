@@ -268,6 +268,7 @@ body {
 }
 
 .currency-converter-ex .currency-option {
+  width: 308px;
   padding: 10px;
   cursor: pointer;
   -webkit-user-select: none;
@@ -275,13 +276,15 @@ body {
   -ms-user-select: none;
   user-select: none;
   border-bottom: var(--border-dark) solid 1px;
-  transition: border 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    background 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .currency-converter-ex .currency-active {
   background: var(--primary-light);
-  border-left: 2px solid var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border: solid 1px var(--primary-color);
+  border-radius: 8px;
 }
 
 .flag {
