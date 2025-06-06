@@ -1963,6 +1963,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       input.dataset.previousValue = rawValue;
     }
     await resetInputsWithNewFormat();
+    numToTextElement.textContent = "ABC..."; // Clear if input is invalid
   });
 
   fiatDecimalSelector.addEventListener("change", async function () {
