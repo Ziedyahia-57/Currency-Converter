@@ -250,28 +250,57 @@ let savedCurrencies = {};
 let lastSelectionRect = null;
 
 // Initialize currencies from storage
-chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
-  if (result.currencyOrder && result.currencyData) {
-    savedCurrencies = {};
-    result.currencyOrder.forEach((currency) => {
-      if (result.currencyData[currency]) {
-        savedCurrencies[currency] = result.currencyData[currency];
-      }
-    });
+chrome.storage.local.get(
+  ["currencyOrder", "currencyData", "fiatDecimals", "cryptoDecimals"],
+  (result) => {
+    savedCurrencies = {
+      currencyOrder: result.currencyOrder || [],
+      currencyData: result.currencyData || {},
+      fiatDecimals: result.fiatDecimals !== undefined ? result.fiatDecimals : 2,
+      cryptoDecimals:
+        result.cryptoDecimals !== undefined ? result.cryptoDecimals : 8,
+    };
+
+    if (result.currencyOrder && result.currencyData) {
+      result.currencyOrder.forEach((currency) => {
+        if (result.currencyData[currency]) {
+          savedCurrencies[currency] = result.currencyData[currency];
+        }
+      });
+    }
   }
-});
+);
 
 // ===== UTILITY FUNCTIONS =====
 function formatNumber(num, currency) {
-  if (currency === "BTC") {
-    return num.toLocaleString("en-US", {
-      minimumFractionDigits: 8,
-      maximumFractionDigits: 8,
-    });
-  }
+  // Use saved decimals or defaults
+  const fiatDecimals =
+    savedCurrencies.fiatDecimals !== undefined
+      ? savedCurrencies.fiatDecimals
+      : 2;
+  const cryptoDecimals =
+    savedCurrencies.cryptoDecimals !== undefined
+      ? savedCurrencies.cryptoDecimals
+      : 8;
+
+  // Simple crypto check - expand this list as needed
+  const isCrypto = [
+    "BTC",
+    "ETH",
+    "XRP",
+    "LTC",
+    "BCH",
+    "XLM",
+    "ADA",
+    "DOGE",
+    "DOT",
+  ].includes(currency);
+
+  const decimals = isCrypto ? cryptoDecimals : fiatDecimals;
+
   return num.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   });
 }
 
@@ -1005,6 +1034,24 @@ function initialize() {
       if (changes.checkboxState) {
         if (changes.checkboxState.newValue === false) {
           hidePopup();
+        }
+      }
+
+      // Update decimal settings if they change
+      if (changes.fiatDecimals || changes.cryptoDecimals) {
+        if (changes.fiatDecimals) {
+          savedCurrencies.fiatDecimals = changes.fiatDecimals.newValue;
+        }
+        if (changes.cryptoDecimals) {
+          savedCurrencies.cryptoDecimals = changes.cryptoDecimals.newValue;
+        }
+
+        // Refresh the view if we're currently showing conversions
+        if (currentMode === "currencies" && lastSelectionValue) {
+          showCurrenciesView(
+            document.getElementById(POPUP_ID),
+            lastSelectionValue
+          );
         }
       }
     });
