@@ -2531,12 +2531,11 @@ async function addCurrency(currency, shouldSave = true) {
     inputField.addEventListener("input", async (event) => {
       const input = event.target;
       const separators = await getNumberFormatSeparators();
+
+      // Store current cursor position
       const cursorPos = input.selectionStart;
 
-      // Store the previous raw value (without any formatting)
-      const previousRawValue = input.dataset.previousValue || "";
-
-      // Get current value and clean it (remove all formatting)
+      // Get raw value (without thousand separators)
       let rawValue = input.value.replace(
         new RegExp(`[${separators.thousand}]`, "g"),
         ""
@@ -2547,14 +2546,16 @@ async function addCurrency(currency, shouldSave = true) {
       const isDelete = event.inputType === "deleteContentForward";
 
       if (!isBackspace && !isDelete) {
-        // Validate characters - only allow digits and one decimal separator
-        const decimalRegex = new RegExp(`^[\\d${separators.decimal}]*$`);
+        // Validate new character
+        const decimalRegex =
+          separators.decimal === "." ? /^[\d.]*$/ : /^[\d,]*$/;
         if (!decimalRegex.test(rawValue)) {
           // Invalid character entered - revert to previous value
-          input.value = await formatNumberWithCommas(previousRawValue, input);
+          input.value = input.dataset.previousValue || "";
+
+          // Restore cursor position
           setTimeout(() => {
-            const newPos = Math.max(0, cursorPos - 1);
-            input.setSelectionRange(newPos, newPos);
+            input.setSelectionRange(cursorPos - 1, cursorPos - 1);
           }, 0);
           return;
         }
@@ -2562,24 +2563,21 @@ async function addCurrency(currency, shouldSave = true) {
         // Prevent multiple decimal separators
         const decimalCount = rawValue.split(separators.decimal).length - 1;
         if (decimalCount > 1) {
-          input.value = await formatNumberWithCommas(previousRawValue, input);
+          input.value = input.dataset.previousValue || "";
           setTimeout(() => {
-            const newPos = Math.max(0, cursorPos - 1);
-            input.setSelectionRange(newPos, newPos);
+            input.setSelectionRange(cursorPos - 1, cursorPos - 1);
           }, 0);
           return;
         }
       }
 
-      // Save the raw value before formatting
+      // Format the valid input
       input.dataset.previousValue = rawValue;
-
-      // Format the number (this will add thousand separators properly)
       await formatNumberWithCommas(rawValue, input);
 
-      // Calculate and set the new cursor position
+      // Adjust cursor position
       const newCursorPos = calculateNewCursorPosition(
-        previousRawValue,
+        input.dataset.previousValue,
         input.value,
         cursorPos,
         separators

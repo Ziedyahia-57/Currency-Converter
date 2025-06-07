@@ -284,7 +284,6 @@ body {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
   border: solid 1px var(--primary-color);
-  border-radius: 8px;
 }
 
 .flag {
@@ -700,7 +699,7 @@ body {
 }
 
 .currency-converter-ex .option-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 300;
   color: var(--font-color2);
   align-self: center;
