@@ -251,14 +251,20 @@ let lastSelectionRect = null;
 
 // Initialize currencies from storage
 chrome.storage.local.get(
-  ["currencyOrder", "currencyData", "fiatDecimals", "cryptoDecimals"],
+  [
+    "currencyOrder",
+    "currencyData",
+    "fiatDecimals",
+    "cryptoDecimals",
+    "numberFormat",
+  ],
   (result) => {
     savedCurrencies = {
       currencyOrder: result.currencyOrder || [],
       currencyData: result.currencyData || {},
-      fiatDecimals: result.fiatDecimals !== undefined ? result.fiatDecimals : 2,
-      cryptoDecimals:
-        result.cryptoDecimals !== undefined ? result.cryptoDecimals : 8,
+      fiatDecimals: result.fiatDecimals ?? 2,
+      cryptoDecimals: result.cryptoDecimals ?? 8,
+      numberFormat: result.numberFormat ?? "comma-dot",
     };
 
     if (result.currencyOrder && result.currencyData) {
@@ -273,44 +279,83 @@ chrome.storage.local.get(
 
 // ===== UTILITY FUNCTIONS =====
 function formatNumber(num, currency) {
-  // Use saved decimals or defaults
-  const fiatDecimals =
-    savedCurrencies.fiatDecimals !== undefined
-      ? savedCurrencies.fiatDecimals
-      : 2;
-  const cryptoDecimals =
-    savedCurrencies.cryptoDecimals !== undefined
-      ? savedCurrencies.cryptoDecimals
-      : 8;
+  const fiatDecimals = savedCurrencies.fiatDecimals ?? 2;
+  const cryptoDecimals = savedCurrencies.cryptoDecimals ?? 8;
+  const [thousandOpt, decimalOpt] = (
+    savedCurrencies.numberFormat ?? "comma-dot"
+  ).split("-");
 
-  // Simple crypto check - expand this list as needed
-  const isCrypto = [
-    "BTC",
-    "ETH",
-    "XRP",
-    "LTC",
-    "BCH",
-    "XLM",
-    "ADA",
-    "DOGE",
-    "DOT",
-  ].includes(currency);
-
+  const isCrypto = ["BTC", "ETH", "XRP"].includes(currency);
   const decimals = isCrypto ? cryptoDecimals : fiatDecimals;
 
-  return num.toLocaleString("en-US", {
+  // Determine separators
+  const thousandSep =
+    thousandOpt === "comma"
+      ? ","
+      : thousandOpt === "dot"
+      ? "."
+      : thousandOpt === "space"
+      ? " "
+      : "";
+  const decimalSep = decimalOpt === "comma" ? "," : ".";
+
+  // Ensure proper rounding
+  const factor = Math.pow(10, decimals);
+  const roundedNum = Math.round(num * factor) / factor;
+
+  // Format number with fixed decimals (no separators yet)
+  let formatted = roundedNum.toLocaleString("en-US", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
+    useGrouping: false,
   });
+
+  // Split into integer and decimal parts
+  const parts = formatted.split(".");
+  let integerPart = parts[0];
+  let decimalPart = parts[1] || "";
+
+  // Apply thousand separators to integer part
+  if (thousandSep) {
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSep);
+  }
+
+  // Combine parts with decimal separator
+  formatted = decimalPart
+    ? `${integerPart}${decimalSep}${decimalPart}`
+    : integerPart;
+
+  return formatted;
 }
 
 function parseNumber(text) {
-  // Handle European-style numbers (1.234,56)
-  if (/\.\d{3},\d{2}$/.test(text)) {
-    return parseFloat(text.replace(/\./g, "").replace(",", "."));
+  const [thousandOpt, decimalOpt] = (
+    savedCurrencies.numberFormat ?? "comma-dot"
+  ).split("-");
+
+  // Determine separators
+  const thousandSep =
+    thousandOpt === "comma"
+      ? ","
+      : thousandOpt === "dot"
+      ? "."
+      : thousandOpt === "space"
+      ? " "
+      : "";
+  const decimalSep = decimalOpt === "comma" ? "," : ".";
+
+  // Remove thousand separators
+  if (thousandSep) {
+    const regex = new RegExp(`\\${thousandSep}`, "g");
+    text = text.replace(regex, "");
   }
-  // Handle normal numbers with commas as thousand separators
-  return parseFloat(text.replace(/,/g, ""));
+
+  // Normalize decimal separator to dot
+  if (decimalSep === ",") {
+    text = text.replace(",", ".");
+  }
+
+  return parseFloat(text);
 }
 
 function getFlagElement(currencyCode) {
@@ -609,7 +654,8 @@ function showCurrenciesView(popup, baseText) {
 
       // Add currency code
       const sourceCodeSpan = document.createElement("span");
-      sourceCodeSpan.textContent = `${baseCurrency}    `;
+      sourceCodeSpan.textContent = baseCurrency;
+      sourceCodeSpan.style.marginRight = "4px"; // Add some spacing
       sourceFlagContainer.appendChild(sourceCodeSpan);
 
       // Add symbol switcher if multiple currencies available
@@ -623,20 +669,12 @@ function showCurrenciesView(popup, baseText) {
 
         const switcherIcon = document.createElement("span");
         switcherIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-repeat" viewBox="0 0 16 16">
-  <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
-</svg>`;
+      <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
+    </svg>`;
         switcherIcon.title = `Switch between ${possibleCurrencies.join(", ")}`;
 
         switcher.appendChild(switcherIcon);
         sourceFlagContainer.appendChild(switcher);
-
-        switcher.addEventListener("click", (e) => {
-          e.stopPropagation();
-          currentSymbolIndex =
-            (currentSymbolIndex + 1) % possibleCurrencies.length;
-          currentBaseCurrency = possibleCurrencies[currentSymbolIndex];
-          renderConversions(currentBaseCurrency, numericAmount);
-        });
       }
 
       sourceItem.appendChild(sourceFlagContainer);
@@ -661,6 +699,7 @@ function showCurrenciesView(popup, baseText) {
 
         const item = document.createElement("div");
         item.className = "currency-item";
+        item.dataset.currency = targetCurrency; // Set data attribute
 
         // Create flag container
         const flagContainer = document.createElement("div");
@@ -672,14 +711,15 @@ function showCurrenciesView(popup, baseText) {
         // Add flag
         flagContainer.appendChild(getFlagElement(targetCurrency));
 
-        // Add currency code
+        // Add currency code - create a separate span for the code
         const codeSpan = document.createElement("span");
-        codeSpan.textContent = `${targetCurrency}    `;
+        codeSpan.textContent = targetCurrency;
+        codeSpan.style.marginRight = "4px"; // Add some spacing
         flagContainer.appendChild(codeSpan);
 
         item.appendChild(flagContainer);
 
-        // Add converted value
+        // Add converted value - create a separate span for the value
         const valueSpan = document.createElement("span");
         valueSpan.textContent = formatNumber(convertedValue, targetCurrency);
         item.appendChild(valueSpan);
@@ -705,6 +745,16 @@ function showCurrenciesView(popup, baseText) {
   currenciesContainer.style.display = "flex";
   currentMode = "currencies";
   popupElement.style.pointerEvents = "auto";
+}
+
+function onDecimalPrecisionChange() {
+  const newFiatDecimals = parseInt(fiatDecimalsInput.value);
+  const newCryptoDecimals = parseInt(cryptoDecimalsInput.value);
+
+  chrome.storage.local.set({
+    fiatDecimals: newFiatDecimals,
+    cryptoDecimals: newCryptoDecimals,
+  });
 }
 
 // New helper function
@@ -810,6 +860,53 @@ function updatePopupPosition(popup) {
   popup.style.left = `${
     lastSelectionRect.left + scrollX + lastSelectionRect.width / 2
   }px`;
+}
+
+function refreshDisplayedValues() {
+  if (!lastSelectionValue) return;
+
+  // Get the current base currency and amount
+  const { currency: baseCurrency, amount } = detectCurrency(lastSelectionValue);
+  const numericAmount = parseNumber(amount);
+
+  // Get fresh rates
+  chrome.storage.local.get(["currencyData"], (result) => {
+    if (!result.currencyData) return;
+
+    // Update all displayed values
+    const currencyItems = document.querySelectorAll(
+      ".currency-item:not(.currency-source)"
+    );
+    for (const item of currencyItems) {
+      const currencyCode = item.dataset.currency;
+      if (!currencyCode) continue;
+
+      // Calculate new value with updated decimals
+      const convertedValue = convertCurrency(
+        numericAmount,
+        baseCurrency,
+        currencyCode,
+        result.currencyData
+      );
+
+      // Find the value span - it should be the last span in the item
+      const spans = item.querySelectorAll("span");
+      if (spans.length >= 2) {
+        const valueSpan = spans[spans.length - 1]; // Last span is the value
+        valueSpan.textContent = formatNumber(convertedValue, currencyCode);
+      }
+    }
+
+    // Also update the source amount display
+    const sourceItem = document.querySelector(".currency-source");
+    if (sourceItem) {
+      const spans = sourceItem.querySelectorAll("span");
+      if (spans.length >= 2) {
+        const valueSpan = spans[spans.length - 1]; // Last span is the value
+        valueSpan.textContent = formatNumber(numericAmount, baseCurrency);
+      }
+    }
+  });
 }
 // ===== MAIN APPLICATION =====
 
@@ -1031,13 +1128,18 @@ function initialize() {
 
     // Add storage change listener
     chrome.storage.onChanged.addListener((changes, namespace) => {
+      // Track if we need to refresh the display
+      let needsRefresh = false;
+
+      // 1. Handle checkbox state changes
       if (changes.checkboxState) {
         if (changes.checkboxState.newValue === false) {
           hidePopup();
+          return; // No need to continue if extension was disabled
         }
       }
 
-      // Update decimal settings if they change
+      // 2. Handle decimal precision changes
       if (changes.fiatDecimals || changes.cryptoDecimals) {
         if (changes.fiatDecimals) {
           savedCurrencies.fiatDecimals = changes.fiatDecimals.newValue;
@@ -1046,12 +1148,79 @@ function initialize() {
           savedCurrencies.cryptoDecimals = changes.cryptoDecimals.newValue;
         }
 
-        // Refresh the view if we're currently showing conversions
+        // If we're in currencies view, update the display
         if (currentMode === "currencies" && lastSelectionValue) {
-          showCurrenciesView(
-            document.getElementById(POPUP_ID),
-            lastSelectionValue
-          );
+          refreshDisplayedValues();
+        }
+      }
+
+      // 3. Handle number format changes
+      if (changes.numberFormat) {
+        const [oldThousand, oldDecimal] = changes.numberFormat.oldValue?.split(
+          "-"
+        ) || ["comma", "dot"];
+        const [newThousand, newDecimal] =
+          changes.numberFormat.newValue.split("-");
+
+        // Refresh if either separator changed
+        if (oldThousand !== newThousand || oldDecimal !== newDecimal) {
+          savedCurrencies.numberFormat = changes.numberFormat.newValue;
+          if (currentMode === "currencies" && lastSelectionValue) {
+            showCurrenciesView(
+              document.getElementById(POPUP_ID),
+              lastSelectionValue
+            );
+          }
+        }
+      }
+
+      // 4. Handle currency data updates
+      if (changes.currencyData) {
+        savedCurrencies.currencyData = changes.currencyData.newValue;
+        needsRefresh = true;
+      }
+
+      // 5. Handle currency order changes
+      if (changes.currencyOrder) {
+        savedCurrencies.currencyOrder = changes.currencyOrder.newValue;
+        needsRefresh = true;
+      }
+
+      // Refresh display if needed and we're in currencies view
+      if (needsRefresh && currentMode === "currencies" && lastSelectionValue) {
+        const { currency: baseCurrency, amount } =
+          detectCurrency(lastSelectionValue);
+        const numericAmount = parseNumber(amount);
+
+        // Use latest rates from storage
+        chrome.storage.local.get(["currencyData"], (result) => {
+          if (result.currencyData) {
+            // For most changes, just refresh values
+            if (
+              !changes.numberFormat ||
+              changes.numberFormat.oldValue?.split("-")[0] ===
+                changes.numberFormat.newValue?.split("-")[0]
+            ) {
+              needsRefresh = true;
+            }
+            // For thousand separator type changes, rebuild completely
+            else {
+              showCurrenciesView(
+                document.getElementById(POPUP_ID),
+                lastSelectionValue
+              );
+            }
+          }
+        });
+      }
+
+      // 6. Handle dark mode changes
+      if (changes.darkMode) {
+        const root = document.documentElement;
+        if (changes.darkMode.newValue === "dark") {
+          root.classList.add("dark-mode");
+        } else {
+          root.classList.remove("dark-mode");
         }
       }
     });
