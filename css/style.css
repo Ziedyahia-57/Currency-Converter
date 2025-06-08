@@ -726,7 +726,7 @@ body {
   margin: 5px;
   background: var(--gray);
   padding: 0;
-  width: 155px;
+  /* width: 155px; */
   color: var(--font-color);
   font-family: Roboto flex;
 }
@@ -837,7 +837,7 @@ body {
   border-color: var(--primary-color);
 }
 
-.currency-converter-ex .currency-input:hover::before {
+.currency-converter-ex .currency-input:focus-within::before {
   opacity: 1;
 }
 
@@ -917,4 +917,32 @@ body {
   border-color: var(--primary-color);
   color: white;
   cursor: pointer;
+}
+
+/* Tab Animation */
+.currency-converter-ex .currency-tab {
+  position: fixed;
+  top: 0;
+  right: -380px; /* Match the width of the tab */
+  width: 380px;
+  box-shadow: -3px 0 10px rgba(0, 0, 0, 0.2);
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth transition */
+  height: 100%;
+  overflow: hidden;
+  background: var(--light-gray);
+  border-bottom: var(--border-dark) solid 1px;
+  z-index: 3;
+}
+
+.currency-converter-ex .currency-tab.show {
+  right: 0; /* Slide in from right */
+}
+
+.currency-converter-ex .currency-tab.hidden {
+  right: -380px; /* Slide out to right */
+}
+
+.currency-converter-ex .popup-container {
+  transform: translateZ(0); /* Hardware acceleration */
+  will-change: transform; /* Hint to browser for optimization */
 }
