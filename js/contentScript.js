@@ -933,7 +933,7 @@ function showCurrenciesView(popup, baseText) {
       // Add currency code
       const sourceCodeSpan = document.createElement("span");
       sourceCodeSpan.textContent = baseCurrency;
-      sourceCodeSpan.style.marginRight = "4px";
+      sourceCodeSpan.style.width = "30px";
       sourceFlagContainer.appendChild(sourceCodeSpan);
 
       // Add symbol switcher if multiple currencies available
@@ -942,7 +942,6 @@ function showCurrenciesView(popup, baseText) {
         switcher.className = "symbol-switcher";
         switcher.style.display = "flex";
         switcher.style.height = "14px";
-        switcher.style.marginLeft = "4px";
         switcher.style.cursor = "pointer";
 
         const switcherIcon = document.createElement("span");

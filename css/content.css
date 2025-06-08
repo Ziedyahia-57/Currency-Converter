@@ -1,5 +1,5 @@
 :root {
-  --primary-color: #00d4aa;
+  --primary-color: #00c3aa;
   --background: #f6f6f6;
   --font: #4f545e;
   --border: #e3e3e5;
@@ -49,11 +49,11 @@
   align-items: center;
   align-self: center;
   /* background: rgb(230 251 239); */
-  background: rgba(0, 255, 115, 0.12);
   gap: 8px;
   padding: 4px !important;
   border-radius: 2px;
-  color: #25d46e;
+  background: #00ffcc2e;
+  color: #00c3aa;
 }
 .icon {
   width: 16px;
@@ -62,7 +62,7 @@
 }
 .currency-item {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   padding: 4px 0;
   gap: 4px;
@@ -71,7 +71,7 @@
   font-weight: 300;
 }
 .currency-highlight {
-  color: #25d46e;
+  color: #00c3aa;
   font-weight: 300;
 }
 .currency-error {
