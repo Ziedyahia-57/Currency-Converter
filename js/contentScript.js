@@ -329,33 +329,7 @@ function formatNumber(num, currency) {
 }
 
 function parseNumber(text) {
-  const [thousandOpt, decimalOpt] = (
-    savedCurrencies.numberFormat ?? "comma-dot"
-  ).split("-");
-
-  // Determine separators
-  const thousandSep =
-    thousandOpt === "comma"
-      ? ","
-      : thousandOpt === "dot"
-      ? "."
-      : thousandOpt === "space"
-      ? " "
-      : "";
-  const decimalSep = decimalOpt === "comma" ? "," : ".";
-
-  // Remove thousand separators
-  if (thousandSep) {
-    const regex = new RegExp(`\\${thousandSep}`, "g");
-    text = text.replace(regex, "");
-  }
-
-  // Normalize decimal separator to dot
-  if (decimalSep === ",") {
-    text = text.replace(",", ".");
-  }
-
-  return parseFloat(text);
+  return parseNumberWithFormatDetection(text.replace(/\s+/g, ""));
 }
 
 function getFlagElement(currencyCode) {
@@ -425,7 +399,8 @@ function detectCurrency(text) {
   for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
     if (cleanText.startsWith(symbol)) {
       const amountPart = cleanText.slice(symbol.length);
-      if (amountPart && !isNaN(parseNumber(amountPart))) {
+      const parsedNumber = parseNumberWithFormatDetection(amountPart);
+      if (parsedNumber !== null && parsedNumber > 0) {
         return {
           currency: currencies[0], // Default to first currency in array
           possibleCurrencies: currencies, // All possible currencies for this symbol
@@ -441,7 +416,8 @@ function detectCurrency(text) {
   for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
     if (cleanText.endsWith(symbol)) {
       const amountPart = cleanText.slice(0, -symbol.length);
-      if (amountPart && !isNaN(parseNumber(amountPart))) {
+      const parsedNumber = parseNumberWithFormatDetection(amountPart);
+      if (parsedNumber !== null && parsedNumber > 0) {
         return {
           currency: currencies[0], // Default to first currency
           possibleCurrencies: currencies, // All possibilities
@@ -458,7 +434,8 @@ function detectCurrency(text) {
     const regex = new RegExp(`^${code}`, "i");
     if (regex.test(cleanText)) {
       const amountPart = cleanText.slice(code.length);
-      if (amountPart && !isNaN(parseNumber(amountPart))) {
+      const parsedNumber = parseNumberWithFormatDetection(amountPart);
+      if (parsedNumber !== null && parsedNumber > 0) {
         return {
           currency: code.toUpperCase(),
           amount: amountPart,
@@ -473,7 +450,8 @@ function detectCurrency(text) {
     const regex = new RegExp(`${code}$`, "i");
     if (regex.test(cleanText)) {
       const amountPart = cleanText.slice(0, -code.length);
-      if (amountPart && !isNaN(parseNumber(amountPart))) {
+      const parsedNumber = parseNumberWithFormatDetection(amountPart);
+      if (parsedNumber !== null && parsedNumber > 0) {
         return {
           currency: code.toUpperCase(),
           amount: amountPart,
@@ -483,11 +461,11 @@ function detectCurrency(text) {
     }
   }
 
-  // Default to USD if no currency detected but has valid number
-  const numberValue = parseNumber(cleanText);
-  if (!isNaN(numberValue) && numberValue > 0) {
+  // If no currency symbol/code found but has valid number, try to parse as number
+  const parsedNumber = parseNumberWithFormatDetection(cleanText);
+  if (parsedNumber !== null && parsedNumber > 0) {
     return {
-      currency: "USD",
+      currency: "USD", // Default to USD
       amount: cleanText,
       type: "unknown",
     };
@@ -499,6 +477,48 @@ function detectCurrency(text) {
     amount: cleanText,
     type: "invalid",
   };
+}
+
+// New helper function to detect number format and parse accordingly
+function parseNumberWithFormatDetection(text) {
+  if (!text) return null;
+
+  // Remove all whitespace first
+  const cleanText = text.replace(/\s+/g, "");
+
+  // Check for common number formats
+  // 1. Comma thousand, dot decimal (1,234.56)
+  if (/^[+-]?\d{1,3}(,\d{3})*(\.\d+)?$/.test(cleanText)) {
+    return parseFloat(cleanText.replace(/,/g, ""));
+  }
+
+  // 2. Dot thousand, comma decimal (1.234,56)
+  if (/^[+-]?\d{1,3}(\.\d{3})*(,\d+)?$/.test(cleanText)) {
+    return parseFloat(cleanText.replace(/\./g, "").replace(/,/, "."));
+  }
+
+  // 3. Space thousand, dot decimal (1 234.56)
+  if (/^[+-]?\d{1,3}( \d{3})*(\.\d+)?$/.test(cleanText)) {
+    return parseFloat(cleanText.replace(/ /g, ""));
+  }
+
+  // 4. Space thousand, comma decimal (1 234,56)
+  if (/^[+-]?\d{1,3}( \d{3})*(,\d+)?$/.test(cleanText)) {
+    return parseFloat(cleanText.replace(/ /g, "").replace(/,/, "."));
+  }
+
+  // 5. No thousand, dot decimal (1234.56)
+  if (/^[+-]?\d+(\.\d+)?$/.test(cleanText)) {
+    return parseFloat(cleanText);
+  }
+
+  // 6. No thousand, comma decimal (1234,56)
+  if (/^[+-]?\d+(,\d+)?$/.test(cleanText)) {
+    return parseFloat(cleanText.replace(/,/, "."));
+  }
+
+  // If none of the patterns match
+  return null;
 }
 
 function convertCurrency(amount, fromCurrency, toCurrency, rates) {
@@ -592,8 +612,10 @@ function showSelectionView(popup, value) {
 // ===== MODIFIED CODE =====
 function showCurrenciesView(popup, baseText) {
   const popupElement = document.getElementById(POPUP_ID);
+  const selectionView = document.getElementById(`${POPUP_ID}-selection`);
   const currenciesContainer = document.getElementById(`${POPUP_ID}-currencies`);
 
+  // Clear previous currencies but keep the container structure
   currenciesContainer.innerHTML =
     '<div style="padding:4px 0;text-align:center">Loading...</div>';
 
@@ -637,6 +659,10 @@ function showCurrenciesView(popup, baseText) {
     function renderConversions(baseCurrency, amount) {
       currenciesContainer.innerHTML = "";
 
+      // Store current state in popup dataset
+      const popupElement = document.getElementById(POPUP_ID);
+      popupElement.dataset.baseCurrency = baseCurrency;
+      popupElement.dataset.baseAmount = amount;
       // Add source currency as first item
       const sourceItem = document.createElement("div");
       sourceItem.className = `currency-item currency-source currency-highlight`;
@@ -655,7 +681,7 @@ function showCurrenciesView(popup, baseText) {
       // Add currency code
       const sourceCodeSpan = document.createElement("span");
       sourceCodeSpan.textContent = baseCurrency;
-      sourceCodeSpan.style.marginRight = "4px"; // Add some spacing
+      sourceCodeSpan.style.marginRight = "4px";
       sourceFlagContainer.appendChild(sourceCodeSpan);
 
       // Add symbol switcher if multiple currencies available
@@ -669,12 +695,25 @@ function showCurrenciesView(popup, baseText) {
 
         const switcherIcon = document.createElement("span");
         switcherIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-repeat" viewBox="0 0 16 16">
-      <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
-    </svg>`;
+          <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
+        </svg>`;
         switcherIcon.title = `Switch between ${possibleCurrencies.join(", ")}`;
 
         switcher.appendChild(switcherIcon);
         sourceFlagContainer.appendChild(switcher);
+
+        // Inside the symbol switcher click handler:
+        switcher.addEventListener("click", (e) => {
+          e.stopPropagation();
+          currentSymbolIndex =
+            (currentSymbolIndex + 1) % possibleCurrencies.length;
+          currentBaseCurrency = possibleCurrencies[currentSymbolIndex];
+
+          // Update the popup dataset with new currency but keep the same amount
+          const popupElement = document.getElementById(POPUP_ID);
+          const currentAmount = parseFloat(popupElement.dataset.baseAmount);
+          renderConversions(currentBaseCurrency, currentAmount);
+        });
       }
 
       sourceItem.appendChild(sourceFlagContainer);
@@ -699,7 +738,7 @@ function showCurrenciesView(popup, baseText) {
 
         const item = document.createElement("div");
         item.className = "currency-item";
-        item.dataset.currency = targetCurrency; // Set data attribute
+        item.dataset.currency = targetCurrency;
 
         // Create flag container
         const flagContainer = document.createElement("div");
@@ -711,15 +750,15 @@ function showCurrenciesView(popup, baseText) {
         // Add flag
         flagContainer.appendChild(getFlagElement(targetCurrency));
 
-        // Add currency code - create a separate span for the code
+        // Add currency code
         const codeSpan = document.createElement("span");
         codeSpan.textContent = targetCurrency;
-        codeSpan.style.marginRight = "4px"; // Add some spacing
+        codeSpan.style.marginRight = "4px";
         flagContainer.appendChild(codeSpan);
 
         item.appendChild(flagContainer);
 
-        // Add converted value - create a separate span for the value
+        // Add converted value
         const valueSpan = document.createElement("span");
         valueSpan.textContent = formatNumber(convertedValue, targetCurrency);
         item.appendChild(valueSpan);
@@ -741,8 +780,7 @@ function showCurrenciesView(popup, baseText) {
     renderConversions(currentBaseCurrency, numericAmount);
   });
 
-  document.getElementById(`${POPUP_ID}-selection`).style.display = "flex";
-  currenciesContainer.style.display = "flex";
+  currenciesContainer.style.display = "block";
   currentMode = "currencies";
   popupElement.style.pointerEvents = "auto";
 }
@@ -863,50 +901,59 @@ function updatePopupPosition(popup) {
 }
 
 function refreshDisplayedValues() {
-  if (!lastSelectionValue) return;
+  const popupElement = document.getElementById(POPUP_ID);
+  if (!popupElement || !lastSelectionValue) return;
 
-  // Get the current base currency and amount
-  const { currency: baseCurrency, amount } = detectCurrency(lastSelectionValue);
-  const numericAmount = parseNumber(amount);
+  // Get the current base currency and amount from popup dataset
+  const baseCurrency = popupElement.dataset.baseCurrency;
+  const baseAmount = parseFloat(popupElement.dataset.baseAmount);
 
   // Get fresh rates
-  chrome.storage.local.get(["currencyData"], (result) => {
-    if (!result.currencyData) return;
+  chrome.storage.local.get(
+    ["currencyData", "fiatDecimals", "cryptoDecimals", "numberFormat"],
+    (result) => {
+      if (!result.currencyData) return;
 
-    // Update all displayed values
-    const currencyItems = document.querySelectorAll(
-      ".currency-item:not(.currency-source)"
-    );
-    for (const item of currencyItems) {
-      const currencyCode = item.dataset.currency;
-      if (!currencyCode) continue;
+      // Update saved currencies with latest settings
+      savedCurrencies.fiatDecimals = result.fiatDecimals ?? 2;
+      savedCurrencies.cryptoDecimals = result.cryptoDecimals ?? 8;
+      savedCurrencies.numberFormat = result.numberFormat ?? "comma-dot";
 
-      // Calculate new value with updated decimals
-      const convertedValue = convertCurrency(
-        numericAmount,
-        baseCurrency,
-        currencyCode,
-        result.currencyData
+      // Update all displayed values
+      const currencyItems = document.querySelectorAll(
+        ".currency-item:not(.currency-source)"
       );
+      for (const item of currencyItems) {
+        const currencyCode = item.dataset.currency;
+        if (!currencyCode) continue;
 
-      // Find the value span - it should be the last span in the item
-      const spans = item.querySelectorAll("span");
-      if (spans.length >= 2) {
-        const valueSpan = spans[spans.length - 1]; // Last span is the value
-        valueSpan.textContent = formatNumber(convertedValue, currencyCode);
+        // Calculate new value with updated decimals
+        const convertedValue = convertCurrency(
+          baseAmount,
+          baseCurrency,
+          currencyCode,
+          result.currencyData
+        );
+
+        // Find the value span - it should be the last span in the item
+        const spans = item.querySelectorAll("span");
+        if (spans.length >= 2) {
+          const valueSpan = spans[spans.length - 1]; // Last span is the value
+          valueSpan.textContent = formatNumber(convertedValue, currencyCode);
+        }
+      }
+
+      // Also update the source amount display
+      const sourceItem = document.querySelector(".currency-source");
+      if (sourceItem) {
+        const spans = sourceItem.querySelectorAll("span");
+        if (spans.length >= 2) {
+          const valueSpan = spans[spans.length - 1]; // Last span is the value
+          valueSpan.textContent = formatNumber(baseAmount, baseCurrency);
+        }
       }
     }
-
-    // Also update the source amount display
-    const sourceItem = document.querySelector(".currency-source");
-    if (sourceItem) {
-      const spans = sourceItem.querySelectorAll("span");
-      if (spans.length >= 2) {
-        const valueSpan = spans[spans.length - 1]; // Last span is the value
-        valueSpan.textContent = formatNumber(numericAmount, baseCurrency);
-      }
-    }
-  });
+  );
 }
 // ===== MAIN APPLICATION =====
 
@@ -1188,6 +1235,7 @@ function initialize() {
 
       // Refresh display if needed and we're in currencies view
       if (needsRefresh && currentMode === "currencies" && lastSelectionValue) {
+        refreshDisplayedValues();
         const { currency: baseCurrency, amount } =
           detectCurrency(lastSelectionValue);
         const numericAmount = parseNumber(amount);
