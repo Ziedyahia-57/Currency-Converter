@@ -425,7 +425,7 @@ body {
 .currency-converter-ex .switch {
   position: relative;
   display: inline-block;
-  width: 32px;
+  width: 30px;
   height: 16px;
 }
 
@@ -468,7 +468,7 @@ body {
 }
 
 .currency-converter-ex input:checked + .slider::before {
-  transform: translateX(16px);
+  transform: translateX(15px);
 }
 
 .currency-converter-ex .currency-info {
@@ -949,14 +949,14 @@ body {
 
 /* Show state - slides in from left */
 .currency-converter-ex .currency-tab.show {
-  transform: translateX(340px);
-  display: none;
+  transform: translateX(0px);
+  display: block;
 }
 
 /* Hide state - slides out to the left */
 .currency-converter-ex .currency-tab.hidden {
-  transform: translateX(0px);
-  display: block;
+  transform: translateX(340px);
+  display: none;
 }
 
 /*************************/
