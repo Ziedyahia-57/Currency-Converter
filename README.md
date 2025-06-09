@@ -11,20 +11,29 @@ A browser extension for currency conversion
 This browser extension allows you to convert any chosen currency to multiple other currencies simultaneously, saving you time when you need exchange rates for several currencies at once.
 
 # Features
-* **🔄 Bulk currency conversion:** Convert your base currency to multiple target currencies in one operation.
-* **💱 Supports Major Currencies:** Including USD, EUR, GBP, JPY, AUD, CAD, and many more (168 Total Currencies).
-* **🏳️ Currency Flags:** Visual country flags next to each currency to aid quick recognition.
-* **⌨️ Keyboard Navigation:** Fully accessible with keyboard shortcuts and tab navigation.
-  * Fully navigable via keyboard (Tab, Arrow keys, Enter, Esc).
-  * Jump quickly to currency names by pressing the first letter of the currency (e.g. pressing U jumps to UAH).
+* **Bulk currency conversion:**<br/> Convert your base currency into multiple target currencies in a single operation for faster comparisons.
+* **Comprehensive Currency Support:**<br/>Supports 150+ global currencies, including USD, EUR, GBP, JPY, AUD, CAD, and more.
+* **Currency Flags Display:**<br/> Country flags are displayed alongside currencies for quick visual identification.
+* **Keyboard Accessibility:**<br/>
+Fully navigable using keyboard controls:
+  * Tab, arrow keys, Enter, and Esc supported.
+  * Jump directly to currencies by typing their starting letter (sorted alphabetically).
 
-* **🧲 Drag & Drop Organization:** Easily reorder your target currencies by dragging them into your preferred order.
-* **🌗 Dark Mode:** Seamlessly switch between light and dark themes with a simple toggle for a comfortable viewing experience.
-* **🔒 Private & Secure:** Your data stays on your device; no tracking or analytics.
-* **📡 Offline Support:** Converts using the cached exchange rates when you're offline or disconnected.
-* **🪙 Convert on Select:** Instantly convert selected text from any webpage with a simple click.
-* **✨ Smart Currency Detection:**  Automatically detects the currency format on a webpage (example: 100USD, 100 USD, 100$, 100 $, and many other variants!)
-* **🔁 Shared Symbol Handling:** Select the correct currency when multiple currencies use the same symbol — like choosing between USD, CAD, or AUD for $100.
+* **Drag & Drop Reordering:**<br/> Customize your list by dragging and reordering currencies according to your preferences.
+* **Dark Mode:**<br/> Toggle between light and dark themes, with optional system default detection for a comfortable viewing experience.
+* **Privacy-First Architecture:**<br/> All data remains on your device — no tracking, no analytics, and no external data sharing.
+* **Offline Support:**<br/> Works seamlessly without internet access using cached exchange rates.
+* **Convert on Select:**<br/> Instantly convert any selected currency text from any webpage via popup.
+* **Smart Currency Detection:**<br/>Detects any number and currency combination across common formats and converts to your preferred output instantly:
+  * Examples: 100USD, 100 US$, $100, and many more.
+  * Toggle between currencies that share the same symbol (e.g., *$ → USD, CAD, AUD*).
+* **Settings Panel:**<br/>Customize your experience:
+  * Choose number format (e.g., *1,000.00 - 1.000,00 - 1 000.00* etc..).
+  * Set decimal precision.
+  * Configure date & time display.
+  * Enable system-based dark mode preference.
+* **Fee/Tax(%):**<br/>Optionally include tax rates in currency conversions for accurate financial planning.
+
 
 # Installation
 1. Clone this repository: git clone https://github.com/Ziedyahia-57/Currency-Converter.git.
