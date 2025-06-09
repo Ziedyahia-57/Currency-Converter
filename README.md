@@ -25,7 +25,7 @@ Fully navigable using keyboard controls:
 * **Offline Support:**<br/> Works seamlessly without internet access using cached exchange rates.
 * **Convert on Select:**<br/> Instantly convert any selected currency text from any webpage via popup.
 * **Smart Currency Detection:**<br/>Detects any number and currency combination across common formats and converts to your preferred output instantly:
-  * Examples: 100USD, 100 US$, $100, and many more.
+  * Examples: *100USD, 100 US$, $100, and many more.*
   * Toggle between currencies that share the same symbol (e.g., *$ → USD, CAD, AUD*).
 * **Settings Panel:**<br/>Customize your experience:
   * Choose number format (e.g., *1,000.00 - 1.000,00 - 1 000.00* etc..).
