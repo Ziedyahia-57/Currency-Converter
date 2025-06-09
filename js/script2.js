@@ -882,7 +882,7 @@ function openSettingsTab() {
   setTimeout(() => {
     settingsTab.classList.add("show");
     settingsTab.classList.remove("hidden");
-  }, 300);
+  }, 10); //!animation test
 }
 settingsBtn.addEventListener("click", () => {
   openSettingsTab();
