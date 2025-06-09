@@ -336,13 +336,6 @@ body {
   z-index: 1;
 }
 
-/* .currency-converter-ex .hide-tab {
-  width: 16px;
-  height: 1px;
-  fill: var(--font-color2);
-  margin: 0px 16px 24px 0px;
-  cursor: pointer;
-} */
 .currency-converter-ex .hide-tab {
   width: 28px;
   height: 28px;
@@ -350,6 +343,10 @@ body {
   cursor: pointer;
   background: transparent;
   border: none;
+  transition: fill 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* This enables the smooth transition */
+}
+.currency-converter-ex .hide-tab:hover {
+  fill: var(--primary-color);
 }
 
 .currency-converter-ex .convert-select {
