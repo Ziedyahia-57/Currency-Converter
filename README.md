@@ -33,6 +33,7 @@ Fully navigable using keyboard controls:
   * Configure date & time display.
   * Enable system-based dark mode preference.
 * **Fee/Tax(%):**<br/>Optionally include tax rates in currency conversions for accurate financial planning.
+* **Polished UI:**<br/>Clean interface with smooth animations for a seamless user experience.
 
 
 # Installation
