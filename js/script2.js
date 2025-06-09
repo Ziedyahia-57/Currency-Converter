@@ -879,10 +879,8 @@ window.addEventListener("offline", () => {
 //⚪                        SETTINGS TAB                        */
 //⚪------------------------------------------------------------*/
 function openSettingsTab() {
-  setTimeout(() => {
-    settingsTab.classList.add("show");
-    settingsTab.classList.remove("hidden");
-  }, 10); //!animation test
+  settingsTab.classList.add("show");
+  settingsTab.classList.remove("hidden");
 }
 settingsBtn.addEventListener("click", () => {
   openSettingsTab();

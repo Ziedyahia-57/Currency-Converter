@@ -190,6 +190,15 @@ body {
   background: var(--primary-color) !important;
   fill: white !important;
 }
+.currency-converter-ex #tax-btn:hover {
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    fill 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--primary-color);
+}
+.currency-converter-ex #tax-btn.expanded:hover {
+  background: var(--gray);
+}
 
 .currency-converter-ex #add-currency-btn,
 .currency-converter-ex #support-dev-btn,
@@ -221,7 +230,7 @@ body {
   margin-left: auto;
 }
 
-/* Currency Dropdown */
+/* Currency Dropdown
 .currency-converter-ex #currency-dropdown {
   background: white;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
@@ -230,41 +239,35 @@ body {
   padding: 5px;
   max-height: 150px;
   overflow-y: auto;
-}
+} */
 
 .currency-converter-ex .currency-option {
   padding: 5px 10px;
   cursor: pointer;
 }
 
-/* Hidden */
+/* Replace the existing .hidden and .show classes with these: */
+
 .currency-converter-ex .hidden {
-  right: 235px !important;
-  display: none;
+  transform: translateX(400px);
 }
 
-/* Ensure the tab starts off-screen */
+.currency-converter-ex .show {
+  transform: translateX(0px);
+}
+
+/* Make sure the currency-tab has the transition property */
 .currency-converter-ex .currency-tab {
   position: fixed;
   top: 0;
-  right: -300px;
   width: 380px;
   box-shadow: -3px 0 10px rgba(0, 0, 0, 0.2);
-  transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* This enables the smooth transition */
   height: 100%;
   overflow: hidden;
   background: var(--light-gray);
   border-bottom: var(--border-dark) solid 1px;
   z-index: 3;
-}
-
-.currency-converter-ex .currency-tab.show {
-  position: absolute;
-  left: 0;
-}
-
-.currency-converter-ex .currency-tab.hidden {
-  left: 385px;
 }
 
 .currency-converter-ex #currency-list {
@@ -505,6 +508,7 @@ body {
 }
 
 .currency-converter-ex .donation-tab {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* This enables the smooth transition */
   position: absolute;
   z-index: 3;
   top: 0;
@@ -759,6 +763,7 @@ body {
 }
 
 .currency-converter-ex .settings-tab {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* This enables the smooth transition */
   position: absolute;
   z-index: 3;
   top: 0;
@@ -937,28 +942,6 @@ body {
   border-color: var(--primary-color);
   color: white;
   cursor: pointer;
-}
-
-/* Base tab style - start position */
-.currency-converter-ex .currency-tab {
-  position: fixed; /* Changed from absolute to fixed for consistent behavior */
-  top: 0; /* Start off-screen to the left */
-  width: 380px;
-  height: 100%;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth transition */
-  z-index: 100;
-}
-
-/* Show state - slides in from left */
-.currency-converter-ex .currency-tab.show {
-  transform: translateX(0px);
-  display: block;
-}
-
-/* Hide state - slides out to the left */
-.currency-converter-ex .currency-tab.hidden {
-  transform: translateX(340px);
-  display: none;
 }
 
 /*************************/
