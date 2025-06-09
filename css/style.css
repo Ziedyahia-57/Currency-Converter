@@ -477,11 +477,20 @@ body {
   border: 2px solid var(--primary-color);
 }
 .currency-converter-ex #dark-mode-btn.auto {
-  border: 2px #0dc4e1 dotted;
-  fill: #0dc4e1;
+  border: 1px solid transparent;
+  outline: 3px double var(--primary-color);
+  height: 18px;
+  width: 18px;
+  padding: 2px;
+  margin-right: 3px;
 }
 .currency-converter-ex #dark-mode-btn.auto:hover {
-  background: #0dc4e1 !important;
+  height: 24px;
+  width: 24px;
+  background: var(--primary-color);
+  outline: none;
+  margin-right: 0;
+  padding: 5px;
 }
 
 .currency-converter-ex .donation-tab {
@@ -919,30 +928,24 @@ body {
   cursor: pointer;
 }
 
-/* Tab Animation */
+/* Base tab style - start position */
 .currency-converter-ex .currency-tab {
-  position: fixed;
-  top: 0;
-  right: -380px; /* Match the width of the tab */
+  position: fixed; /* Changed from absolute to fixed for consistent behavior */
+  top: 0; /* Start off-screen to the left */
   width: 380px;
-  box-shadow: -3px 0 10px rgba(0, 0, 0, 0.2);
-  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth transition */
   height: 100%;
-  overflow: hidden;
-  background: var(--light-gray);
-  border-bottom: var(--border-dark) solid 1px;
-  z-index: 3;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth transition */
+  z-index: 100;
 }
 
+/* Show state - slides in from left */
 .currency-converter-ex .currency-tab.show {
-  right: 0; /* Slide in from right */
+  transform: translateX(340px);
+  display: none;
 }
 
+/* Hide state - slides out to the left */
 .currency-converter-ex .currency-tab.hidden {
-  right: -380px; /* Slide out to right */
-}
-
-.currency-converter-ex .popup-container {
-  transform: translateZ(0); /* Hardware acceleration */
-  will-change: transform; /* Hint to browser for optimization */
+  transform: translateX(0px);
+  display: block;
 }
