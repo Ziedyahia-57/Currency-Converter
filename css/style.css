@@ -182,7 +182,7 @@ body {
   width: 268px;
 }
 
-.currency-converter-ex .add-currency button:hover {
+.currency-converter-ex .add-currency button:hover:not(.expanded) {
   transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
     fill 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--primary-color) !important;
@@ -204,6 +204,15 @@ body {
   align-self: center;
   background: var(--gray);
   fill: var(--font-color);
+}
+.currency-converter-ex #tax-btn {
+  transition: width 0.3s ease;
+}
+.currency-converter-ex #tax-btn svg {
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  align-self: center;
 }
 
 .currency-converter-ex #dark-mode-btn {
@@ -948,4 +957,56 @@ body {
 .currency-converter-ex .currency-tab.hidden {
   transform: translateX(0px);
   display: block;
+}
+
+/*************************/
+#tax-btn.expanded {
+  width: 44px;
+  border-radius: 6px;
+  border-color: var(--primary-color);
+  background: var(--gray);
+}
+
+#tax-btn.expanded svg {
+  opacity: 0;
+}
+
+#tax-input {
+  width: 24px;
+  border: none;
+  background: transparent;
+  color: var(--font-color);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  outline: none;
+  -moz-appearance: textfield;
+  text-align: left;
+  overflow: hidden;
+}
+
+#tax-input::-webkit-outer-spin-button,
+#tax-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/**/
+#tax-btn::after {
+  content: "%";
+  transform: translateY(20%);
+  font-size: 12px;
+  color: var(--font-color);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+/**/
+
+#tax-btn.expanded::after {
+  opacity: 1;
+}
+
+#tax-btn.expanded #tax-input {
+  opacity: 1;
+  pointer-events: auto;
 }

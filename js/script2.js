@@ -879,8 +879,10 @@ window.addEventListener("offline", () => {
 //⚪                        SETTINGS TAB                        */
 //⚪------------------------------------------------------------*/
 function openSettingsTab() {
-  settingsTab.classList.add("show");
-  settingsTab.classList.remove("hidden");
+  setTimeout(() => {
+    settingsTab.classList.add("show");
+    settingsTab.classList.remove("hidden");
+  }, 300);
 }
 settingsBtn.addEventListener("click", () => {
   openSettingsTab();
@@ -911,6 +913,72 @@ function closeCurrencyTab() {
 }
 hideCurrencyTab.addEventListener("click", () => {
   closeCurrencyTab();
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                         TAX BUTTON                         */
+//⚪------------------------------------------------------------*/
+const taxBtn = document.getElementById("tax-btn");
+const taxInput = document.getElementById("tax-input");
+let isExpanded = false;
+
+taxBtn.addEventListener("click", function (e) {
+  if (!isExpanded) {
+    // Expand the button
+    taxBtn.classList.add("expanded");
+    isExpanded = true;
+    // Focus on input after transition
+    setTimeout(() => {
+      taxInput.focus();
+      taxInput.select();
+    }, 300);
+  }
+});
+
+// Handle input validation and submission
+taxInput.addEventListener("input", function (e) {
+  let value = parseInt(e.target.value);
+  if (value < 0) {
+    e.target.value = 0;
+  } else if (value > 100) {
+    e.target.value = 100;
+  }
+});
+
+taxInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" || e.key === "Escape") {
+    collapseTaxButton();
+  }
+});
+
+taxInput.addEventListener("blur", function (e) {
+  // Small delay to allow for other interactions
+  setTimeout(() => {
+    const value = taxInput.value;
+    if (!value || value == 0) {
+      collapseTaxButton();
+    }
+  }, 300);
+});
+
+function collapseTaxButton() {
+  const value = taxInput.value;
+  taxBtn.classList.remove("expanded");
+  isExpanded = false;
+  taxInput.value = "";
+}
+
+// Select all text when input is focused
+taxInput.addEventListener("focus", function (e) {
+  e.target.select();
+});
+document.addEventListener("click", function (e) {
+  if (isExpanded && !taxBtn.contains(e.target)) {
+    const value = taxInput.value;
+    if (!value || value < 1 || value > 100) {
+      collapseTaxButton();
+    }
+  }
 });
 
 //⚪------------------------------------------------------------*/
