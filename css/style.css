@@ -1004,7 +1004,7 @@ body {
   pointer-events: none;
   transition: opacity 0.3s ease;
   align-self: baseline;
-  margin-left: 1px;
+  padding: 0 1px;
 }
 /**/
 
