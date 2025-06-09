@@ -964,6 +964,7 @@ body {
   pointer-events: none;
   transition: opacity 0.3s ease;
   outline: none;
+  appearance: textfield;
   -moz-appearance: textfield;
   text-align: left;
   overflow: hidden;

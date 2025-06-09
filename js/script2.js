@@ -934,18 +934,17 @@ taxBtn.addEventListener("click", function (e) {
 });
 
 // Handle input validation and submission
-taxInput.addEventListener("input", function (e) {
+taxInput.addEventListener("input", async function (e) {
   let value = parseInt(e.target.value);
   if (value < 0) {
     e.target.value = 0;
   } else if (value > 100) {
     e.target.value = 100;
   }
-});
-
-taxInput.addEventListener("keydown", function (e) {
-  if (e.key === "Enter" || e.key === "Escape") {
-    collapseTaxButton();
+  // Update conversions
+  const baseInput = await findBaseInput();
+  if (baseInput && baseInput.dataset) {
+    updateCurrencyValues(baseInput.dataset.currency);
   }
 });
 
@@ -963,7 +962,18 @@ function collapseTaxButton() {
   const value = taxInput.value;
   taxBtn.classList.remove("expanded");
   isExpanded = false;
-  taxInput.value = "";
+
+  // Don't clear if value is > 0
+  if (!value || parseFloat(value) === 0) {
+    taxInput.value = "";
+    taxBtn.classList.remove("active");
+
+    // Safely update conversions
+    const baseInput = findBaseInput();
+    if (baseInput && baseInput.dataset.currency) {
+      updateCurrencyValues(baseInput.dataset.currency);
+    }
+  }
 }
 
 // Select all text when input is focused
@@ -2052,7 +2062,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       customFiatDecimals.classList.add("hidden");
     }
 
-    // Update all fiat currency inputs while preserving values
+    // Update all fiat currency inputs while preserving values and tax
     await updateAllCurrencyDecimals();
   });
 
@@ -2065,7 +2075,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       customCryptoDecimals.classList.add("hidden");
     }
 
-    // Update all crypto currency inputs while preserving values
+    // Update all crypto currency inputs while preserving values and tax
     await updateAllCurrencyDecimals();
   });
 
@@ -2153,6 +2163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       customTheme.classList.add("hidden");
     }
   });
+
   function systemThemeChangeHandler(e) {
     if (themeSelector.value === "auto") {
       const prefersDark = e.matches;
@@ -2178,6 +2189,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initializeApp(); // Initialize the app
   await updateExchangeRates(); // Load exchange rates first
+  // Add this to your DOMContentLoaded event listener
+  taxInput.addEventListener("input", () => {
+    // Find the first non-zero input to use as base for conversion
+    const baseInput = document.querySelector(
+      '.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])'
+    );
+    console.log("baseInput:", baseInput);
+
+    if (baseInput) {
+      updateCurrencyValues(baseInput.dataset.currency);
+    }
+  });
 });
 
 async function getDecimalPlaces(currency) {
@@ -2201,10 +2224,12 @@ async function getDecimalPlaces(currency) {
 
 async function updateAllCurrencyDecimals() {
   const inputs = document.querySelectorAll(".currency-input input");
+  const taxPercentage = parseFloat(taxInput.value) || 0;
+  const taxMultiplier = 1 + taxPercentage / 100;
 
   // Get the first non-zero input to use as base
   let baseInput = document.querySelector(
-    '.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])'
+    `.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])`
   );
 
   // If no non-zero input found, use the first input
@@ -2245,6 +2270,11 @@ async function updateAllCurrencyDecimals() {
       } else {
         convertedValue =
           baseValue * (exchangeRates[currency] / exchangeRates[baseCurrency]);
+      }
+
+      // Apply tax if percentage > 0
+      if (taxPercentage > 0) {
+        convertedValue *= taxMultiplier;
       }
 
       const formattedValue = convertedValue
@@ -2700,20 +2730,33 @@ async function addCurrency(currency, shouldSave = true) {
 }
 
 async function updateCurrencyValues(changedCurrency) {
+  if (!changedCurrency) {
+    console.warn("No currency specified for update");
+    return;
+  }
+
   const separators = await getNumberFormatSeparators();
+
+  // Get tax percentage (default to 0 if empty)
+  const taxPercentage = parseFloat(taxInput.value) || 0;
+  const taxMultiplier = 1 + taxPercentage / 100;
 
   const changedInput = document.querySelector(
     `input[data-currency="${changedCurrency}"]`
   );
-  if (!changedInput) return;
 
-  // Get raw value by removing thousand separators and converting to standard format (dot as decimal)
+  if (!changedInput) {
+    console.warn(`Input element for currency ${changedCurrency} not found`);
+    return;
+  }
+
+  // Get raw value by removing thousand separators
   let rawValue = changedInput.value
     .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
     .replace(separators.decimal, ".");
 
-  // If input is empty or cleared, set all other inputs to 0 with proper decimal places
-  if (rawValue === "") {
+  // If input is empty or invalid, set others to 0
+  if (rawValue === "" || isNaN(rawValue)) {
     document
       .querySelectorAll(".currency-input input")
       .forEach(async (input) => {
@@ -2728,35 +2771,41 @@ async function updateCurrencyValues(changedCurrency) {
     return;
   }
 
-  const value = parseFloat(rawValue) || 0;
+  const baseValue = parseFloat(rawValue) || 0;
   const baseCurrency = changedCurrency;
 
   // Update all other currency inputs
   document.querySelectorAll(".currency-input input").forEach(async (input) => {
-    if (input.dataset.currency === changedCurrency) return;
+    if (!input.dataset.currency || input.dataset.currency === changedCurrency) {
+      return;
+    }
 
     const targetCurrency = input.dataset.currency;
     const decimalPlaces = await getDecimalPlaces(targetCurrency);
 
+    // Calculate converted value
     let convertedValue;
     if (baseCurrency === "USD") {
-      convertedValue = value * exchangeRates[targetCurrency];
+      convertedValue = baseValue * (exchangeRates[targetCurrency] || 1);
     } else if (targetCurrency === "USD") {
-      convertedValue = value / exchangeRates[baseCurrency];
+      convertedValue = baseValue / (exchangeRates[baseCurrency] || 1);
     } else {
-      convertedValue =
-        value * (exchangeRates[targetCurrency] / exchangeRates[baseCurrency]);
+      const baseRate = exchangeRates[baseCurrency] || 1;
+      const targetRate = exchangeRates[targetCurrency] || 1;
+      convertedValue = baseValue * (targetRate / baseRate);
     }
 
-    // Convert to string with proper decimal places
-    let formattedValue = convertedValue.toFixed(decimalPlaces);
+    // Apply tax if percentage > 0
+    if (taxPercentage > 0) {
+      convertedValue *= taxMultiplier;
+    }
 
-    // If the decimal separator is comma, replace the dot with comma
+    // Format the final value
+    let formattedValue = convertedValue.toFixed(decimalPlaces);
     if (separators.decimal === ",") {
       formattedValue = formattedValue.replace(".", ",");
     }
 
-    // Format with thousand separators
     input.value = await formatNumberWithCommas(formattedValue, input);
   });
 }
@@ -2774,5 +2823,29 @@ async function resetInputsWithNewFormat() {
     // Format and set the value
     input.value = await formatNumberWithCommas(zeroValue, input);
     input.dataset.previousValue = zeroValue;
+  }
+}
+
+async function findBaseInput() {
+  try {
+    const separators = await getNumberFormatSeparators();
+
+    // Try to find a non-zero input first
+    const nonZeroInput = document.querySelector(
+      `.currency-input input:not([value="0"]):not([value^="0${separators.decimal}"])`
+    );
+    if (nonZeroInput) return nonZeroInput;
+
+    // Fallback to first input with any value
+    const firstWithValue = document.querySelector(
+      '.currency-input input:not([value=""])'
+    );
+    if (firstWithValue) return firstWithValue;
+
+    // Final fallback to first input
+    return document.querySelector(".currency-input input");
+  } catch (error) {
+    console.error("Error in findBaseInput:", error);
+    return document.querySelector(".currency-input input");
   }
 }
