@@ -694,6 +694,10 @@ body {
   transition: fill 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.currency-converter-ex .custom-hidden {
+  opacity: 0;
+}
+
 /* .currency-input {
     background: transparent !important;
     box-shadow: -1px 1px 5px 0px #0000003d;

@@ -268,10 +268,10 @@ function checkAutoTheme() {
     darkModeBtn.classList.add("auto");
     darkModeBtn.title = "Dark Mode - Auto";
 
-    customTheme.classList.add("hidden");
+    customTheme.classList.add("custom-hidden");
   } else {
     darkModeBtn.classList.remove("auto");
-    customTheme.classList.remove("hidden");
+    customTheme.classList.remove("custom-hidden");
     if (darkModeBtn.classList.contains("active")) {
       darkModeBtn.title = "Dark Mode - ON";
     } else {
@@ -393,12 +393,12 @@ restoreBtn.addEventListener("click", async () => {
   );
 
   // Manually update UI for immediate effect
-  customTheme.classList.add("hidden");
-  customFormat.classList.add("hidden");
-  customFiatDecimals.classList.add("hidden");
-  customCryptoDecimals.classList.add("hidden");
-  customDate.classList.add("hidden");
-  customTime.classList.add("hidden");
+  customTheme.classList.add("custom-hidden");
+  customFormat.classList.add("custom-hidden");
+  customFiatDecimals.classList.add("custom-hidden");
+  customCryptoDecimals.classList.add("custom-hidden");
+  customDate.classList.add("custom-hidden");
+  customTime.classList.add("custom-hidden");
 
   // Manually apply the theme change
   darkModeBtn.classList.add("auto");
@@ -437,7 +437,7 @@ async function checkCustomSettings() {
     formatSettings.numberFormat !== "comma-dot"
   ) {
     console.log("formatSettings: ", formatSettings.numberFormat);
-    customFormat.classList.remove("hidden");
+    customFormat.classList.remove("custom-hidden");
   }
 
   if (
@@ -445,7 +445,7 @@ async function checkCustomSettings() {
     fiatDecimalsSettings.fiatDecimals != 2
   ) {
     console.log("fiatDecimalsSettings: ", fiatDecimalsSettings.fiatDecimals);
-    customFiatDecimals.classList.remove("hidden");
+    customFiatDecimals.classList.remove("custom-hidden");
   }
   console.log(
     "cryptoDecimalsSettings: ",
@@ -460,22 +460,22 @@ async function checkCustomSettings() {
       "cryptoDecimalsSettings: ",
       cryptoDecimalsSettings.cryptoDecimals
     );
-    customCryptoDecimals.classList.remove("hidden");
+    customCryptoDecimals.classList.remove("custom-hidden");
   }
 
   if (themeSettings.theme && themeSettings.theme !== "auto") {
     console.log("themeSettings: ", themeSettings.theme);
-    customTheme.classList.remove("hidden");
+    customTheme.classList.remove("custom-hidden");
   }
 
   if (dateSettings.date && dateSettings.date !== "dd/mm/yyyy") {
     console.log("dateSettings: ", dateSettings.date);
-    customDate.classList.remove("hidden");
+    customDate.classList.remove("custom-hidden");
   }
 
   if (timeSettings.time && timeSettings.time !== "ampm") {
     console.log("timeSettings: ", timeSettings.time);
-    customTime.classList.remove("hidden");
+    customTime.classList.remove("custom-hidden");
   }
 }
 
@@ -724,7 +724,7 @@ darkModeBtn.addEventListener("click", () => {
 
   // Update theme selector to manual
   themeSelector.value = "manual";
-  customTheme.classList.remove("hidden");
+  customTheme.classList.remove("custom-hidden");
   chrome.storage.local.set({ ["theme"]: themeSelector.value });
   // Update title based on current state (after all class changes)
   if (darkModeBtn.classList.contains("auto")) {
@@ -2023,9 +2023,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     await saveNumberFormat();
 
     if (formatSelector.value !== "comma-dot") {
-      customFormat.classList.remove("hidden");
+      customFormat.classList.remove("custom-hidden");
     } else {
-      customFormat.classList.add("hidden");
+      customFormat.classList.add("custom-hidden");
     }
 
     // Reformat all inputs with new separators but preserve values
@@ -2057,9 +2057,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     await saveFiatDecimal();
 
     if (fiatDecimalSelector.value != 2) {
-      customFiatDecimals.classList.remove("hidden");
+      customFiatDecimals.classList.remove("custom-hidden");
     } else {
-      customFiatDecimals.classList.add("hidden");
+      customFiatDecimals.classList.add("custom-hidden");
     }
 
     // Update all fiat currency inputs while preserving values and tax
@@ -2070,9 +2070,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     await saveCryptoDecimal();
 
     if (cryptoDecimalSelector.value != 8) {
-      customCryptoDecimals.classList.remove("hidden");
+      customCryptoDecimals.classList.remove("custom-hidden");
     } else {
-      customCryptoDecimals.classList.add("hidden");
+      customCryptoDecimals.classList.add("custom-hidden");
     }
 
     // Update all crypto currency inputs while preserving values and tax
@@ -2087,9 +2087,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     if (dateSelector.value !== "dd/mm/yyyy") {
-      customDate.classList.remove("hidden");
+      customDate.classList.remove("custom-hidden");
     } else {
-      customDate.classList.add("hidden");
+      customDate.classList.add("custom-hidden");
     }
   });
 
@@ -2101,9 +2101,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     if (timeSelector.value !== "ampm") {
-      customTime.classList.remove("hidden");
+      customTime.classList.remove("custom-hidden");
     } else {
-      customTime.classList.add("hidden");
+      customTime.classList.add("custom-hidden");
     }
   });
 
@@ -2158,9 +2158,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Update custom theme indicator
     if (themeSelector.value !== "auto") {
-      customTheme.classList.remove("hidden");
+      customTheme.classList.remove("custom-hidden");
     } else {
-      customTheme.classList.add("hidden");
+      customTheme.classList.add("custom-hidden");
     }
   });
 
