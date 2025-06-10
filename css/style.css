@@ -718,8 +718,8 @@ body {
 }
 .currency-converter-ex .title-row svg {
   fill: var(--primary-color);
-  height: 14px;
-  width: 14px;
+  height: 18px;
+  width: 18px;
   margin-right: 4px;
 }
 
@@ -736,7 +736,8 @@ body {
 .currency-converter-ex select#crypto-round,
 .currency-converter-ex select#time,
 .currency-converter-ex select#date,
-.currency-converter-ex select#theme {
+.currency-converter-ex select#theme,
+.currency-converter-ex select#target {
   height: 26px;
   display: flex;
   align-items: center;

@@ -20,6 +20,8 @@ const cryptoDecimalSelector = document.getElementById("crypto-round");
 const themeSelector = document.getElementById("theme");
 const dateSelector = document.getElementById("date");
 const timeSelector = document.getElementById("time");
+const convertTargetSelector = document.getElementById("target");
+const pageConvertSelector = document.getElementById("page-convert");
 const restoreBtn = document.getElementById("restore");
 const customTheme = document.getElementById("custom-theme");
 const customCryptoDecimals = document.getElementById("custom-crypto-decimal");
@@ -27,6 +29,8 @@ const customFiatDecimals = document.getElementById("custom-fiat-decimal");
 const customFormat = document.getElementById("custom-format");
 const customDate = document.getElementById("custom-date");
 const customTime = document.getElementById("custom-time");
+const customPageConvert = document.getElementById("custom-page-convert");
+const customConvertTarget = document.getElementById("custom-convert-target");
 const lastUpdateElement = document.querySelector(".last-update");
 const darkModeBtn = document.getElementById("dark-mode-btn");
 const root = document.documentElement;
@@ -162,19 +166,6 @@ async function saveThemePreference() {
 async function loadThemePreference() {
   //🟣 Load user's theme preference
 
-  // const result = await chrome.storage.local.get("theme");
-  // const savedTheme = result.theme;
-
-  // if (savedTheme) {
-  //   themeSelector.value = savedTheme; // Set the selected option
-  //   checkAutoTheme();
-  //   console.log("Loaded theme preference:", savedTheme);
-  //   return savedTheme;
-  // } else {
-  //   console.log("No saved theme found. Checking system preference...");
-  //   checkAutoTheme();
-  //   return null;
-  // }⚙️
   try {
     const result = await chrome.storage.local.get("theme");
     const savedTheme = result.theme;
@@ -341,6 +332,72 @@ async function loadTimeFormat() {
 }
 
 //⚪------------------------------------------------------------*/
+//⚪                        PAGE CONVERT                        */
+//⚪------------------------------------------------------------*/
+async function savePageConvert() {
+  //🟣 Save user's page convert preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("pageConvert", pageConvertSelector.checked);
+    chrome.storage.local.set(
+      { pageConvert: pageConvertSelector.checked },
+      () => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else {
+          console.log("pageConvert saved:", pageConvertSelector.checked);
+          resolve();
+        }
+      }
+    );
+  });
+}
+async function loadPageConvert() {
+  //🟣 Load user's page convert preference
+
+  const result = await chrome.storage.local.get("pageConvert");
+  const savedFormat = result.pageConvert;
+  if (savedFormat) {
+    pageConvertSelector.checked = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                       CONVERT TARGET                       */
+//⚪------------------------------------------------------------*/
+async function saveConvertTarget() {
+  //🟣 Save user's convert target preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("convertTarget", convertTargetSelector.value);
+    chrome.storage.local.set(
+      { convertTarget: convertTargetSelector.value },
+      () => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else {
+          console.log("convertTarget saved:", convertTargetSelector.value);
+          resolve();
+        }
+      }
+    );
+  });
+}
+async function loadConvertTarget() {
+  //🟣 Load user's convert target preference
+
+  const result = await chrome.storage.local.get("convertTarget");
+  const savedFormat = result.convertTarget;
+  if (savedFormat) {
+    convertTargetSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
 //⚪                        RESTORE BUTTON                      */
 //⚪------------------------------------------------------------*/
 restoreBtn.addEventListener("click", async () => {
@@ -353,6 +410,8 @@ restoreBtn.addEventListener("click", async () => {
   cryptoDecimalSelector.value = "8";
   dateSelector.value = "dd/mm/yyyy";
   timeSelector.value = "ampm";
+  convertTargetSelector.value = "all";
+  pageConvertSelector.checked = false;
 
   // Save all settings
   localStorage.setItem("theme", themeSelector.value);
@@ -372,6 +431,12 @@ restoreBtn.addEventListener("click", async () => {
 
   localStorage.setItem("time", timeSelector.value);
   chrome.storage.local.set({ ["time"]: timeSelector.value });
+
+  localStorage.setItem("convertTarget", convertTargetSelector.value);
+  chrome.storage.local.set({ ["convertTarget"]: convertTargetSelector.value });
+
+  localStorage.setItem("pageConvert", pageConvertSelector.checked);
+  chrome.storage.local.set({ ["pageConvert"]: pageConvertSelector.checked });
 
   // Reset all currency inputs to 0 with proper decimal places
   const inputs = document.querySelectorAll(".currency-input input");
@@ -399,6 +464,8 @@ restoreBtn.addEventListener("click", async () => {
   customCryptoDecimals.classList.add("custom-hidden");
   customDate.classList.add("custom-hidden");
   customTime.classList.add("custom-hidden");
+  customPageConvert.classList.add("custom-hidden");
+  customConvertTarget.classList.add("custom-hidden");
 
   // Manually apply the theme change
   darkModeBtn.classList.add("auto");
@@ -431,6 +498,8 @@ async function checkCustomSettings() {
   const themeSettings = await chrome.storage.local.get("theme");
   const dateSettings = await chrome.storage.local.get("date");
   const timeSettings = await chrome.storage.local.get("time");
+  const convertTargetSettings = await chrome.storage.local.get("convertTarget");
+  const pageConvertSettings = await chrome.storage.local.get("pageConvert");
 
   if (
     formatSettings.numberFormat &&
@@ -476,6 +545,22 @@ async function checkCustomSettings() {
   if (timeSettings.time && timeSettings.time !== "ampm") {
     console.log("timeSettings: ", timeSettings.time);
     customTime.classList.remove("custom-hidden");
+  }
+
+  if (
+    convertTargetSettings.convertTarget &&
+    convertTargetSettings.convertTarget !== "all"
+  ) {
+    console.log("convertTarget: ", convertTargetSettings.convertTarget);
+    customConvertTarget.classList.remove("custom-hidden");
+  }
+
+  if (
+    pageConvertSettings.pageConvert &&
+    pageConvertSettings.pageConvert !== false
+  ) {
+    console.log("pageConvert: ", pageConvertSettings.pageConvert);
+    customPageConvert.classList.remove("custom-hidden");
   }
 }
 
@@ -2000,6 +2085,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadNumberFormat();
   loadFiatDecimal();
   loadCryptoDecimal();
+  loadPageConvert();
+  loadConvertTarget();
   loadTimeFormat();
   loadDateFormat();
 
@@ -2104,6 +2191,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       customTime.classList.remove("custom-hidden");
     } else {
       customTime.classList.add("custom-hidden");
+    }
+  });
+
+  convertTargetSelector.addEventListener("change", function () {
+    saveConvertTarget();
+
+    if (convertTargetSelector.value !== "all") {
+      customConvertTarget.classList.remove("custom-hidden");
+    } else {
+      customConvertTarget.classList.add("custom-hidden");
+    }
+  });
+
+  pageConvertSelector.addEventListener("change", function () {
+    savePageConvert();
+
+    if (pageConvertSelector.checked !== false) {
+      customPageConvert.classList.remove("custom-hidden");
+    } else {
+      customPageConvert.classList.add("custom-hidden");
     }
   });
 
