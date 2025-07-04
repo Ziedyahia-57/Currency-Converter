@@ -142,3 +142,7 @@
 .icon {
   margin: 0 !important;
 } /*Fix for reddit img having margin*/
+
+.currency-item {
+  padding: 0;
+} /*Fix for deepseek padding*/
