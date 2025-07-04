@@ -18,7 +18,7 @@ const CURRENCY_REPRESENTATIONS = {
   EUR: ["Euro"],
   GBP: ["British Pound", "British Pounds", "Sterling", "Pound Sterling"],
   JPY: ["Japanese Yen", "Yen"],
-  CNY: ["元", "Chinese Yuan", "Renminbi", "RMB"],
+  CNY: ["元", "Chinese Yuan", "Yuan", "Renminbi", "RMB"],
 
   AUD: ["A$", "AU$", "Australian Dollar", "Australian Dollars"],
   CAD: [
@@ -225,6 +225,32 @@ const CURRENCY_SYMBOLS = {
     "JMD", // Jamaica
     "NAD", // Namibia
   ],
+  Dollars: [
+    "USD",
+    "CAD",
+    "AUD",
+    "NZD",
+    "SGD",
+    "HKD",
+    "MXN",
+    "BRL",
+    "CLP",
+    "COP",
+    "ZWL",
+    "TTD",
+    "BSD",
+    "BZD",
+    "BBD",
+    "XCD",
+    "SBD", // Solomon Islands
+    "LRD", // Liberia
+    "SRD", // Suriname
+    "GYD", // Guyana
+    "KYD", // Cayman Islands
+    "FJD", // Fiji
+    "JMD", // Jamaica
+    "NAD", // Namibia
+  ],
   "€": ["EUR"],
   "£": ["GBP", "EGP", "LBP", "SYP", "FKP", "GIP", "SDG", "SSP"],
   "₹": ["INR"],
@@ -317,11 +343,8 @@ const CURRENCY_SYMBOLS = {
     "KMF",
     "MGA",
   ],
-
-  // Multi-currency symbols (now arrays)
   "¥": ["JPY", "CNY"],
   "￥": ["JPY", "CNY"],
-  // Add other multi-currency symbols as needed
 };
 
 // Inline currencyToCountry mapping (instead of import)
@@ -652,7 +675,7 @@ function detectCurrency(text) {
   if (!trimmedText) return { currency: "", amount: "", type: "invalid" };
 
   // First check for valid number(s) in the text
-  const numberMatches = trimmedText.match(/\d[\d,.]*/g);
+  const numberMatches = trimmedText.match(/\d[\d,. ]*/g);
   if (!numberMatches || numberMatches.length === 0) {
     return { currency: "", amount: "", type: "invalid" }; // No numbers found
   }
@@ -735,45 +758,117 @@ function detectCurrency(text) {
   return { currency: "", amount: "", type: "invalid" };
 }
 
+// function parseNumberWithFormatDetection(text) {
+//   if (!text) return null;
+
+//   // Remove all whitespace first
+//   const cleanText = text.replace(/\s+/g, "");
+
+//   // Check for common number formats
+//   // 1. Comma thousand, dot decimal (1,234.56)
+//   if (/^[+-]?\d{1,3}(,\d{3})*(\.\d+)?$/.test(cleanText)) {
+//     return parseFloat(cleanText.replace(/,/g, ""));
+//   }
+
+//   // 2. Dot thousand, comma decimal (1.234,56)
+//   if (/^[+-]?\d{1,3}(\.\d{3})*(,\d+)?$/.test(cleanText)) {
+//     return parseFloat(cleanText.replace(/\./g, "").replace(/,/, "."));
+//   }
+
+//   // 3. Space thousand, dot decimal (1 234.56)
+//   if (/^[+-]?\d{1,3}( \d{3})*(\.\d+)?$/.test(cleanText)) {
+//     return parseFloat(cleanText.replace(/ /g, ""));
+//   }
+
+//   // 4. Space thousand, comma decimal (1 234,56)
+//   if (/^[+-]?\d{1,3}( \d{3})*(,\d+)?$/.test(cleanText)) {
+//     return parseFloat(cleanText.replace(/ /g, "").replace(/,/, "."));
+//   }
+
+//   // 5. No thousand, dot decimal (1234.56)
+//   if (/^[+-]?\d+(\.\d+)?$/.test(cleanText)) {
+//     return parseFloat(cleanText);
+//   }
+
+//   // 6. No thousand, comma decimal (1234,56)
+//   if (/^[+-]?\d+(,\d+)?$/.test(cleanText)) {
+//     return parseFloat(cleanText.replace(/,/, "."));
+//   }
+
+//   // If none of the patterns match
+//   return null;
+// }
+
+// function parseNumberWithFormatDetection(text) {
+//   if (!text) return null;
+
+//   // Remove currency symbols and trim whitespace
+//   const cleanText = text.replace(/[^0-9,. ]/g, "").trim();
+
+//   // Check for space thousand separator (e.g. "1 000" or "1 000.00")
+//   if (/^\d{1,3}( \d{3})*(\.\d+)?$/.test(cleanText)) {
+//     console.log("CURRENTLY USING: SPACE");
+//     return parseFloat(cleanText.replace(/ /g, ""));
+//   }
+
+//   // Check for dot thousand separator (e.g. "1.000" or "1.000,00")
+//   if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(cleanText)) {
+//     console.log("CURRENTLY USING: DOT");
+//     return parseFloat(cleanText.replace(/\./g, "").replace(/,/, "."));
+//   }
+
+//   // Check for comma thousand separator (e.g. "1,000" or "1,000.00")
+//   if (/^\d{1,3}(,\d{3})*(\.\d+)?$/.test(cleanText)) {
+//     console.log("CURRENTLY USING: COMMA");
+//     return parseFloat(cleanText.replace(/,/g, ""));
+//   }
+
+//   // Check for numbers with exactly 3 decimal places (e.g. "1.000" - treat as thousand)
+//   if (/^\d+\.\d{3}$/.test(cleanText)) {
+//     return parseFloat(cleanText.replace(".", ""));
+//   }
+
+//   // Default case - regular number (e.g. "1000" or "1.23")
+//   return parseFloat(cleanText.replace(",", "."));
+// }
+
 function parseNumberWithFormatDetection(text) {
   if (!text) return null;
 
-  // Remove all whitespace first
-  const cleanText = text.replace(/\s+/g, "");
+  // Step 1: Extract the numeric part (allowing spaces, commas, or dots as separators)
+  const numberMatch = text.match(/[\d ,.]+/);
+  if (!numberMatch) return null;
 
-  // Check for common number formats
-  // 1. Comma thousand, dot decimal (1,234.56)
-  if (/^[+-]?\d{1,3}(,\d{3})*(\.\d+)?$/.test(cleanText)) {
-    return parseFloat(cleanText.replace(/,/g, ""));
-  }
+  const cleanText = numberMatch[0].replace(/\s+/g, ""); // Remove all whitespace first
 
-  // 2. Dot thousand, comma decimal (1.234,56)
-  if (/^[+-]?\d{1,3}(\.\d{3})*(,\d+)?$/.test(cleanText)) {
-    return parseFloat(cleanText.replace(/\./g, "").replace(/,/, "."));
-  }
-
-  // 3. Space thousand, dot decimal (1 234.56)
-  if (/^[+-]?\d{1,3}( \d{3})*(\.\d+)?$/.test(cleanText)) {
+  // Step 2: Handle different formats
+  // Case 1: Space as thousand, dot as decimal → "1 000.50" → 1000.50
+  if (/^\d{1,3}( \d{3})*(\.\d+)?$/.test(numberMatch[0])) {
     return parseFloat(cleanText.replace(/ /g, ""));
   }
 
-  // 4. Space thousand, comma decimal (1 234,56)
-  if (/^[+-]?\d{1,3}( \d{3})*(,\d+)?$/.test(cleanText)) {
-    return parseFloat(cleanText.replace(/ /g, "").replace(/,/, "."));
+  // Case 2: Space as thousand, comma as decimal → "1 000,50" → 1000.50
+  if (/^\d{1,3}( \d{3})*(,\d+)?$/.test(numberMatch[0])) {
+    return parseFloat(cleanText.replace(/ /g, "").replace(",", "."));
   }
 
-  // 5. No thousand, dot decimal (1234.56)
-  if (/^[+-]?\d+(\.\d+)?$/.test(cleanText)) {
-    return parseFloat(cleanText);
+  // Case 3: Comma as thousand, dot as decimal → "1,000.50" → 1000.50
+  if (/^\d{1,3}(,\d{3})*(\.\d+)?$/.test(cleanText)) {
+    return parseFloat(cleanText.replace(/,/g, ""));
   }
 
-  // 6. No thousand, comma decimal (1234,56)
-  if (/^[+-]?\d+(,\d+)?$/.test(cleanText)) {
-    return parseFloat(cleanText.replace(/,/, "."));
+  // Case 4: Dot as thousand, comma as decimal → "1.000,50" → 1000.50
+  if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(cleanText)) {
+    return parseFloat(cleanText.replace(/\./g, "").replace(",", "."));
   }
 
-  // If none of the patterns match
-  return null;
+  // Case 5: No thousand separator, just decimal → "1000.50" or "1000,50"
+  if (/^\d+([.,]\d+)?$/.test(cleanText)) {
+    return parseFloat(cleanText.replace(",", "."));
+  }
+
+  // Default: Try to parse as-is (removing all non-numeric chars except [.,])
+  return parseFloat(cleanText.replace(",", "."));
 }
 
 function convertCurrency(amount, fromCurrency, toCurrency, rates) {
@@ -1400,63 +1495,148 @@ function initialize() {
       const trimmedText = text.trim();
       if (!trimmedText) return false;
 
-      // 1. Check for exactly one valid number in the text
-      const numberMatches = trimmedText.match(/\d[\d,.]*/g);
-      if (!numberMatches || numberMatches.length !== 1) return false; // No number or multiple numbers
+      // 1. First extract what looks like the number part (allowing various formats)
+      const numberMatch = trimmedText.match(/[+-]?[\d ,.]+/);
+      if (!numberMatch) return false;
 
-      const amountPart = numberMatches[0];
-      const parsedNumber = parseNumberWithFormatDetection(amountPart);
-      if (parsedNumber === null || parsedNumber <= 0) return false; // Invalid number
+      const numberPart = numberMatch[0];
+      const numberStartIndex = trimmedText.indexOf(numberPart);
+      const numberEndIndex = numberStartIndex + numberPart.length;
 
-      // 2. Remove the number part to analyze remaining text for currency
-      const textWithoutNumber = trimmedText
-        .replace(amountPart, "")
-        .replace(/\s+/g, " ")
-        .trim();
+      const prefix = trimmedText.slice(0, numberStartIndex).trim();
+      const suffix = trimmedText.slice(numberEndIndex).trim();
 
-      // REJECT if there's no currency indicator (just a number)
-      if (!textWithoutNumber) return false;
+      // 2. Parse the number to ensure it's valid
+      const parsedNumber = parseNumberWithFormatDetection(numberPart);
+      if (parsedNumber === null || parsedNumber <= 0) return false;
 
-      // 3. Check if remaining text is a valid currency indicator
-      let hasCurrency = false;
+      // 3. Check for valid currency indicators (strict matching)
+      const checkCurrencyIndicator = (text) => {
+        if (!text) return null;
 
-      // Check for currency symbols (e.g., $, €, £)
-      for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
-        if (textWithoutNumber === symbol) {
-          hasCurrency = true;
-          break;
+        // Check for currency symbols (exact match)
+        for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
+          // Match symbol exactly (including multi-character symbols like "NT$")
+          if (text === symbol) return currencies[0];
         }
-      }
 
-      // Check for currency codes (exactly 3 letters, e.g., USD, EUR)
-      if (!hasCurrency && textWithoutNumber.length === 3) {
-        const code = textWithoutNumber.toUpperCase();
-        if (currencyToCountry[code]) {
-          hasCurrency = true;
+        // Check for currency codes (case insensitive)
+        const upperText = text.toUpperCase();
+        if (CURRENCY_REPRESENTATIONS[upperText]) {
+          return upperText;
         }
-      }
 
-      // Check for word representations (e.g., "US Dollar", "Euro")
-      if (!hasCurrency) {
-        outerLoop: for (const representations of Object.values(
+        // Check for word representations (case insensitive exact match)
+        for (const [currencyCode, representations] of Object.entries(
           CURRENCY_REPRESENTATIONS
         )) {
           for (const rep of representations) {
-            if (textWithoutNumber.toLowerCase() === rep.toLowerCase()) {
-              hasCurrency = true;
-              break outerLoop;
+            if (text.toLowerCase() === rep.toLowerCase()) {
+              return currencyCode;
             }
+          }
+        }
+
+        return null;
+      };
+
+      const prefixCurrency = checkCurrencyIndicator(prefix);
+      const suffixCurrency = checkCurrencyIndicator(suffix);
+
+      // 4. Strict validation rules
+      // Must have exactly one currency indicator (either prefix OR suffix)
+      if (
+        (prefixCurrency && suffixCurrency) ||
+        (!prefixCurrency && !suffixCurrency)
+      ) {
+        return false;
+      }
+
+      // 5. The ENTIRE text must consist of just:
+      //    [currency][number], [number][currency], or similar with optional spaces
+      // Allow for no space between currency and number (like "$100" or "100$")
+      const validPattern = prefixCurrency
+        ? `(${escapeRegExp(prefix)}\\s*${escapeRegExp(
+            numberPart
+          )}|${escapeRegExp(prefix)}${escapeRegExp(numberPart)})`
+        : `(${escapeRegExp(numberPart)}\\s*${escapeRegExp(
+            suffix
+          )}|${escapeRegExp(numberPart)}${escapeRegExp(suffix)})`;
+
+      const patternRegex = new RegExp(`^${validPattern}$`, "i");
+      if (!patternRegex.test(trimmedText)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    // Helper function to check if text contains a valid currency indicator
+    function checkCurrencyIndicator(text) {
+      if (!text) return false;
+
+      // Check for currency codes (3 letters)
+      if (text.length === 3) {
+        const code = text.toUpperCase();
+        if (currencyToCountry[code]) {
+          return true;
+        }
+      }
+
+      // Check for currency symbols
+      for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
+        if (text.includes(symbol)) {
+          return true;
+        }
+      }
+
+      // Check for word representations (case insensitive)
+      const lowerText = text.toLowerCase();
+      for (const representations of Object.values(CURRENCY_REPRESENTATIONS)) {
+        for (const rep of representations) {
+          if (lowerText.includes(rep.toLowerCase())) {
+            return true;
           }
         }
       }
 
-      // Only return true if BOTH conditions are met:
-      // 1. There's exactly one valid number
-      // 2. There's exactly one valid currency indicator
-      return hasCurrency;
+      return false;
     }
 
-    // Add event listeners
+    // Helper function to check if number is wrapped in currency symbol (like $100 or 100$)
+    function isNumberWrappedInCurrencySymbol(text) {
+      // Check for symbol prefix (e.g. $100)
+      for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
+        const prefixPattern = new RegExp(`^${escapeRegExp(symbol)}\\s*\\d`);
+        if (prefixPattern.test(text)) {
+          return true;
+        }
+      }
+
+      // Check for symbol suffix (e.g. 100$)
+      for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
+        const suffixPattern = new RegExp(`\\d\\s*${escapeRegExp(symbol)}$`);
+        if (suffixPattern.test(text)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    // Helper to escape regex special characters
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
     document.addEventListener("selectionchange", handleSelection);
     document.addEventListener("mouseup", handleMouseUp);
 

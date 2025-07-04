@@ -138,3 +138,7 @@
   -ms-user-select: none;
   user-select: none;
 }
+.currency-flag-img,
+.icon {
+  margin: 0 !important;
+} /*Fix for reddit img having margin*/
