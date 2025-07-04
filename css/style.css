@@ -718,9 +718,9 @@ body {
 }
 .currency-converter-ex .title-row svg {
   fill: var(--primary-color);
-  height: 18px;
-  width: 18px;
-  margin-right: 4px;
+  height: 14px;
+  width: 14px;
+  margin-right: 8px;
 }
 
 .currency-converter-ex .option-name {
