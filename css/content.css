@@ -141,8 +141,10 @@
 .currency-flag-img,
 .icon {
   margin: 0 !important;
-} /*Fix for reddit img having margin*/
+}
+/*Fix for reddit img having margin*/
 
 .currency-item {
-  padding: 0;
-} /*Fix for deepseek padding*/
+  line-height: 1.5 !important;
+}
+/* Fix for deepseek padding */
