@@ -21,7 +21,7 @@ Fully navigable using keyboard controls:
 
 * **Drag & Drop Reordering:**<br/> Customize your list by dragging and reordering currencies according to your preferences.
 * **Dark Mode:**<br/> Toggle between light and dark themes, with optional system default detection for a comfortable viewing experience.
-* **Privacy-First Architecture:**<br/> All data remains on your device — no tracking, no analytics, and no external data sharing.
+* **Privacy-First Architecture:**<br/> All data remains on your device. No tracking, no analytics, and no external data sharing.
 * **Offline Support:**<br/> Works seamlessly without internet access using cached exchange rates.
 * **Convert on Select:**<br/> Instantly convert any selected currency text from any webpage via popup.
 * **Smart Currency Detection:**<br/>Detects any number and currency combination across common formats and converts to your preferred output instantly:
