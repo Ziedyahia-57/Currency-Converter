@@ -15,7 +15,7 @@ const CURRENCY_REPRESENTATIONS = {
     "United States Dollar",
     "United States Dollars",
   ],
-  EUR: ["Euro"],
+  EUR: ["Euro","Euros"],
   GBP: ["British Pound", "British Pounds", "Sterling", "Pound Sterling"],
   JPY: ["Japanese Yen", "Yen"],
   CNY: ["元", "Chinese Yuan", "Yuan", "Renminbi", "RMB"],
