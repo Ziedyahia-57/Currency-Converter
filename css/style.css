@@ -25,13 +25,13 @@
 
 /* Dark mode colors */
 :root.dark-mode {
-  --gray: #272c32; /**/
+  --light-gray: #171d20;
   --dark-gray: #19191e; /**/
-  --light-gray: #21242b; /**/
   --border-dark: #00000040; /**/
   --font-color: #c1c6cb; /**/
   --fill-color: #6d777e; /**/
   --dark-background: #004cff; /**/
+  --gray: #1b2226;
   --small-input: #1c232c;
 
   --drag-border: #535353cc;
