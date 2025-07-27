@@ -1,5 +1,5 @@
 # Currency Converter (Beta)
-A browser extension for currency conversion
+A browser extension for bulk currency conversion.
 
 <img width="344" height="441" alt="ext-dark3" src="https://github.com/user-attachments/assets/b951c383-8dda-4b0d-ad57-9711a833365a" />
 <img width="344" height="441" alt="ext-light3" src="https://github.com/user-attachments/assets/df046afb-b4d2-4331-83ee-6715fe19e909" />
