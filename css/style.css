@@ -819,6 +819,7 @@ body {
   fill: var(--font-color);
   background: transparent;
   border: none;
+  border-radius: 50%;
 }
 
 .currency-converter-ex span.custom {
