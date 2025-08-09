@@ -82,17 +82,14 @@ async function saveFiatDecimal() {
 
   return new Promise((resolve, reject) => {
     localStorage.setItem("fiatDecimals", fiatDecimalSelector.value);
-    chrome.storage.local.set(
-      { fiatDecimals: fiatDecimalSelector.value },
-      () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          console.log("FIAT Decimal Format saved:", fiatDecimalSelector.value);
-          resolve();
-        }
+    chrome.storage.local.set({ fiatDecimals: fiatDecimalSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("FIAT Decimal Format saved:", fiatDecimalSelector.value);
+        resolve();
       }
-    );
+    });
   });
 }
 async function loadFiatDecimal() {
@@ -115,20 +112,14 @@ async function saveCryptoDecimal() {
 
   return new Promise((resolve, reject) => {
     localStorage.setItem("cryptoDecimals", cryptoDecimalSelector.value);
-    chrome.storage.local.set(
-      { cryptoDecimals: cryptoDecimalSelector.value },
-      () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          console.log(
-            "Crypto Decimal Format saved:",
-            cryptoDecimalSelector.value
-          );
-          resolve();
-        }
+    chrome.storage.local.set({ cryptoDecimals: cryptoDecimalSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("Crypto Decimal Format saved:", cryptoDecimalSelector.value);
+        resolve();
       }
-    );
+    });
   });
 }
 async function loadCryptoDecimal() {
@@ -173,9 +164,7 @@ async function loadThemePreference() {
     if (savedTheme) {
       themeSelector.value = savedTheme; // Set the selected option
       if (savedTheme === "auto") {
-        const prefersDark = window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        ).matches;
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         let preferredTheme = prefersDark ? "dark" : "light";
         console.log("Preferred theme based on system setting:", preferredTheme);
         localStorage.setItem("darkMode", preferredTheme);
@@ -188,9 +177,7 @@ async function loadThemePreference() {
     } else {
       // No saved theme found - use system preference as default
       console.log("No saved theme found. Using system preference.");
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       let preferredTheme = prefersDark ? "dark" : "light";
 
       // Set the theme selector to auto and apply system preference
@@ -216,9 +203,7 @@ async function loadThemePreference() {
     console.error("Failed to load theme preference:", error);
 
     // Fallback to system preference on error
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     let preferredTheme = prefersDark ? "dark" : "light";
 
     // Set the theme selector to auto and apply system preference
@@ -246,9 +231,7 @@ function checkAutoTheme() {
 
   const savedTheme = themeSelector.value;
   if (savedTheme === "auto") {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     let preferredTheme = prefersDark ? "dark" : "light";
     root.classList.toggle("dark-mode", preferredTheme === "dark");
     darkModeBtn.classList.toggle("active", preferredTheme === "dark");
@@ -339,17 +322,14 @@ async function savePageConvert() {
 
   return new Promise((resolve, reject) => {
     localStorage.setItem("pageConvert", pageConvertSelector.checked);
-    chrome.storage.local.set(
-      { pageConvert: pageConvertSelector.checked },
-      () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          console.log("pageConvert saved:", pageConvertSelector.checked);
-          resolve();
-        }
+    chrome.storage.local.set({ pageConvert: pageConvertSelector.checked }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("pageConvert saved:", pageConvertSelector.checked);
+        resolve();
       }
-    );
+    });
   });
 }
 async function loadPageConvert() {
@@ -372,17 +352,14 @@ async function saveConvertTarget() {
 
   return new Promise((resolve, reject) => {
     localStorage.setItem("convertTarget", convertTargetSelector.value);
-    chrome.storage.local.set(
-      { convertTarget: convertTargetSelector.value },
-      () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          console.log("convertTarget saved:", convertTargetSelector.value);
-          resolve();
-        }
+    chrome.storage.local.set({ convertTarget: convertTargetSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("convertTarget saved:", convertTargetSelector.value);
+        resolve();
       }
-    );
+    });
   });
 }
 async function loadConvertTarget() {
@@ -452,10 +429,7 @@ restoreBtn.addEventListener("click", async () => {
   }
 
   // Update last updated time
-  updateLastUpdateElement(
-    navigator.onLine,
-    localStorage.getItem(LAST_UPDATED_KEY)
-  );
+  updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
 
   // Manually update UI for immediate effect
   customTheme.classList.add("custom-hidden");
@@ -492,43 +466,26 @@ async function checkCustomSettings() {
   //🟣 Show "*" indicator for custom settings
   const formatSettings = await chrome.storage.local.get("numberFormat");
   const fiatDecimalsSettings = await chrome.storage.local.get("fiatDecimals");
-  const cryptoDecimalsSettings = await chrome.storage.local.get(
-    "cryptoDecimals"
-  );
+  const cryptoDecimalsSettings = await chrome.storage.local.get("cryptoDecimals");
   const themeSettings = await chrome.storage.local.get("theme");
   const dateSettings = await chrome.storage.local.get("date");
   const timeSettings = await chrome.storage.local.get("time");
   const convertTargetSettings = await chrome.storage.local.get("convertTarget");
   const pageConvertSettings = await chrome.storage.local.get("pageConvert");
 
-  if (
-    formatSettings.numberFormat &&
-    formatSettings.numberFormat !== "comma-dot"
-  ) {
+  if (formatSettings.numberFormat && formatSettings.numberFormat !== "comma-dot") {
     console.log("formatSettings: ", formatSettings.numberFormat);
     customFormat.classList.remove("custom-hidden");
   }
 
-  if (
-    fiatDecimalsSettings.fiatDecimals &&
-    fiatDecimalsSettings.fiatDecimals != 2
-  ) {
+  if (fiatDecimalsSettings.fiatDecimals && fiatDecimalsSettings.fiatDecimals != 2) {
     console.log("fiatDecimalsSettings: ", fiatDecimalsSettings.fiatDecimals);
     customFiatDecimals.classList.remove("custom-hidden");
   }
-  console.log(
-    "cryptoDecimalsSettings: ",
-    cryptoDecimalsSettings.cryptoDecimals
-  );
+  console.log("cryptoDecimalsSettings: ", cryptoDecimalsSettings.cryptoDecimals);
 
-  if (
-    cryptoDecimalsSettings.cryptoDecimals &&
-    cryptoDecimalsSettings.cryptoDecimals != 8
-  ) {
-    console.log(
-      "cryptoDecimalsSettings: ",
-      cryptoDecimalsSettings.cryptoDecimals
-    );
+  if (cryptoDecimalsSettings.cryptoDecimals && cryptoDecimalsSettings.cryptoDecimals != 8) {
+    console.log("cryptoDecimalsSettings: ", cryptoDecimalsSettings.cryptoDecimals);
     customCryptoDecimals.classList.remove("custom-hidden");
   }
 
@@ -547,18 +504,12 @@ async function checkCustomSettings() {
     customTime.classList.remove("custom-hidden");
   }
 
-  if (
-    convertTargetSettings.convertTarget &&
-    convertTargetSettings.convertTarget !== "all"
-  ) {
+  if (convertTargetSettings.convertTarget && convertTargetSettings.convertTarget !== "all") {
     console.log("convertTarget: ", convertTargetSettings.convertTarget);
     customConvertTarget.classList.remove("custom-hidden");
   }
 
-  if (
-    pageConvertSettings.pageConvert &&
-    pageConvertSettings.pageConvert !== false
-  ) {
+  if (pageConvertSettings.pageConvert && pageConvertSettings.pageConvert !== false) {
     console.log("pageConvert: ", pageConvertSettings.pageConvert);
     customPageConvert.classList.remove("custom-hidden");
   }
@@ -629,9 +580,7 @@ class DonationTracker {
 
       if (cyclePosition === 2) {
         // Every 3rd click shows an interaction
-        if (
-          this.usedInteractions.length === donationContent.interactions.length
-        ) {
+        if (this.usedInteractions.length === donationContent.interactions.length) {
           this.usedInteractions = []; // Reset if all interactions used
         }
 
@@ -641,9 +590,7 @@ class DonationTracker {
 
         const interaction =
           availableInteractions.length > 0
-            ? availableInteractions[
-                Math.floor(Math.random() * availableInteractions.length)
-              ]
+            ? availableInteractions[Math.floor(Math.random() * availableInteractions.length)]
             : donationContent.interactions[0]; // Fallback
 
         this.usedInteractions.push(interaction.greeting);
@@ -659,15 +606,11 @@ class DonationTracker {
       this.usedMessages = []; // Reset if all messages used
     }
 
-    const availableMessages = donationContent.messages.filter(
-      (msg) => !this.usedMessages.includes(msg.greeting)
-    );
+    const availableMessages = donationContent.messages.filter((msg) => !this.usedMessages.includes(msg.greeting));
 
     const message =
       availableMessages.length > 0
-        ? availableMessages[
-            Math.floor(Math.random() * availableMessages.length)
-          ]
+        ? availableMessages[Math.floor(Math.random() * availableMessages.length)]
         : donationContent.messages[0]; // Fallback
 
     this.usedMessages.push(message.greeting);
@@ -718,8 +661,7 @@ function updateDonationContent() {
   const isInteraction = donationContent.interactions.some(
     (int) =>
       int.greeting === rawContent.greeting ||
-      (typeof rawContent.greeting === "function" &&
-        int.greeting === rawContent.greeting.toString())
+      (typeof rawContent.greeting === "function" && int.greeting === rawContent.greeting.toString())
   );
 
   const titleContent = isInteraction
@@ -839,19 +781,21 @@ function formatDateTime(dateString) {
     let dateText;
     switch (dateFormat) {
       case "mm/dd/yyyy":
-        dateText = `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
-          date.getDate()
-        ).padStart(2, "0")}/${date.getFullYear()}`;
+        dateText = `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(
+          2,
+          "0"
+        )}/${date.getFullYear()}`;
         break;
       case "yyyy/mm/dd":
-        dateText = `${date.getFullYear()}/${String(
-          date.getMonth() + 1
-        ).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+        dateText = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+          date.getDate()
+        ).padStart(2, "0")}`;
         break;
       default: // "dd/mm/yyyy"
-        dateText = `${String(date.getDate()).padStart(2, "0")}/${String(
-          date.getMonth() + 1
-        ).padStart(2, "0")}/${date.getFullYear()}`;
+        dateText = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}/${date.getFullYear()}`;
     }
 
     // Format time
@@ -883,9 +827,7 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
   const { dateText, timeText } = formatDateTime(lastUpdated);
 
   lastUpdateElement.innerHTML = `
-    <span class="${isOnline ? "green" : "red"}">● ${
-    isOnline ? "Online" : "Offline"
-  }</span>
+    <span class="${isOnline ? "green" : "red"}">● ${isOnline ? "Online" : "Offline"}</span>
     - Last Updated: <span class="date">${dateText}</span> at <span class="date">${timeText}</span>
   `;
 }
@@ -897,10 +839,7 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
 //⚪                       OFFLINE MESSAGE                      */
 //⚪------------------------------------------------------------*/
 function showOfflineMessage() {
-  if (
-    currencyContainer &&
-    !currencyContainer.querySelector(".first-launch-offline")
-  ) {
+  if (currencyContainer && !currencyContainer.querySelector(".first-launch-offline")) {
     currencyContainer.innerHTML = `
       <div class="first-launch-offline">
         <p class="emoji">¯\\_(ツ)_/¯</p>
@@ -911,9 +850,7 @@ function showOfflineMessage() {
   }
 }
 function removeOfflineMessage() {
-  const offlineMessage = currencyContainer?.querySelector(
-    ".first-launch-offline"
-  );
+  const offlineMessage = currencyContainer?.querySelector(".first-launch-offline");
   if (offlineMessage) {
     offlineMessage.remove();
 
@@ -1350,9 +1287,7 @@ function loadData() {
 //⚪------------------------------------------------------------*/
 async function fetchExchangeRates() {
   try {
-    const url =
-      "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
-      Date.now();
+    const url = "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" + Date.now();
     const response = await fetch(url);
 
     if (!response || !response.ok) {
@@ -1934,9 +1869,7 @@ addCurrencyBtn.addEventListener("click", async () => {
   }
 
   // Sort currencies alphabetically
-  const sortedCurrencies = Object.keys(exchangeRates).sort((a, b) =>
-    a.localeCompare(b)
-  );
+  const sortedCurrencies = Object.keys(exchangeRates).sort((a, b) => a.localeCompare(b));
   sortedCurrencies.forEach((currency) => {
     if (!currencies.includes(currency)) {
       const option = document.createElement("div");
@@ -1979,10 +1912,7 @@ currencyTab.addEventListener("click", async (event) => {
 
   event.target.dataset.previousValue = rawValue;
   event.target.value = await formatNumberWithCommas(rawValue);
-  updateCurrencyValues(
-    parseFloat(rawValue) || 0,
-    event.target.dataset.currency
-  ); // Update currency values based on input
+  updateCurrencyValues(parseFloat(rawValue) || 0, event.target.dataset.currency); // Update currency values based on input
 });
 
 function initializeInputStyles() {
@@ -2012,9 +1942,7 @@ function adjustContentHeight() {
     contentHeight = windowHeight - 71;
   }
 
-  document.querySelector(
-    ".currency-converter-ex .content"
-  ).style.height = `${contentHeight}px`;
+  document.querySelector(".currency-converter-ex .content").style.height = `${contentHeight}px`;
 }
 
 //🔴++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -2101,10 +2029,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   saveCheckboxState();
 
   // Initial check
-  updateLastUpdateElement(
-    navigator.onLine,
-    localStorage.getItem(LAST_UPDATED_KEY)
-  );
+  updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
 
   formatSelector.addEventListener("change", async function () {
     await saveNumberFormat();
@@ -2128,9 +2053,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Ensure proper decimal places
       const decimalPlaces = await getDecimalPlaces(currency);
-      let formattedValue = parseFloat(rawValue)
-        .toFixed(decimalPlaces)
-        .replace(".", separators.decimal);
+      let formattedValue = parseFloat(rawValue).toFixed(decimalPlaces).replace(".", separators.decimal);
 
       // Apply new formatting
       input.value = await formatNumberWithCommas(formattedValue, input);
@@ -2168,10 +2091,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   dateSelector.addEventListener("change", function () {
     saveDateFormat();
-    updateLastUpdateElement(
-      navigator.onLine,
-      localStorage.getItem(LAST_UPDATED_KEY)
-    );
+    updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
 
     if (dateSelector.value !== "dd/mm/yyyy") {
       customDate.classList.remove("custom-hidden");
@@ -2182,10 +2102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   timeSelector.addEventListener("change", function () {
     saveTimeFormat();
-    updateLastUpdateElement(
-      navigator.onLine,
-      localStorage.getItem(LAST_UPDATED_KEY)
-    );
+    updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
 
     if (timeSelector.value !== "ampm") {
       customTime.classList.remove("custom-hidden");
@@ -2226,9 +2143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       darkModeBtn.title = "Dark Mode - Auto";
 
       // Detect system preference immediately
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       const preferredTheme = prefersDark ? "dark" : "light";
 
       // Apply the theme
@@ -2241,16 +2156,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Add event listener for future changes (only if online)
       if (navigator.onLine) {
-        window
-          .matchMedia("(prefers-color-scheme: dark)")
-          .addEventListener("change", systemThemeChangeHandler);
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
       }
     } else {
       // Remove auto class and event listener when switching to manual mode
       darkModeBtn.classList.remove("auto");
-      window
-        .matchMedia("(prefers-color-scheme: dark)")
-        .removeEventListener("change", systemThemeChangeHandler);
+      window.matchMedia("(prefers-color-scheme: dark)").removeEventListener("change", systemThemeChangeHandler);
 
       // For light/dark modes, apply directly
       const isDark = selectedTheme === "dark";
@@ -2316,10 +2227,7 @@ async function getDecimalPlaces(currency) {
   let cryptoDecimals = 8;
 
   try {
-    const storage = await chrome.storage.local.get([
-      "fiatDecimals",
-      "cryptoDecimals",
-    ]);
+    const storage = await chrome.storage.local.get(["fiatDecimals", "cryptoDecimals"]);
     fiatDecimals = storage.fiatDecimals || 2;
     cryptoDecimals = storage.cryptoDecimals || 8;
   } catch (error) {
@@ -2361,9 +2269,7 @@ async function updateAllCurrencyDecimals() {
 
       // For the base input, just reformat with new decimals
       if (input === baseInput) {
-        const formattedValue = baseValue
-          .toFixed(decimalPlaces)
-          .replace(".", separators.decimal);
+        const formattedValue = baseValue.toFixed(decimalPlaces).replace(".", separators.decimal);
         input.value = await formatNumberWithCommas(formattedValue, input);
         continue;
       }
@@ -2375,8 +2281,7 @@ async function updateAllCurrencyDecimals() {
       } else if (currency === "USD") {
         convertedValue = baseValue / exchangeRates[baseCurrency];
       } else {
-        convertedValue =
-          baseValue * (exchangeRates[currency] / exchangeRates[baseCurrency]);
+        convertedValue = baseValue * (exchangeRates[currency] / exchangeRates[baseCurrency]);
       }
 
       // Apply tax if percentage > 0
@@ -2384,9 +2289,7 @@ async function updateAllCurrencyDecimals() {
         convertedValue *= taxMultiplier;
       }
 
-      const formattedValue = convertedValue
-        .toFixed(decimalPlaces)
-        .replace(".", separators.decimal);
+      const formattedValue = convertedValue.toFixed(decimalPlaces).replace(".", separators.decimal);
       input.value = await formatNumberWithCommas(formattedValue, input);
     }
   }
@@ -2446,8 +2349,7 @@ async function formatNumberWithCommas(value, inputElement) {
     // Handle multiple decimal points
     const decimalSplit = cleanValue.split(separators.decimal);
     if (decimalSplit.length > 2) {
-      cleanValue =
-        decimalSplit[0] + separators.decimal + decimalSplit.slice(1).join("");
+      cleanValue = decimalSplit[0] + separators.decimal + decimalSplit.slice(1).join("");
     }
 
     // Split into parts
@@ -2455,10 +2357,7 @@ async function formatNumberWithCommas(value, inputElement) {
     integerPart = integerPart.replace(/^0+/, "") || "0";
 
     // Format integer part with thousand separators
-    const formattedInteger = integerPart.replace(
-      /\B(?=(\d{3})+(?!\d))/g,
-      separators.thousand
-    );
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, separators.thousand);
 
     // Reconstruct full formatted value
     let formattedValue = formattedInteger;
@@ -2468,12 +2367,7 @@ async function formatNumberWithCommas(value, inputElement) {
 
     if (inputElement) {
       // Calculate new cursor position
-      let newCursorPos = calculateNewCursorPosition(
-        originalValue,
-        formattedValue,
-        cursorPos,
-        separators
-      );
+      let newCursorPos = calculateNewCursorPosition(originalValue, formattedValue, cursorPos, separators);
 
       // Update input value
       inputElement.value = formattedValue;
@@ -2491,12 +2385,7 @@ async function formatNumberWithCommas(value, inputElement) {
   }
 }
 
-function calculateNewCursorPosition(
-  originalValue,
-  formattedValue,
-  cursorPos,
-  separators
-) {
+function calculateNewCursorPosition(originalValue, formattedValue, cursorPos, separators) {
   // Handle edge cases
   if (cursorPos <= 0) return 0;
   if (cursorPos >= originalValue.length) return formattedValue.length;
@@ -2504,8 +2393,7 @@ function calculateNewCursorPosition(
   // Check if we just added a decimal separator
   const isAddingDecimal =
     originalValue.length < formattedValue.length &&
-    originalValue.slice(0, cursorPos - 1) + separators.decimal ===
-      originalValue.slice(0, cursorPos);
+    originalValue.slice(0, cursorPos - 1) + separators.decimal === originalValue.slice(0, cursorPos);
 
   if (isAddingDecimal) {
     const decimalIndex = formattedValue.indexOf(separators.decimal);
@@ -2623,12 +2511,7 @@ async function addCurrency(currency, shouldSave = true) {
 
   // Find the best input to use as conversion base
   let baseInput = findConversionBaseInput();
-  let initialValue = calculateInitialValue(
-    baseInput,
-    currency,
-    decimalPlaces,
-    separators
-  );
+  let initialValue = calculateInitialValue(baseInput, currency, decimalPlaces, separators);
 
   // Create the new currency element
   const currencyDiv = createCurrencyElement(currency, initialValue, separators);
@@ -2655,21 +2538,14 @@ async function addCurrency(currency, shouldSave = true) {
     if (nonZeroInput) return nonZeroInput;
 
     // Fallback to first input with value
-    const firstWithValue = document.querySelector(
-      '.currency-input input:not([value=""])'
-    );
+    const firstWithValue = document.querySelector('.currency-input input:not([value=""])');
     if (firstWithValue) return firstWithValue;
 
     // Final fallback to first input
     return document.querySelector(".currency-input input");
   }
 
-  function calculateInitialValue(
-    baseInput,
-    targetCurrency,
-    decimalPlaces,
-    separators
-  ) {
+  function calculateInitialValue(baseInput, targetCurrency, decimalPlaces, separators) {
     if (!baseInput || !baseInput.value || !exchangeRates) {
       return `0${separators.decimal}${initialDecimalPart}`;
     }
@@ -2687,15 +2563,11 @@ async function addCurrency(currency, shouldSave = true) {
     } else if (targetCurrency === "USD") {
       convertedValue = baseValue / exchangeRates[baseCurrency];
     } else {
-      convertedValue =
-        baseValue *
-        (exchangeRates[targetCurrency] / exchangeRates[baseCurrency]);
+      convertedValue = baseValue * (exchangeRates[targetCurrency] / exchangeRates[baseCurrency]);
     }
 
     // Format with correct decimal places and separators
-    return convertedValue
-      .toFixed(decimalPlaces)
-      .replace(".", separators.decimal);
+    return convertedValue.toFixed(decimalPlaces).replace(".", separators.decimal);
   }
 
   function createCurrencyElement(currency, initialValue, separators) {
@@ -2725,12 +2597,39 @@ async function addCurrency(currency, shouldSave = true) {
     const removeBtn = currencyDiv.querySelector(".remove-btn");
 
     // Initial formatting
-    inputField.value = await formatNumberWithCommas(
-      inputField.value,
-      inputField
-    );
+    inputField.value = await formatNumberWithCommas(inputField.value, inputField);
 
-    // In the addCurrency function's input handler:
+    inputField.addEventListener("paste", async (event) => {
+      event.preventDefault(); // Prevent default paste behavior
+
+      // Get pasted text
+      const pastedText = (event.clipboardData || window.clipboardData).getData("text");
+
+      if (!pastedText) return;
+
+      // Process the pasted value
+      const processedValue = await processPastedValue(pastedText, inputField);
+
+      // Set the processed value
+      inputField.value = processedValue.formatted;
+      inputField.dataset.previousValue = processedValue.raw;
+
+      // Update cursor position
+      setTimeout(() => {
+        inputField.setSelectionRange(processedValue.cursorPos, processedValue.cursorPos);
+
+        // Manually trigger the input event to update numToText
+        const inputEvent = new Event("input", {
+          bubbles: true,
+          cancelable: true,
+        });
+        inputField.dispatchEvent(inputEvent);
+      }, 0);
+
+      // Trigger conversion
+      updateCurrencyValues(inputField.dataset.currency);
+    });
+
     inputField.addEventListener("input", async (event) => {
       const input = event.target;
       const separators = await getNumberFormatSeparators();
@@ -2740,10 +2639,7 @@ async function addCurrency(currency, shouldSave = true) {
       const previousRawValue = input.dataset.previousValue || "";
 
       // Get current value and clean it (remove all formatting)
-      let rawValue = input.value.replace(
-        new RegExp(`[${separators.thousand}]`, "g"),
-        ""
-      );
+      let rawValue = input.value.replace(new RegExp(`[${separators.thousand}]`, "g"), "");
 
       // Check if the change is valid
       const isBackspace = event.inputType === "deleteContentBackward";
@@ -2781,12 +2677,7 @@ async function addCurrency(currency, shouldSave = true) {
       await formatNumberWithCommas(rawValue, input);
 
       // Calculate and set the new cursor position
-      const newCursorPos = calculateNewCursorPosition(
-        previousRawValue,
-        input.value,
-        cursorPos,
-        separators
-      );
+      const newCursorPos = calculateNewCursorPosition(previousRawValue, input.value, cursorPos, separators);
 
       setTimeout(() => {
         input.setSelectionRange(newCursorPos, newCursorPos);
@@ -2799,10 +2690,7 @@ async function addCurrency(currency, shouldSave = true) {
     inputField.addEventListener("blur", async () => {
       const decimalPlaces = await getDecimalPlaces(currency);
       const separators = await getNumberFormatSeparators();
-      let value = inputField.value.replace(
-        new RegExp(`[${separators.thousand}]`, "g"),
-        ""
-      );
+      let value = inputField.value.replace(new RegExp(`[${separators.thousand}]`, "g"), "");
 
       if (value === "") value = "0";
 
@@ -2848,9 +2736,7 @@ async function updateCurrencyValues(changedCurrency) {
   const taxPercentage = parseFloat(taxInput.value) || 0;
   const taxMultiplier = 1 + taxPercentage / 100;
 
-  const changedInput = document.querySelector(
-    `input[data-currency="${changedCurrency}"]`
-  );
+  const changedInput = document.querySelector(`input[data-currency="${changedCurrency}"]`);
 
   if (!changedInput) {
     console.warn(`Input element for currency ${changedCurrency} not found`);
@@ -2864,17 +2750,15 @@ async function updateCurrencyValues(changedCurrency) {
 
   // If input is empty or invalid, set others to 0
   if (rawValue === "" || isNaN(rawValue)) {
-    document
-      .querySelectorAll(".currency-input input")
-      .forEach(async (input) => {
-        if (input.dataset.currency === changedCurrency) return;
+    document.querySelectorAll(".currency-input input").forEach(async (input) => {
+      if (input.dataset.currency === changedCurrency) return;
 
-        const targetCurrency = input.dataset.currency;
-        const decimalPlaces = await getDecimalPlaces(targetCurrency);
-        const zeroValue = `0${separators.decimal}${"0".repeat(decimalPlaces)}`;
+      const targetCurrency = input.dataset.currency;
+      const decimalPlaces = await getDecimalPlaces(targetCurrency);
+      const zeroValue = `0${separators.decimal}${"0".repeat(decimalPlaces)}`;
 
-        input.value = await formatNumberWithCommas(zeroValue, input);
-      });
+      input.value = await formatNumberWithCommas(zeroValue, input);
+    });
     return;
   }
 
@@ -2944,9 +2828,7 @@ async function findBaseInput() {
     if (nonZeroInput) return nonZeroInput;
 
     // Fallback to first input with any value
-    const firstWithValue = document.querySelector(
-      '.currency-input input:not([value=""])'
-    );
+    const firstWithValue = document.querySelector('.currency-input input:not([value=""])');
     if (firstWithValue) return firstWithValue;
 
     // Final fallback to first input
@@ -2955,4 +2837,60 @@ async function findBaseInput() {
     console.error("Error in findBaseInput:", error);
     return document.querySelector(".currency-input input");
   }
+}
+
+/*Paste formatting*/
+async function processPastedValue(pastedText, inputField) {
+  const separators = await getNumberFormatSeparators();
+  const decimalPlaces = await getDecimalPlaces(inputField.dataset.currency);
+
+  // Remove all thousand separators (both comma and dot initially)
+  let cleanedValue = pastedText.replace(/[,.]/g, (match) => {
+    // We'll handle decimal separator replacement separately
+    return match;
+  });
+
+  // Now find the rightmost separator that could be a decimal
+  const lastCommaPos = cleanedValue.lastIndexOf(",");
+  const lastDotPos = cleanedValue.lastIndexOf(".");
+
+  // Determine which separator to treat as decimal
+  let decimalSeparatorPos = -1;
+  if (lastCommaPos > lastDotPos) {
+    decimalSeparatorPos = lastCommaPos;
+  } else if (lastDotPos > lastCommaPos) {
+    decimalSeparatorPos = lastDotPos;
+  }
+
+  // Process the number
+  if (decimalSeparatorPos >= 0) {
+    // We found a decimal separator - split the number
+    const beforeDecimal = cleanedValue.substring(0, decimalSeparatorPos).replace(/[^0-9]/g, ""); // Remove any remaining non-digits
+    const afterDecimal = cleanedValue.substring(decimalSeparatorPos + 1).replace(/[^0-9]/g, ""); // Remove any remaining non-digits
+
+    // Reconstruct with proper decimal separator
+    cleanedValue = beforeDecimal + separators.decimal + afterDecimal;
+  } else {
+    // No decimal separator found - just clean all non-digits
+    cleanedValue = cleanedValue.replace(/[^0-9]/g, "");
+  }
+
+  // Ensure proper decimal places
+  const parts = cleanedValue.split(separators.decimal);
+  if (parts.length > 1) {
+    parts[1] = parts[1].slice(0, decimalPlaces);
+    cleanedValue = parts[0] + separators.decimal + parts[1];
+  }
+
+  // Format with thousand separators
+  const formattedValue = await formatNumberWithCommas(cleanedValue, inputField);
+
+  // Calculate cursor position
+  const cursorPos = formattedValue.length;
+
+  return {
+    raw: cleanedValue,
+    formatted: formattedValue,
+    cursorPos: cursorPos,
+  };
 }
