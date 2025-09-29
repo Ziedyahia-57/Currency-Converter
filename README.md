@@ -1,8 +1,8 @@
 # Currency Converter (Beta)
 A browser extension for bulk currency conversion.
 
-<img width="344" height="441" alt="ext-dark3" src="https://github.com/user-attachments/assets/b951c383-8dda-4b0d-ad57-9711a833365a" />
-<img width="344" height="441" alt="ext-light3" src="https://github.com/user-attachments/assets/df046afb-b4d2-4331-83ee-6715fe19e909" />
+<img width="344" height="441" alt="app-dark" src="https://github.com/user-attachments/assets/5b2d4e10-37c3-4388-96df-fd894c372ee9" />
+<img width="344" height="441" alt="app-light" src="https://github.com/user-attachments/assets/b1eda995-f886-4b5a-9380-18365f3f80de" />
 
 ![dark](https://github.com/user-attachments/assets/c4a0a546-b769-469b-9536-33c039e40cb1)
 ![light](https://github.com/user-attachments/assets/e75c0153-87ad-403b-a192-6ab11e0605a8)
