@@ -735,7 +735,6 @@ function createPopup() {
 
   const popup = document.createElement("div");
   popup.id = POPUP_ID;
-  popup.className = "currency-converter-ex";
   popup.style.cssText = `
   top: ${POPUP_DISTANCE}px;`;
 
@@ -764,10 +763,9 @@ function createPopup() {
   selectionView.className = "currency-converter-ex-selection";
 
   selectionView.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:center;width:16px;height:16px">
+    <div style="display:flex;align-items:center;justify-content:center;width:fit-content;gap: 8px;height:16px">
       <img class="currency-converter-ex-icon" src="${chrome.runtime.getURL("icons/icon.png")}" 
-           onerror="this.replaceWith('<div style=\\'width:16px;height:16px;background:var(--currency-converter-ex-error);border-radius:2px\\'></div>')">
-    </div>
+           style='width:16px;height:16px;border-radius:2px'>
     <span id="${POPUP_ID}-text" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px"></span>
   `;
   popup.appendChild(selectionView);
@@ -777,101 +775,6 @@ function createPopup() {
   currenciesView.id = `${POPUP_ID}-currencies`;
   currenciesView.className = "currency-converter-ex-currencies";
   popup.appendChild(currenciesView);
-
-  // Add scoped CSS
-  const style = document.createElement("style");
-  style.textContent = `
-    .currency-converter-ex {
-      position: absolute;
-      z-index: 10000;
-      background: var(--currency-converter-ex-background, #ffffff);
-      border: 1px solid var(--currency-converter-ex-border, #e0e0e0);
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 13px;
-      color: var(--currency-converter-ex-text, #333333);
-      min-width: 200px;
-      max-width: 300px;
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .currency-converter-ex-dark-mode .currency-converter-ex {
-      --currency-converter-ex-background: #2d3748;
-      --currency-converter-ex-border: #4a5568;
-      --currency-converter-ex-text: #e2e8f0;
-      --currency-converter-ex-hover: #4a5568;
-      --currency-converter-ex-error: #e53e3e;
-    }
-
-    .currency-converter-ex-selection {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      cursor: pointer;
-      background: var(--currency-converter-ex-background);
-    }
-
-    .currency-converter-ex-selection:hover {
-      background: var(--currency-converter-ex-hover, #f5f5f5);
-    }
-
-    .currency-converter-ex-currencies {
-      display: none;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .currency-converter-ex-currency-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 12px;
-      cursor: pointer;
-      background: var(--currency-converter-ex-background);
-    }
-
-    .currency-converter-ex-currency-item:hover {
-      background: var(--currency-converter-ex-hover, #f5f5f5);
-    }
-
-    .currency-converter-ex-currency-source {
-      background: var(--currency-converter-ex-highlight, #ebf8ff);
-      border-bottom: 1px solid var(--currency-converter-ex-border, #e0e0e0);
-    }
-
-    .currency-converter-ex-currency-highlight {
-      font-weight: 600;
-    }
-
-    .currency-converter-ex-currency-error {
-      padding: 12px;
-      text-align: center;
-      color: var(--currency-converter-ex-error, #e53e3e);
-      font-style: italic;
-    }
-
-    .currency-converter-ex-flag {
-      display: flex;
-      align-items: center;
-    }
-
-    .currency-converter-ex-symbol-switcher {
-      display: flex;
-      height: 14px;
-      cursor: pointer;
-      color: var(--currency-converter-ex-text);
-    }
-
-    .currency-converter-ex-symbol-switcher:hover {
-      color: var(--currency-converter-ex-accent, #3182ce);
-    }
-  `;
-  document.head.appendChild(style);
 
   document.body.appendChild(popup);
   return popup;
@@ -908,7 +811,8 @@ function showCurrenciesView(popup, baseText) {
   // Get fresh currency data
   chrome.storage.local.get(["currencyOrder", "currencyData", "convertTarget"], (result) => {
     if (!result.currencyData) {
-      currenciesContainer.innerHTML = '<div class="currency-converter-ex-currency-error">No currency data available</div>';
+      currenciesContainer.innerHTML =
+        '<div class="currency-converter-ex-currency-error">No currency data available</div>';
       return;
     }
 
@@ -945,11 +849,11 @@ function showCurrenciesView(popup, baseText) {
       sourceItem.style.paddingTop = "8px";
 
       // Create flag container
+      // (Only base currency)
       const sourceFlagContainer = document.createElement("div");
       sourceFlagContainer.style.display = "flex";
       sourceFlagContainer.style.alignItems = "center";
       sourceFlagContainer.style.gap = "2px";
-      sourceFlagContainer.style.width = "68px";
 
       // Add flag
       sourceFlagContainer.appendChild(getFlagElement(baseCurrency));
@@ -957,8 +861,8 @@ function showCurrenciesView(popup, baseText) {
       // Add currency code
       const sourceCodeSpan = document.createElement("span");
       sourceCodeSpan.textContent = baseCurrency;
-      sourceCodeSpan.style.width = "30px";
       sourceFlagContainer.appendChild(sourceCodeSpan);
+      sourceItem.appendChild(sourceFlagContainer);
 
       // Add symbol switcher if multiple currencies available
       if (possibleCurrencies.length > 1) {
@@ -975,8 +879,7 @@ function showCurrenciesView(popup, baseText) {
         switcherIcon.title = `Switch between ${possibleCurrencies.join(", ")}`;
 
         switcher.appendChild(switcherIcon);
-        sourceFlagContainer.appendChild(switcher);
-
+        sourceItem.appendChild(switcher);
         switcher.addEventListener("click", (e) => {
           e.stopPropagation();
           currentSymbolIndex = (currentSymbolIndex + 1) % possibleCurrencies.length;
@@ -985,8 +888,6 @@ function showCurrenciesView(popup, baseText) {
           renderConversions(currentBaseCurrency, currentAmount);
         });
       }
-
-      sourceItem.appendChild(sourceFlagContainer);
 
       // Add amount
       const sourceValueSpan = document.createElement("span");
@@ -998,6 +899,7 @@ function showCurrenciesView(popup, baseText) {
       // Handle conversion based on convertTarget setting
       if (convertTarget === "one" && result.currencyOrder?.length > 0) {
         // Only show the first currency in the list
+        // (Only one currency)
         const targetCurrency = result.currencyOrder[0];
         if (targetCurrency !== baseCurrency) {
           const convertedValue = convertCurrency(amount, baseCurrency, targetCurrency, rates);
@@ -1010,7 +912,8 @@ function showCurrenciesView(popup, baseText) {
           flagContainer.style.display = "flex";
           flagContainer.style.alignItems = "center";
           flagContainer.style.gap = "2px";
-          flagContainer.style.width = "68px";
+          flagContainer.style.width = "100%";
+          flagContainer.style.minWidth = "70px";
 
           flagContainer.appendChild(getFlagElement(targetCurrency));
 
@@ -1029,6 +932,7 @@ function showCurrenciesView(popup, baseText) {
         }
       } else {
         // Show all currencies in the specified order
+        // (All currencies except base currency)
         Object.keys(originalOrderedCurrencies).forEach((targetCurrency) => {
           if (targetCurrency === baseCurrency) return;
 
@@ -1042,7 +946,8 @@ function showCurrenciesView(popup, baseText) {
           flagContainer.style.display = "flex";
           flagContainer.style.alignItems = "center";
           flagContainer.style.gap = "2px";
-          flagContainer.style.width = "68px";
+          flagContainer.style.width = "100%";
+          flagContainer.style.minWidth = "70px";
 
           flagContainer.appendChild(getFlagElement(targetCurrency));
 
@@ -1097,9 +1002,15 @@ function onDecimalPrecisionChange() {
 
 // New helper function
 function updateBaseCurrency(newCurrency, amount, rates) {
-  const sourceCodeSpan = document.querySelector("#currency-converter-popup .currency-converter-ex-currency-source span");
-  const sourceValueSpan = document.querySelector("#currency-converter-popup .currency-converter-ex-currency-source span:last-child");
-  const flagContainer = document.querySelector("#currency-converter-popup .currency-converter-ex-currency-source .currency-converter-ex-flag");
+  const sourceCodeSpan = document.querySelector(
+    "#currency-converter-popup .currency-converter-ex-currency-source span"
+  );
+  const sourceValueSpan = document.querySelector(
+    "#currency-converter-popup .currency-converter-ex-currency-source span:last-child"
+  );
+  const flagContainer = document.querySelector(
+    "#currency-converter-popup .currency-converter-ex-currency-source .currency-converter-ex-flag"
+  );
 
   // Update code display
   sourceCodeSpan.textContent = `${newCurrency}    `;
@@ -1109,16 +1020,20 @@ function updateBaseCurrency(newCurrency, amount, rates) {
   flagContainer.appendChild(getFlagElement(newCurrency));
 
   // Update all conversions
-  document.querySelectorAll("#currency-converter-popup .currency-converter-ex-currency-item:not(.currency-converter-ex-currency-source)").forEach((item) => {
-    const targetCurrency = item.querySelector("span")?.textContent?.trim().split(/\s+/)[0];
-    if (targetCurrency && targetCurrency !== newCurrency) {
-      const convertedValue = convertCurrency(amount, newCurrency, targetCurrency, rates);
-      const valueSpan = item.querySelector("span:last-child");
-      if (valueSpan) {
-        valueSpan.textContent = formatNumber(convertedValue, targetCurrency);
+  document
+    .querySelectorAll(
+      "#currency-converter-popup .currency-converter-ex-currency-item:not(.currency-converter-ex-currency-source)"
+    )
+    .forEach((item) => {
+      const targetCurrency = item.querySelector("span")?.textContent?.trim().split(/\s+/)[0];
+      if (targetCurrency && targetCurrency !== newCurrency) {
+        const convertedValue = convertCurrency(amount, newCurrency, targetCurrency, rates);
+        const valueSpan = item.querySelector("span:last-child");
+        if (valueSpan) {
+          valueSpan.textContent = formatNumber(convertedValue, targetCurrency);
+        }
       }
-    }
-  });
+    });
 }
 
 function updatePopupPosition(popup) {
@@ -1192,7 +1107,9 @@ function refreshDisplayedValues() {
     savedCurrencies.numberFormat = result.numberFormat ?? "comma-dot";
 
     // Update all displayed values
-    const currencyItems = document.querySelectorAll(".currency-converter-ex-currency-item:not(.currency-converter-ex-currency-source)");
+    const currencyItems = document.querySelectorAll(
+      ".currency-converter-ex-currency-item:not(.currency-converter-ex-currency-source)"
+    );
     for (const item of currencyItems) {
       const currencyCode = item.dataset.currency;
       if (!currencyCode) continue;
@@ -1233,7 +1150,10 @@ function initialize() {
 
     const popup = createPopup();
     chrome.storage.onChanged.addListener((changes, namespace) => {
-      if ((namespace === "local" && changes.darkMode) || document.documentElement.classList.contains("currency-converter-ex-dark-mode")) {
+      if (
+        (namespace === "local" && changes.darkMode) ||
+        document.documentElement.classList.contains("currency-converter-ex-dark-mode")
+      ) {
         chrome.storage.local.get(["darkMode"], (result) => {
           const root = document.documentElement;
           if (result.darkMode === "dark") {
@@ -1468,34 +1388,34 @@ function initialize() {
     // }
 
     function checkCurrencyIndicator(text) {
-  if (!text) return null;
+      if (!text) return null;
 
-  // Check for currency symbols (exact match, case-sensitive for symbols)
-  for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
-    // Match symbol exactly (including multi-character symbols)
-    if (text === symbol) return currencies[0];
-  }
-
-  // Check for currency codes (3 letters, case insensitive)
-  if (text.length === 3) {
-    const code = text.toUpperCase();
-    if (currencyToCountry[code]) {
-      return code;
-    }
-  }
-
-  // Check for word representations (case insensitive exact match)
-  const lowerText = text.toLowerCase();
-  for (const [currencyCode, representations] of Object.entries(CURRENCY_REPRESENTATIONS)) {
-    for (const rep of representations) {
-      if (lowerText === rep.toLowerCase()) {
-        return currencyCode;
+      // Check for currency symbols (exact match, case-sensitive for symbols)
+      for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
+        // Match symbol exactly (including multi-character symbols)
+        if (text === symbol) return currencies[0];
       }
-    }
-  }
 
-  return null;
-}
+      // Check for currency codes (3 letters, case insensitive)
+      if (text.length === 3) {
+        const code = text.toUpperCase();
+        if (currencyToCountry[code]) {
+          return code;
+        }
+      }
+
+      // Check for word representations (case insensitive exact match)
+      const lowerText = text.toLowerCase();
+      for (const [currencyCode, representations] of Object.entries(CURRENCY_REPRESENTATIONS)) {
+        for (const rep of representations) {
+          if (lowerText === rep.toLowerCase()) {
+            return currencyCode;
+          }
+        }
+      }
+
+      return null;
+    }
 
     // Helper function to check if number is wrapped in currency symbol (like $100 or 100$)
     function isNumberWrappedInCurrencySymbol(text) {
@@ -1576,12 +1496,14 @@ function initialize() {
 
       // 7. Handle dark mode changes
       if (changes.darkMode) {
-        const root = document.documentElement;
-        if (changes.darkMode.newValue === "dark") {
-          root.classList.add("currency-converter-ex-dark-mode");
-        } else {
-          root.classList.remove("currency-converter-ex-dark-mode");
-        }
+        chrome.storage.local.get(["darkMode"], (result) => {
+          const root = document.documentElement;
+          if (result.darkMode === "dark") {
+            root.classList.add("currency-converter-ex-dark-mode");
+          } else {
+            root.classList.remove("currency-converter-ex-dark-mode");
+          }
+        });
       }
 
       // Refresh display if needed and we're in currencies view

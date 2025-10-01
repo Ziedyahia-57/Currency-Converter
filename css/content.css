@@ -1,22 +1,22 @@
 :root {
   --primary-color: #00c3aa;
-  --background: #f6f6f6;
-  --font: #4f545e;
-  --border: #e3e3e5;
-  --error: #ff3366;
+  --currency-converter-ex-background: #f6f6f6;
+  --currency-converter-ex-font: #4f4f4f;
+  --currency-converter-ex-border: #e3e3e5;
+  --currency-converter-ex-error: #d32f2f;
 }
-:root.dark-mode {
-  --background: #171d20;
-  --border: #1b2226;
-  --font: #ffffff;
-  --error: #ff3366;
+:root.currency-converter-ex-dark-mode {
+  --currency-converter-ex-background: #010d10;
+  --currency-converter-ex-border: #09181c;
+  --currency-converter-ex-font: #ffffff;
+  --currency-converter-ex-error: #d32f2f;
 }
 
 #currency-converter-popup {
   height: fit-content !important;
   position: absolute;
-  background: var(--background);
-  border: var(--border) solid 1px;
+  background: var(--currency-converter-ex-background);
+  border: var(--currency-converter-ex-border) solid 1px;
   width: fit-content;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -27,20 +27,72 @@
   font-family: Arial, sans-serif;
   font-size: 12px;
   font-weight: bold;
-  color: #333333;
+  color: var(--currency-converter-ex-font);
   box-sizing: border-box;
   transform: translateX(-50%);
   cursor: pointer;
   align-items: center;
   pointer-events: auto;
 }
+.currency-converter-ex {
+  position: absolute;
+  z-index: 10000;
+  background: var(--currency-converter-ex-background, #ffffff);
+  border: 1px solid var(--currency-converter-ex-border, #e0e0e0);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: var(--currency-converter-ex-text, #333333);
+  min-width: 200px;
+  max-width: 300px;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.currency-converter-ex-selection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: var(--currency-converter-ex-background);
+}
+
+.currency-converter-ex-currency-source {
+  color: rgb(0, 195, 170);
+}
+
+.currency-converter-ex-symbol-switcher {
+  display: flex;
+  height: 14px;
+  padding: 0 6px;
+  margin: 0 4px;
+  cursor: pointer;
+  color: var(--currency-converter-ex-text);
+}
+
+.currency-converter-ex-symbol-switcher:hover {
+  background: #0064589c;
+  color: var(--primary-color);
+  border-radius: 4px;
+}
+
+.currency-converter-ex-currencies {
+  display: none;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
 #currency-converter-popup-currencies {
   width: fit-content;
   display: flex;
   flex-direction: column;
   align-self: center;
   gap: 4px;
-  color: rgb(112, 112, 112);
+  color: var(--currency-converter-ex-font);
   font-style: normal;
   padding: 0px 4px;
 }
@@ -53,37 +105,47 @@
   padding: 4px !important;
   border-radius: 2px;
   background: #00ffcc2e;
-  color: #00c3aa;
+  color: var(--primary-color);
 }
-.icon {
+
+.currency-converter-ex img.currency-converter-ex-icon {
   width: 16px;
   height: 16px;
   object-fit: contain;
 }
-.currency-item {
-  display: flex;
+
+.currency-converter-ex-currency-item {
   justify-content: flex-start;
-  align-items: center;
   padding: 4px 0;
-  gap: 4px;
   margin-right: auto;
-  color: var(--font);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: var(--currency-converter-ex-background);
+  color: var(--currency-converter-ex-font);
   font-weight: 300;
 }
-.currency-highlight {
-  color: #00c3aa;
+
+.currency-converter-ex-currency-highlight {
+  color: var(--primary-color);
   font-weight: 300;
+  justify-content: space-between;
 }
-.currency-error {
-  color: #d32f2f;
+
+.currency-converter-ex-currency-error {
   padding: 8px 0;
   text-align: center;
+  color: var(--currency-converter-ex-error);
 }
-.flag {
-  margin-right: 6px;
-  border-radius: 2px;
+
+.currency-converter-ex-flag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
-.fi {
+
+#currency-converter-popup .fi {
   display: inline-block;
   width: 1em;
   height: 1em;
@@ -91,7 +153,8 @@
   background-repeat: no-repeat;
   background-position: center;
 }
-.currency-flag-fallback {
+
+#currency-converter-popup .currency-flag-fallback {
   width: 16px;
   height: 12px;
   background: #bd05c4;
@@ -122,7 +185,7 @@
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: var(--border) transparent transparent transparent;
+    border-color: var(--currency-converter-ex-border) transparent transparent transparent;
   }
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -131,7 +194,7 @@
 }
 #currency-converter-popup {
   /* Ensures visibility on all sites */
-  background: var(--background) !important;
+  background: var(--currency-converter-ex-background) !important;
   z-index: 999999999 !important;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -144,7 +207,7 @@
 }
 /*Fix for reddit img having margin*/
 
-.currency-item {
+#currency-converter-popup .currency-item {
   line-height: 1.5 !important;
 }
 /* Fix for deepseek padding */
