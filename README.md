@@ -4,8 +4,8 @@ A browser extension for bulk currency conversion.
 <img width="344" height="441" alt="app-dark" src="https://github.com/user-attachments/assets/5b2d4e10-37c3-4388-96df-fd894c372ee9" />
 <img width="344" height="441" alt="app-light" src="https://github.com/user-attachments/assets/b1eda995-f886-4b5a-9380-18365f3f80de" />
 
-![dark](https://github.com/user-attachments/assets/c4a0a546-b769-469b-9536-33c039e40cb1)
-![light](https://github.com/user-attachments/assets/e75c0153-87ad-403b-a192-6ab11e0605a8)
+<img width="345" height="226" alt="image (5)" src="https://github.com/user-attachments/assets/5311bf9a-5db5-4842-8971-393551a16921" />
+<img width="345" height="226" alt="image (6)" src="https://github.com/user-attachments/assets/5e0f43e0-d5c2-4ec8-9375-bd49a18f3e9e" />
 
 # Description
 This browser extension allows you to convert any chosen currency to multiple other currencies simultaneously, saving you time when you need exchange rates for several currencies at once.
