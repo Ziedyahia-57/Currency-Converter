@@ -75,7 +75,7 @@
 }
 
 .currency-converter-ex-symbol-switcher:hover {
-  background: #0064589c;
+  background: rgba(0, 255, 204, 0.18);
   color: var(--primary-color);
   border-radius: 4px;
 }
