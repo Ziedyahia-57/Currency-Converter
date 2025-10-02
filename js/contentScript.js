@@ -138,7 +138,14 @@ const CURRENCY_REPRESENTATIONS = {
   UAH: ["Ukrainian Hryvnia", "Ukrainian Hryvnias"],
   BYN: ["Br", "Belarusian Ruble", "Belarusian Rubles"],
   MDL: ["Moldovan Leu", "Moldovan Lei"],
-  BAM: ["KM", "Bosnia and Herzegovina Convertible Mark", "Convertible Marks"],
+  BAM: [
+    "KM",
+    "Bosnia and Herzegovina Convertible Mark",
+    "Bosnia & Herzegovina Convertible Mark",
+    "Bosnia-Herzegovina Convertible Mark",
+    "Bosnia-Herzegovina Convertible Marka",
+    "Convertible Marks",
+  ],
   HRK: ["kn", "Croatian Kuna", "Croatian Kunas"],
 
   // Caribbean and Latin America
@@ -148,7 +155,13 @@ const CURRENCY_REPRESENTATIONS = {
   NIO: ["C$", "Nicaraguan Córdoba"],
   BZD: ["BZ$", "Belize Dollar", "Belize Dollars"],
   BSD: ["BSD$", "Bahamian Dollar", "Bahamian Dollars"],
-  TTD: ["TT$", "Trinidad and Tobago Dollar", "Trinidad and Tobago Dollars"],
+  TTD: [
+    "TT$",
+    "Trinidad and Tobago Dollar",
+    "Trinidad & Tobago Dollar",
+    "Trinidad & Tobago Dollars",
+    "Trinidad and Tobago Dollars",
+  ],
   UYU: ["$U", "Uruguayan Peso", "Uruguayan Pesos"],
   PYG: ["Gs.", "Paraguayan Guaraní"],
   BOB: ["Bolivian Boliviano", "Bolivian Bolivianos"],
