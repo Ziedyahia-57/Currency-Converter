@@ -317,6 +317,7 @@ const currencyToCountry = {
   BTN: "bt",
   BWP: "bw",
   BYN: "by",
+  BYR: "by",
   BZD: "bz",
   CAD: "ca",
   CDF: "cd",
@@ -380,6 +381,8 @@ const currencyToCountry = {
   LKR: "lk",
   LRD: "lr",
   LSL: "ls",
+  LTL: "lt",
+  LVL: "lv",
   LYD: "ly",
   MAD: "ma",
   MDL: "md",
@@ -421,6 +424,7 @@ const currencyToCountry = {
   SEK: "se",
   SGD: "sg",
   SHP: "sh",
+  SLE: "sl",
   SLL: "sl",
   SOS: "so",
   SRD: "sr",
@@ -459,6 +463,7 @@ const currencyToCountry = {
   XPT: "xt",
   YER: "ye",
   ZAR: "za",
+  ZMK: "zm",
   ZMW: "zm",
   ZWL: "zw",
 };
@@ -1149,16 +1154,218 @@ function refreshDisplayedValues() {
     }
   });
 }
-// ===== MAIN APPLICATION =====
+// ===== IN-PAGE CONVERT =====
+function detectAndMarkPrices() {
+  // Get all text nodes on the page
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false); // Walk through all text nodes in the document
 
+  const priceElements = [];
+  let node;
+
+  while ((node = walker.nextNode())) {
+    const text = node.textContent.trim();
+    if (!text) continue;
+
+    // Skip if this node is already inside a marked price element
+    if (node.parentElement.closest('[id*="detected-price"]')) {
+      continue;
+    }
+
+    // Use the same detection logic as the popup
+    if (isCurrencyValue(text)) {
+      const { currency, amount } = detectCurrency(text);
+      if (currency && amount) {
+        priceElements.push({
+          node: node,
+          text: text,
+          currency: currency,
+          amount: amount,
+        });
+      }
+    }
+  }
+
+  // Process found prices and mark them
+  priceElements.forEach((price, index) => {
+    markPriceElement(price.node, price.text, price.currency, price.amount, index);
+  });
+}
+
+function markPriceElement(textNode, originalText, currency, amount, index) {
+  const parent = textNode.parentNode;
+
+  // Skip if already processed
+  if (parent.id && parent.id.includes("detected-price")) {
+    return;
+  }
+
+  // Create a wrapper span
+  const wrapper = document.createElement("span");
+  wrapper.id = `detected-price`;
+  wrapper.className = "detected-price";
+
+  // Copy all attributes from parent if it's a simple element
+  if (parent.nodeType === Node.ELEMENT_NODE && parent.childNodes.length === 1) {
+    Array.from(parent.attributes).forEach((attr) => {
+      const name = attr.name.toLowerCase();
+
+      // Skip any attribute name that starts with margin, padding, or background
+      const isExcludedName = name.startsWith("margin") || name.startsWith("padding") || name.startsWith("background");
+
+      // Special handling for 'style' attribute
+      if (name === "style") {
+        // Filter out forbidden CSS properties from inline styles
+        const filteredStyle = attr.value
+          .split(";")
+          .map((s) => s.trim())
+          .filter(
+            (s) => s && !/^margin/i.test(s) && !/^padding/i.test(s) && !/^background/i.test(s) && !/^color/i.test(s)
+          )
+          .join("; ");
+
+        if (filteredStyle) {
+          wrapper.setAttribute("style", filteredStyle);
+        }
+        return; // skip rest
+      }
+
+      if (!isExcludedName && name !== "color") {
+        wrapper.setAttribute(attr.name, attr.value);
+      }
+    });
+  }
+
+  wrapper.textContent = originalText;
+
+  // Replace the text node with our wrapper
+  parent.replaceChild(wrapper, textNode);
+}
+
+// Enhanced currency detection for in-page prices
+function isCurrencyValue(text) {
+  const trimmedText = text.trim();
+  if (!trimmedText) return false;
+
+  // More lenient detection for in-page prices
+  const patterns = [
+    // Standard formats: $100, 100 USD, €50.00, etc.
+    /^[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE][\s]*[\d,.]+/i,
+    /^[\d,.]+[\s]*[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE]/i,
+    /^[\d,.]+[\s]*(USD|EUR|GBP|JPY|CNY|AUD|CAD|CHF|HKD|NZD|SEK|NOK|DKK|SGD|MXN|BRL|INR|RUB|TRY|ZAR|SAR|AED|QAR|KRW|THB|VND|MYR|IDR|PHP|TWD|BTC|EGP|NGN|KES|PLN|CZK|HUF|ARS|CLP|COP|PEN|DZD|MAD|TND|ZMW|RWF|UGX|SDG|BWP|MGA|MUR|SCR|GHS|XOF|XAF|LSL|SZL|MWK|NAD|SSP|BHD|KWD|OMR|JOD|IQD|IRR|YER|AFN|PKR|LKR|NPR|UZS|TMT|TJS|KGS|AZN|GEL|AMD|MMK|KHR|LAK|MOP|BND|PGK|VUV|WST|FJD|TOP|SBD|XPF|RON|RSD|MKD|ISK|UAH|BYN|MDL|BAM|HRK|DOP|GTQ|HNL|NIO|BZD|BSD|TTD|UYU|PYG|BOB|VEF|VES|XDR|XAG|XAU|XPT|XPD)$/i,
+
+    // Word representations: 100 dollars, 50 euros, etc.
+    /^[\d,.]+[\s]*(dollars?|euros?|pounds?|yen|yuan|renminbi|rmb|francs?|rupees?|pesos?|real|reais|rubles?|lira|rands?|riyals?|dirhams?|won|baht|dong|ringgit|rupiah|bitcoin|cedis?|kronor?|kroner?|krona|forints?|złoty|złote|sol|soles|dinars?|kwacha|shillings?|pula|ariary|lilangeni|emalangeni|tala|paʻanga|leu|lei|hryvnia|hryvnias?|kuna|kunas?|quetzal|quetzales|lempira|córdoba|boliviano|bolivianos|bolívar|bolívars?)/i,
+
+    // With symbols and codes: $100 USD, €50 EUR, etc.
+    /^[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE][\s]*[\d,.]+[\s]*(USD|EUR|GBP|JPY|CNY|AUD|CAD|CHF|HKD|NZD|SEK|NOK|DKK|SGD|MXN|BRL|INR|RUB|TRY|ZAR|SAR|AED|QAR|KRW|THB|VND|MYR|IDR|PHP|TWD|BTC)/i,
+  ];
+
+  return patterns.some((pattern) => pattern.test(trimmedText));
+}
+
+// Initialize price detection when the page loads and when changes occur
+function initializePriceDetection() {
+  // Check storage for the setting
+  chrome.storage.local.get(["pageConvert"], (result) => {
+    if (result.pageConvert) {
+      // Initial detection
+      setTimeout(detectAndMarkPrices, 1000);
+
+      // Observe DOM changes for dynamic content
+      const observer = new MutationObserver((mutations) => {
+        let shouldDetect = false;
+
+        mutations.forEach((mutation) => {
+          if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+            shouldDetect = true;
+          }
+        });
+
+        if (shouldDetect) {
+          setTimeout(detectAndMarkPrices, 500);
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      // Re-detect when user interacts with the page
+      document.addEventListener("click", () => {
+        setTimeout(detectAndMarkPrices, 1000);
+      });
+
+      // Re-detect on scroll (for lazy-loaded content)
+      window.addEventListener("scroll", () => {
+        setTimeout(detectAndMarkPrices, 1000);
+      });
+
+      // Store the observer for later removal
+      window.currencyConverterMutationObserver = observer;
+    }
+  });
+}
+
+function uninitializePriceDetection() {
+  // Remove all detected price elements
+  const elements = document.querySelectorAll('.detected-price, [id*="detected-price"]');
+  elements.forEach((element) => {
+    const parent = element.parentElement;
+    if (parent) {
+      // Replace the detected price element with just its text content
+      const textNode = document.createTextNode(element.textContent);
+      parent.replaceChild(textNode, element);
+
+      // Normalize the parent to merge adjacent text nodes
+      parent.normalize();
+    }
+  });
+
+  // Disconnect any existing mutation observer
+  if (window.currencyConverterMutationObserver) {
+    window.currencyConverterMutationObserver.disconnect();
+    window.currencyConverterMutationObserver = null;
+  }
+
+  // Remove the event listener for detected prices
+  document.removeEventListener("click", handleDetectedPriceClick);
+}
+
+// Handler function for detected price clicks
+function handleDetectedPriceClick(e) {
+  if (e.target.classList.contains("detected-price")) {
+    const priceText = e.target.textContent.trim();
+    if (priceText) {
+      // Show the conversion popup for this price
+      lastSelectionValue = priceText;
+      lastSelectionRect = e.target.getBoundingClientRect();
+
+      const popup = document.getElementById(POPUP_ID);
+      showSelectionView(popup, priceText);
+      popup.style.display = "flex";
+      updatePopupPosition(popup);
+      isActive = true;
+
+      e.stopPropagation();
+    }
+  }
+}
+
+// ===== MAIN APPLICATION =====
 function initialize() {
   // Check the checkbox state before creating the popup
-  chrome.storage.local.get(["checkboxState"], (result) => {
+  chrome.storage.local.get(["checkboxState", "pageConvert"], (result) => {
     // Explicitly check for true/false/undefined
     const isEnabled = result.checkboxState === true;
 
     if (!isEnabled) {
       return; // Exit if extension is disabled
+    }
+
+    // Initialize price detection if enabled
+    if (result.pageConvert) {
+      initializePriceDetection();
     }
 
     const popup = createPopup();
@@ -1187,7 +1394,7 @@ function initialize() {
       mouseDownOnPopup = true;
     });
 
-    // Click handler
+    // Click handler for popup
     popup.addEventListener("click", (e) => {
       e.stopPropagation(); // Prevent event from bubbling up
       if (currentMode === "selection" && lastSelectionValue) {
@@ -1195,12 +1402,8 @@ function initialize() {
       }
     });
 
-    // Hide when clicking outside - modified version
-    document.addEventListener("click", (e) => {
-      if (!popup.contains(e.target) && popup.style.display === "flex") {
-        hidePopup();
-      }
-    });
+    // Click handler for detected prices
+    document.addEventListener("click", handleDetectedPriceClick);
 
     function hidePopup() {
       const popupElement = document.getElementById(POPUP_ID);
@@ -1221,7 +1424,7 @@ function initialize() {
       isMouseOverPopup = false;
     });
 
-    // Then modify the document click handler to also check this:
+    // Hide when clicking outside
     document.addEventListener("click", (e) => {
       const selection = window.getSelection();
       const clickedOnPopup = popup.contains(e.target) || isMouseOverPopup;
@@ -1364,98 +1567,6 @@ function initialize() {
       return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
 
-    function escapeRegExp(string) {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    }
-
-    // Helper function to check if text contains a valid currency indicator
-    // function checkCurrencyIndicator(text) {
-    //   if (!text) return false;
-
-    //   // Check for currency codes (3 letters)
-    //   if (text.length === 3) {
-    //     const code = text.toUpperCase();
-    //     if (currencyToCountry[code]) {
-    //       return true;
-    //     }
-    //   }
-
-    //   // Check for currency symbols
-    //   for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
-    //     if (text.includes(symbol)) {
-    //       return true;
-    //     }
-    //   }
-
-    //   // Check for word representations (case insensitive)
-    //   const lowerText = text.toLowerCase();
-    //   for (const representations of Object.values(CURRENCY_REPRESENTATIONS)) {
-    //     for (const rep of representations) {
-    //       if (lowerText.includes(rep.toLowerCase())) {
-    //         return true;
-    //       }
-    //     }
-    //   }
-
-    //   return false;
-    // }
-
-    function checkCurrencyIndicator(text) {
-      if (!text) return null;
-
-      // Check for currency symbols (exact match, case-sensitive for symbols)
-      for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
-        // Match symbol exactly (including multi-character symbols)
-        if (text === symbol) return currencies[0];
-      }
-
-      // Check for currency codes (3 letters, case insensitive)
-      if (text.length === 3) {
-        const code = text.toUpperCase();
-        if (currencyToCountry[code]) {
-          return code;
-        }
-      }
-
-      // Check for word representations (case insensitive exact match)
-      const lowerText = text.toLowerCase();
-      for (const [currencyCode, representations] of Object.entries(CURRENCY_REPRESENTATIONS)) {
-        for (const rep of representations) {
-          if (lowerText === rep.toLowerCase()) {
-            return currencyCode;
-          }
-        }
-      }
-
-      return null;
-    }
-
-    // Helper function to check if number is wrapped in currency symbol (like $100 or 100$)
-    function isNumberWrappedInCurrencySymbol(text) {
-      // Check for symbol prefix (e.g. $100)
-      for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
-        const prefixPattern = new RegExp(`^${escapeRegExp(symbol)}\\s*\\d`);
-        if (prefixPattern.test(text)) {
-          return true;
-        }
-      }
-
-      // Check for symbol suffix (e.g. 100$)
-      for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
-        const suffixPattern = new RegExp(`\\d\\s*${escapeRegExp(symbol)}$`);
-        if (suffixPattern.test(text)) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    // Helper to escape regex special characters
-    function escapeRegExp(string) {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    }
-
     document.addEventListener("selectionchange", handleSelection);
     document.addEventListener("mouseup", handleMouseUp);
 
@@ -1472,7 +1583,16 @@ function initialize() {
         }
       }
 
-      // 2. Handle decimal precision changes
+      // 2. Handle pageConvert changes
+      if (changes.pageConvert) {
+        if (changes.pageConvert.newValue) {
+          initializePriceDetection();
+        } else {
+          uninitializePriceDetection();
+        }
+      }
+
+      // 3. Handle decimal precision changes
       if (changes.fiatDecimals || changes.cryptoDecimals) {
         if (changes.fiatDecimals) {
           savedCurrencies.fiatDecimals = changes.fiatDecimals.newValue;
@@ -1483,31 +1603,31 @@ function initialize() {
         needsRefresh = true;
       }
 
-      // 3. Handle number format changes
+      // 4. Handle number format changes
       if (changes.numberFormat) {
         savedCurrencies.numberFormat = changes.numberFormat.newValue;
         needsRefresh = true;
       }
 
-      // 4. Handle currency data updates
+      // 5. Handle currency data updates
       if (changes.currencyData) {
         savedCurrencies.currencyData = changes.currencyData.newValue;
         needsRefresh = true;
       }
 
-      // 5. Handle currency order changes
+      // 6. Handle currency order changes
       if (changes.currencyOrder) {
         savedCurrencies.currencyOrder = changes.currencyOrder.newValue;
         needsRefresh = true;
       }
 
-      // 6. Handle convertTarget changes
+      // 7. Handle convertTarget changes
       if (changes.convertTarget) {
         convertTarget = changes.convertTarget.newValue;
         needsRefresh = true;
       }
 
-      // 7. Handle dark mode changes
+      // 8. Handle dark mode changes
       if (changes.darkMode) {
         chrome.storage.local.get(["darkMode"], (result) => {
           const root = document.documentElement;

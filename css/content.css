@@ -212,3 +212,12 @@
   line-height: 1.5 !important;
 }
 /* Fix for deepseek padding */
+
+#detected-price {
+  border: solid 2px #00acc100;
+  border-radius: 4px;
+  background: #00dbc15e;
+  border-color: #00acc100;
+  color: var(--primary-color);
+  text-shadow: 0 0 2px #00ff66;
+}
