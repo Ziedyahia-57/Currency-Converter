@@ -1292,17 +1292,21 @@ function initializePriceDetection() {
       });
 
       // Re-detect when user interacts with the page
-      document.addEventListener("click", () => {
-        setTimeout(detectAndMarkPrices, 1000);
-      });
+      const handlePageInteraction = () => {
+        // Check if page conversion is still enabled before detecting
+        chrome.storage.local.get(["pageConvert"], (result) => {
+          if (result.pageConvert) {
+            setTimeout(detectAndMarkPrices, 1000);
+          }
+        });
+      };
 
-      // Re-detect on scroll (for lazy-loaded content)
-      window.addEventListener("scroll", () => {
-        setTimeout(detectAndMarkPrices, 1000);
-      });
+      document.addEventListener("click", handlePageInteraction);
+      window.addEventListener("scroll", handlePageInteraction);
 
-      // Store the observer for later removal
+      // Store the observer and handlers for later removal
       window.currencyConverterMutationObserver = observer;
+      window.currencyConverterPageInteractionHandler = handlePageInteraction;
     }
   });
 }
@@ -1326,6 +1330,13 @@ function uninitializePriceDetection() {
   if (window.currencyConverterMutationObserver) {
     window.currencyConverterMutationObserver.disconnect();
     window.currencyConverterMutationObserver = null;
+  }
+
+  // Remove the event listeners for page interactions
+  if (window.currencyConverterPageInteractionHandler) {
+    document.removeEventListener("click", window.currencyConverterPageInteractionHandler);
+    window.removeEventListener("scroll", window.currencyConverterPageInteractionHandler);
+    window.currencyConverterPageInteractionHandler = null;
   }
 
   // Remove the event listener for detected prices
