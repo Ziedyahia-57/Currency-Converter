@@ -1155,6 +1155,45 @@ function refreshDisplayedValues() {
   });
 }
 // ===== IN-PAGE CONVERT =====
+// Function to immediately update existing price elements when settings change
+function updateExistingPriceElements() {
+  // Get all detected price elements
+  const elements = document.querySelectorAll('.detected-price, [id*="detected-price"]');
+  
+  // Get current settings
+  chrome.storage.local.get(["currencyOrder", "currencyData", "fiatDecimals", "cryptoDecimals", "numberFormat"], (result) => {
+    if (!result.currencyOrder || result.currencyOrder.length === 0 || !result.currencyData) {
+      return; // No currencies configured, nothing to update
+    }
+    
+    // Update saved currencies with latest settings
+    savedCurrencies.fiatDecimals = result.fiatDecimals ?? 2;
+    savedCurrencies.cryptoDecimals = result.cryptoDecimals ?? 8;
+    savedCurrencies.numberFormat = result.numberFormat ?? "comma-dot";
+    
+    const targetCurrency = result.currencyOrder[0];
+    const rates = result.currencyData;
+    
+    // Update each price element
+    elements.forEach((element) => {
+      const originalText = element.dataset.originalText;
+      if (!originalText) return; // Skip if no original text stored
+      
+      // Detect currency from original text
+      const { currency, amount } = detectCurrency(originalText);
+      if (!currency || !amount) return; // Skip if invalid
+      
+      // Convert amount to first currency in list
+      const numericAmount = parseNumber(amount);
+      const convertedValue = convertCurrency(numericAmount, currency, targetCurrency, rates);
+      const formattedValue = formatNumber(convertedValue, targetCurrency);
+      
+      // Update element text with converted value
+      element.textContent = `${formattedValue} ${targetCurrency}`;
+    });
+  });
+}
+
 function detectAndMarkPrices() {
   // Get all text nodes on the page
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false); // Walk through all text nodes in the document
@@ -1199,28 +1238,36 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
     return;
   }
 
-  // Get the first currency in the list
-  chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
-    if (!result.currencyOrder || result.currencyOrder.length === 0 || !result.currencyData) {
-      // If no currencies are configured, just mark the price without conversion
-      createPriceWrapper(textNode, originalText, parent);
-      return;
+  // Get the first currency in the list along with formatting preferences
+  chrome.storage.local.get(
+    ["currencyOrder", "currencyData", "fiatDecimals", "cryptoDecimals", "numberFormat"],
+    (result) => {
+      if (!result.currencyOrder || result.currencyOrder.length === 0 || !result.currencyData) {
+        // If no currencies are configured, just mark the price without conversion
+        createPriceWrapper(textNode, originalText, parent);
+        return;
+      }
+
+      // Update saved currencies with latest settings
+      savedCurrencies.fiatDecimals = result.fiatDecimals ?? 2;
+      savedCurrencies.cryptoDecimals = result.cryptoDecimals ?? 8;
+      savedCurrencies.numberFormat = result.numberFormat ?? "comma-dot";
+
+      const targetCurrency = result.currencyOrder[0];
+      const rates = result.currencyData;
+      const numericAmount = parseNumber(amount);
+
+      // Convert the amount to the first currency in the list
+      const convertedValue = convertCurrency(numericAmount, currency, targetCurrency, rates);
+      const formattedValue = formatNumber(convertedValue, targetCurrency);
+
+      // Create the new text with converted value and currency name
+      const newText = `${formattedValue} ${targetCurrency}`;
+
+      // Create and apply the wrapper
+      createPriceWrapper(textNode, newText, parent);
     }
-
-    const targetCurrency = result.currencyOrder[0];
-    const rates = result.currencyData;
-    const numericAmount = parseNumber(amount);
-
-    // Convert the amount to the first currency in the list
-    const convertedValue = convertCurrency(numericAmount, currency, targetCurrency, rates);
-    const formattedValue = formatNumber(convertedValue, targetCurrency);
-
-    // Create the new text with converted value and currency name
-    const newText = `${formattedValue} ${targetCurrency}`;
-    
-    // Create and apply the wrapper
-    createPriceWrapper(textNode, newText, parent);
-  });
+  );
 }
 
 // Helper function to create the price wrapper
@@ -1229,7 +1276,7 @@ function createPriceWrapper(textNode, text, parent) {
   const wrapper = document.createElement("span");
   wrapper.id = `detected-price`;
   wrapper.className = "detected-price";
-  
+
   // Store the original text for restoration when in-page convert is turned off
   wrapper.dataset.originalText = textNode.textContent;
 
@@ -1298,7 +1345,7 @@ function initializePriceDetection() {
   chrome.storage.local.get(["pageConvert"], (result) => {
     // Clean up any existing price elements first
     uninitializePriceDetection();
-    
+
     if (result.pageConvert) {
       // Initial detection
       setTimeout(detectAndMarkPrices, 1000);
@@ -1351,7 +1398,7 @@ function uninitializePriceDetection() {
     if (parent) {
       // Check if we have stored the original text
       const originalText = element.dataset.originalText;
-      
+
       // Replace the detected price element with original text if available, otherwise current text
       const textNode = document.createTextNode(originalText || element.textContent);
       parent.replaceChild(textNode, element);
@@ -1647,12 +1694,28 @@ function initialize() {
           savedCurrencies.cryptoDecimals = changes.cryptoDecimals.newValue;
         }
         needsRefresh = true;
+
+        // Refresh in-page converted prices if page conversion is enabled
+        chrome.storage.local.get(["pageConvert"], (result) => {
+          if (result.pageConvert) {
+            // Immediately update existing price elements with new decimal settings
+            updateExistingPriceElements();
+          }
+        });
       }
 
       // 4. Handle number format changes
       if (changes.numberFormat) {
         savedCurrencies.numberFormat = changes.numberFormat.newValue;
         needsRefresh = true;
+        
+        // Refresh in-page converted prices if page conversion is enabled
+        chrome.storage.local.get(["pageConvert"], (result) => {
+          if (result.pageConvert) {
+            // Immediately update existing price elements with new format settings
+            updateExistingPriceElements();
+          }
+        });
       }
 
       // 5. Handle currency data updates
@@ -1665,6 +1728,14 @@ function initialize() {
       if (changes.currencyOrder) {
         savedCurrencies.currencyOrder = changes.currencyOrder.newValue;
         needsRefresh = true;
+        
+        // Refresh in-page converted prices if page conversion is enabled
+        chrome.storage.local.get(["pageConvert"], (result) => {
+          if (result.pageConvert) {
+            // Immediately update existing price elements with new currency order
+            updateExistingPriceElements();
+          }
+        });
       }
 
       // 7. Handle convertTarget changes

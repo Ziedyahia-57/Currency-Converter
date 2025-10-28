@@ -176,10 +176,12 @@ body {
   background: var(--primary-color) !important;
   fill: white !important;
 }
-.currency-converter-ex #tax-btn:hover {
+.currency-converter-ex #tax-btn:hover,
+.currency-converter-ex #settings-btn:hover {
   transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), fill 0.2s cubic-bezier(0.4, 0, 0.2, 1),
     width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--primary-color);
+  fill: white !important;
 }
 .currency-converter-ex #tax-btn.expanded:hover {
   background: var(--gray);
@@ -674,12 +676,8 @@ body {
   height: 16px;
   width: 16px;
   margin-left: 46px;
-  fill: var(--font-color);
+  fill: white;
   cursor: pointer;
-}
-.currency-converter-ex .settings-btn:hover svg {
-  fill: var(--primary-color);
-  transition: fill 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .currency-converter-ex .custom-hidden {
