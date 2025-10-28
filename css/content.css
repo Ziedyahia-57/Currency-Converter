@@ -219,5 +219,5 @@
   background: #00dbc15e;
   border-color: #00acc100;
   color: var(--primary-color);
-  text-shadow: 0 0 2px #00ff66;
+  text-shadow: hsl(213 100% 50% / 1) 0px 0px 1px;
 }

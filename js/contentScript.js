@@ -1159,39 +1159,42 @@ function refreshDisplayedValues() {
 function updateExistingPriceElements() {
   // Get all detected price elements
   const elements = document.querySelectorAll('.detected-price, [id*="detected-price"]');
-  
+
   // Get current settings
-  chrome.storage.local.get(["currencyOrder", "currencyData", "fiatDecimals", "cryptoDecimals", "numberFormat"], (result) => {
-    if (!result.currencyOrder || result.currencyOrder.length === 0 || !result.currencyData) {
-      return; // No currencies configured, nothing to update
+  chrome.storage.local.get(
+    ["currencyOrder", "currencyData", "fiatDecimals", "cryptoDecimals", "numberFormat"],
+    (result) => {
+      if (!result.currencyOrder || result.currencyOrder.length === 0 || !result.currencyData) {
+        return; // No currencies configured, nothing to update
+      }
+
+      // Update saved currencies with latest settings
+      savedCurrencies.fiatDecimals = result.fiatDecimals ?? 2;
+      savedCurrencies.cryptoDecimals = result.cryptoDecimals ?? 8;
+      savedCurrencies.numberFormat = result.numberFormat ?? "comma-dot";
+
+      const targetCurrency = result.currencyOrder[0];
+      const rates = result.currencyData;
+
+      // Update each price element
+      elements.forEach((element) => {
+        const originalText = element.dataset.originalText;
+        if (!originalText) return; // Skip if no original text stored
+
+        // Detect currency from original text
+        const { currency, amount } = detectCurrency(originalText);
+        if (!currency || !amount) return; // Skip if invalid
+
+        // Convert amount to first currency in list
+        const numericAmount = parseNumber(amount);
+        const convertedValue = convertCurrency(numericAmount, currency, targetCurrency, rates);
+        const formattedValue = formatNumber(convertedValue, targetCurrency);
+
+        // Update element text with converted value
+        element.textContent = `${formattedValue} ${targetCurrency}`;
+      });
     }
-    
-    // Update saved currencies with latest settings
-    savedCurrencies.fiatDecimals = result.fiatDecimals ?? 2;
-    savedCurrencies.cryptoDecimals = result.cryptoDecimals ?? 8;
-    savedCurrencies.numberFormat = result.numberFormat ?? "comma-dot";
-    
-    const targetCurrency = result.currencyOrder[0];
-    const rates = result.currencyData;
-    
-    // Update each price element
-    elements.forEach((element) => {
-      const originalText = element.dataset.originalText;
-      if (!originalText) return; // Skip if no original text stored
-      
-      // Detect currency from original text
-      const { currency, amount } = detectCurrency(originalText);
-      if (!currency || !amount) return; // Skip if invalid
-      
-      // Convert amount to first currency in list
-      const numericAmount = parseNumber(amount);
-      const convertedValue = convertCurrency(numericAmount, currency, targetCurrency, rates);
-      const formattedValue = formatNumber(convertedValue, targetCurrency);
-      
-      // Update element text with converted value
-      element.textContent = `${formattedValue} ${targetCurrency}`;
-    });
-  });
+  );
 }
 
 function detectAndMarkPrices() {
@@ -1325,15 +1328,15 @@ function isCurrencyValue(text) {
   // More lenient detection for in-page prices
   const patterns = [
     // Standard formats: $100, 100 USD, €50.00, etc.
-    /^[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE][\s]*[\d,.]+/i,
-    /^[\d,.]+[\s]*[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE]/i,
-    /^[\d,.]+[\s]*(USD|EUR|GBP|JPY|CNY|AUD|CAD|CHF|HKD|NZD|SEK|NOK|DKK|SGD|MXN|BRL|INR|RUB|TRY|ZAR|SAR|AED|QAR|KRW|THB|VND|MYR|IDR|PHP|TWD|BTC|EGP|NGN|KES|PLN|CZK|HUF|ARS|CLP|COP|PEN|DZD|MAD|TND|ZMW|RWF|UGX|SDG|BWP|MGA|MUR|SCR|GHS|XOF|XAF|LSL|SZL|MWK|NAD|SSP|BHD|KWD|OMR|JOD|IQD|IRR|YER|AFN|PKR|LKR|NPR|UZS|TMT|TJS|KGS|AZN|GEL|AMD|MMK|KHR|LAK|MOP|BND|PGK|VUV|WST|FJD|TOP|SBD|XPF|RON|RSD|MKD|ISK|UAH|BYN|MDL|BAM|HRK|DOP|GTQ|HNL|NIO|BZD|BSD|TTD|UYU|PYG|BOB|VEF|VES|XDR|XAG|XAU|XPT|XPD)$/i,
+    /[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE][\s]*[\d,.]+/i,
+    /[\d,.]+[\s]*[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE]/i,
+    /[\d,.]+[\s]*(USD|EUR|GBP|JPY|CNY|AUD|CAD|CHF|HKD|NZD|SEK|NOK|DKK|SGD|MXN|BRL|INR|RUB|TRY|ZAR|SAR|AED|QAR|KRW|THB|VND|MYR|IDR|PHP|TWD|BTC|EGP|NGN|KES|PLN|CZK|HUF|ARS|CLP|COP|PEN|DZD|MAD|TND|ZMW|RWF|UGX|SDG|BWP|MGA|MUR|SCR|GHS|XOF|XAF|LSL|SZL|MWK|NAD|SSP|BHD|KWD|OMR|JOD|IQD|IRR|YER|AFN|PKR|LKR|NPR|UZS|TMT|TJS|KGS|AZN|GEL|AMD|MMK|KHR|LAK|MOP|BND|PGK|VUV|WST|FJD|TOP|SBD|XPF|RON|RSD|MKD|ISK|UAH|BYN|MDL|BAM|HRK|DOP|GTQ|HNL|NIO|BZD|BSD|TTD|UYU|PYG|BOB|VEF|VES|XDR|XAG|XAU|XPT|XPD)/i,
 
     // Word representations: 100 dollars, 50 euros, etc.
-    /^[\d,.]+[\s]*(dollars?|euros?|pounds?|yen|yuan|renminbi|rmb|francs?|rupees?|pesos?|real|reais|rubles?|lira|rands?|riyals?|dirhams?|won|baht|dong|ringgit|rupiah|bitcoin|cedis?|kronor?|kroner?|krona|forints?|złoty|złote|sol|soles|dinars?|kwacha|shillings?|pula|ariary|lilangeni|emalangeni|tala|paʻanga|leu|lei|hryvnia|hryvnias?|kuna|kunas?|quetzal|quetzales|lempira|córdoba|boliviano|bolivianos|bolívar|bolívars?)/i,
+    /[\d,.]+[\s]*(dollars?|euros?|pounds?|yen|yuan|renminbi|rmb|francs?|rupees?|pesos?|real|reais|rubles?|lira|rands?|riyals?|dirhams?|won|baht|dong|ringgit|rupiah|bitcoin|cedis?|kronor?|kroner?|krona|forints?|złoty|złote|sol|soles|dinars?|kwacha|shillings?|pula|ariary|lilangeni|emalangeni|tala|paʻanga|leu|lei|hryvnia|hryvnias?|kuna|kunas?|quetzal|quetzales|lempira|córdoba|boliviano|bolivianos|bolívar|bolívars?)/i,
 
     // With symbols and codes: $100 USD, €50 EUR, etc.
-    /^[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE][\s]*[\d,.]+[\s]*(USD|EUR|GBP|JPY|CNY|AUD|CAD|CHF|HKD|NZD|SEK|NOK|DKK|SGD|MXN|BRL|INR|RUB|TRY|ZAR|SAR|AED|QAR|KRW|THB|VND|MYR|IDR|PHP|TWD|BTC)/i,
+    /[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE][\s]*[\d,.]+[\s]*(USD|EUR|GBP|JPY|CNY|AUD|CAD|CHF|HKD|NZD|SEK|NOK|DKK|SGD|MXN|BRL|INR|RUB|TRY|ZAR|SAR|AED|QAR|KRW|THB|VND|MYR|IDR|PHP|TWD|BTC)/i,
   ];
 
   return patterns.some((pattern) => pattern.test(trimmedText));
@@ -1635,20 +1638,20 @@ function initialize() {
       const prefixCurrency = checkCurrencyIndicator(prefix);
       const suffixCurrency = checkCurrencyIndicator(suffix);
 
-      // 4. Strict validation rules
-      // Must have exactly one currency indicator (either prefix OR suffix)
-      if ((prefixCurrency && suffixCurrency) || (!prefixCurrency && !suffixCurrency)) {
+      // 4. Relaxed validation rules for detecting prices in phrases
+      // Accept if we have at least one currency indicator (prefix OR suffix)
+      if (!prefixCurrency && !suffixCurrency) {
         return false;
       }
 
-      // 5. The ENTIRE text must consist of just:
-      //    [currency][number], [number][currency], or similar with optional spaces
+      // 5. For phrases, we only need to verify the currency and number are adjacent
       // Allow for no space between currency and number (like "$100" or "100$")
       const validPattern = prefixCurrency
         ? `(${escapeRegExp(prefix)}\\s*${escapeRegExp(numberPart)}|${escapeRegExp(prefix)}${escapeRegExp(numberPart)})`
         : `(${escapeRegExp(numberPart)}\\s*${escapeRegExp(suffix)}|${escapeRegExp(numberPart)}${escapeRegExp(suffix)})`;
 
-      const patternRegex = new RegExp(`^${validPattern}$`, "i");
+      // Check if the currency and number are adjacent in the text
+      const patternRegex = new RegExp(validPattern, "i");
       if (!patternRegex.test(trimmedText)) {
         return false;
       }
@@ -1708,7 +1711,7 @@ function initialize() {
       if (changes.numberFormat) {
         savedCurrencies.numberFormat = changes.numberFormat.newValue;
         needsRefresh = true;
-        
+
         // Refresh in-page converted prices if page conversion is enabled
         chrome.storage.local.get(["pageConvert"], (result) => {
           if (result.pageConvert) {
@@ -1728,12 +1731,14 @@ function initialize() {
       if (changes.currencyOrder) {
         savedCurrencies.currencyOrder = changes.currencyOrder.newValue;
         needsRefresh = true;
-        
+
         // Refresh in-page converted prices if page conversion is enabled
         chrome.storage.local.get(["pageConvert"], (result) => {
           if (result.pageConvert) {
             // Immediately update existing price elements with new currency order
             updateExistingPriceElements();
+            // Force re-detection of prices with new currency order
+            setTimeout(detectAndMarkPrices, 100);
           }
         });
       }
