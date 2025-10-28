@@ -40,6 +40,7 @@ const LAST_UPDATED_KEY = "lastUpdated";
 
 let currencies = [];
 let exchangeRates = {};
+let lastUserInput = null; // Track the last input the user typed in
 
 //⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 //⚪+                                                      USER SETTINGS                                                   +*/
@@ -1803,10 +1804,15 @@ async function updateAllCurrencyDecimals() {
   const taxPercentage = parseFloat(taxInput.value) || 0;
   const taxMultiplier = 1 + taxPercentage / 100;
 
-  // Get the first non-zero input to use as base
-  let baseInput = document.querySelector(
-    `.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])`
-  );
+  // Use the last input the user typed in, if available
+  let baseInput = lastUserInput;
+  
+  // If no last input, get the first non-zero input to use as base
+  if (!baseInput) {
+    baseInput = document.querySelector(
+      `.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])`
+    );
+  }
 
   // If no non-zero input found, use the first input
   if (!baseInput && inputs.length > 0) {
@@ -1828,14 +1834,15 @@ async function updateAllCurrencyDecimals() {
       const currency = input.dataset.currency;
       const decimalPlaces = await getDecimalPlaces(currency);
 
-      // For the base input, just reformat with new decimals
+      // For the last input the user typed in, just reformat with new decimals
       if (input === baseInput) {
+        // Preserve the original value, just adjust decimal places
         const formattedValue = baseValue.toFixed(decimalPlaces).replace(".", separators.decimal);
         input.value = await formatNumberWithCommas(formattedValue, input);
         continue;
       }
 
-      // For other inputs, recalculate based on base value
+      // For all other inputs, recalculate based on the user input value
       let convertedValue;
       if (baseCurrency === "USD") {
         convertedValue = baseValue * exchangeRates[currency];
@@ -2099,6 +2106,9 @@ async function addCurrency(currency, shouldSave = true) {
 
     inputField.addEventListener("paste", async (event) => {
       event.preventDefault(); // Prevent default paste behavior
+      
+      // Track this as the last input the user typed in
+      lastUserInput = inputField;
 
       // Get pasted text
       const pastedText = (event.clipboardData || window.clipboardData).getData("text");
@@ -2130,6 +2140,8 @@ async function addCurrency(currency, shouldSave = true) {
 
     inputField.addEventListener("input", async (event) => {
       const input = event.target;
+      // Track this as the last input the user typed in
+      lastUserInput = input;
       const separators = await getNumberFormatSeparators();
       const cursorPos = input.selectionStart;
 
@@ -2208,6 +2220,8 @@ async function addCurrency(currency, shouldSave = true) {
 
     // Focus event for UX
     inputField.addEventListener("focus", (event) => {
+      // Track this as the last input the user clicked on
+      lastUserInput = inputField;
       event.target.select();
     });
 
