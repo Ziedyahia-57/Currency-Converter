@@ -1199,10 +1199,39 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
     return;
   }
 
+  // Get the first currency in the list
+  chrome.storage.local.get(["currencyOrder", "currencyData"], (result) => {
+    if (!result.currencyOrder || result.currencyOrder.length === 0 || !result.currencyData) {
+      // If no currencies are configured, just mark the price without conversion
+      createPriceWrapper(textNode, originalText, parent);
+      return;
+    }
+
+    const targetCurrency = result.currencyOrder[0];
+    const rates = result.currencyData;
+    const numericAmount = parseNumber(amount);
+
+    // Convert the amount to the first currency in the list
+    const convertedValue = convertCurrency(numericAmount, currency, targetCurrency, rates);
+    const formattedValue = formatNumber(convertedValue, targetCurrency);
+
+    // Create the new text with converted value and currency name
+    const newText = `${formattedValue} ${targetCurrency}`;
+    
+    // Create and apply the wrapper
+    createPriceWrapper(textNode, newText, parent);
+  });
+}
+
+// Helper function to create the price wrapper
+function createPriceWrapper(textNode, text, parent) {
   // Create a wrapper span
   const wrapper = document.createElement("span");
   wrapper.id = `detected-price`;
   wrapper.className = "detected-price";
+  
+  // Store the original text for restoration when in-page convert is turned off
+  wrapper.dataset.originalText = textNode.textContent;
 
   // Copy all attributes from parent if it's a simple element
   if (parent.nodeType === Node.ELEMENT_NODE && parent.childNodes.length === 1) {
@@ -1235,7 +1264,7 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
     });
   }
 
-  wrapper.textContent = originalText;
+  wrapper.textContent = text;
 
   // Replace the text node with our wrapper
   parent.replaceChild(wrapper, textNode);
@@ -1267,6 +1296,9 @@ function isCurrencyValue(text) {
 function initializePriceDetection() {
   // Check storage for the setting
   chrome.storage.local.get(["pageConvert"], (result) => {
+    // Clean up any existing price elements first
+    uninitializePriceDetection();
+    
     if (result.pageConvert) {
       // Initial detection
       setTimeout(detectAndMarkPrices, 1000);
@@ -1317,8 +1349,11 @@ function uninitializePriceDetection() {
   elements.forEach((element) => {
     const parent = element.parentElement;
     if (parent) {
-      // Replace the detected price element with just its text content
-      const textNode = document.createTextNode(element.textContent);
+      // Check if we have stored the original text
+      const originalText = element.dataset.originalText;
+      
+      // Replace the detected price element with original text if available, otherwise current text
+      const textNode = document.createTextNode(originalText || element.textContent);
       parent.replaceChild(textNode, element);
 
       // Normalize the parent to merge adjacent text nodes
