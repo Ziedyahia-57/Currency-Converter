@@ -1558,6 +1558,30 @@ async function initializeApp() {
 //🟣++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 //🟣+                                                        LOAD APP                                                      +*/
 //🟣++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+// Define systemThemeChangeHandler outside of DOMContentLoaded to ensure it's available when needed
+function systemThemeChangeHandler(e) {
+  if (themeSelector.value === "auto") {
+    const prefersDark = e.matches;
+    const preferredTheme = prefersDark ? "dark" : "light";
+
+    root.classList.toggle("dark-mode", preferredTheme === "dark");
+    darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+    localStorage.setItem("darkMode", preferredTheme);
+    chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+    darkModeBtn.title = "Dark Mode - Auto";
+  }
+  if (themeSelector.value === "manual") {
+    darkModeBtn.classList.remove("auto");
+    if (darkModeBtn.classList.contains("active")) {
+      darkModeBtn.title = "Dark Mode - ON";
+    } else {
+      darkModeBtn.title = "Dark Mode - OFF";
+    }
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   loadDarkMode();
   window.addEventListener("load", adjustContentHeight);
@@ -1580,10 +1604,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
   });
 
-  loadThemePreference().then(() => {
-    // If theme is set to auto, ensure we're listening for system theme changes
-    if (themeSelector.value === "auto") {
-      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
+  loadThemePreference().then((theme) => {
+    // Always set up listener for system theme changes, regardless of current theme
+    // This ensures theme changes are detected in real-time when the extension launches
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
+    
+    // If theme is set to auto, apply the system theme immediately
+    if (theme === "auto" || themeSelector.value === "auto") {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const preferredTheme = prefersDark ? "dark" : "light";
+      root.classList.toggle("dark-mode", preferredTheme === "dark");
+      darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+      localStorage.setItem("darkMode", preferredTheme);
+      chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+      darkModeBtn.classList.add("auto");
+      darkModeBtn.title = "Dark Mode - Auto";
     }
   });
   loadNumberFormat();
@@ -1756,28 +1791,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Define systemThemeChangeHandler outside of DOMContentLoaded to ensure it's available when needed
-function systemThemeChangeHandler(e) {
-  if (themeSelector.value === "auto") {
-    const prefersDark = e.matches;
-    const preferredTheme = prefersDark ? "dark" : "light";
-
-    root.classList.toggle("dark-mode", preferredTheme === "dark");
-    darkModeBtn.classList.toggle("active", preferredTheme === "dark");
-
-    localStorage.setItem("darkMode", preferredTheme);
-    chrome.storage.local.set({ ["darkMode"]: preferredTheme });
-    darkModeBtn.title = "Dark Mode - Auto";
-  }
-  if (themeSelector.value === "manual") {
-    darkModeBtn.classList.remove("auto");
-    if (darkModeBtn.classList.contains("active")) {
-      darkModeBtn.title = "Dark Mode - ON";
-    } else {
-      darkModeBtn.title = "Dark Mode - OFF";
-    }
-  }
-}
+  // systemThemeChangeHandler function is now defined above the DOMContentLoaded event listener
   loadDarkMode();
 
   initializeApp(); // Initialize the app
