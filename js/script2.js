@@ -172,6 +172,9 @@ async function loadThemePreference() {
         chrome.storage.local.set({ ["darkMode"]: preferredTheme });
         darkModeBtn.classList.add("auto");
         darkModeBtn.title = "Dark Mode - Auto";
+
+        // Set up listener for system theme changes
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
       }
       console.log("Loaded theme preference:", savedTheme);
       return savedTheme;
@@ -223,6 +226,12 @@ async function loadThemePreference() {
       theme: "auto",
       darkMode: preferredTheme,
     });
+
+    // Set up listener for system theme changes
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
+
+    // Set up listener for system theme changes
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
 
     return "auto";
   }
@@ -1571,7 +1580,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
   });
 
-  loadThemePreference();
+  loadThemePreference().then(() => {
+    // If theme is set to auto, ensure we're listening for system theme changes
+    if (themeSelector.value === "auto") {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
+    }
+  });
   loadNumberFormat();
   loadFiatDecimal();
   loadCryptoDecimal();
@@ -1716,10 +1730,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       localStorage.setItem("darkMode", preferredTheme);
       chrome.storage.local.set({ ["darkMode"]: preferredTheme });
 
-      // Add event listener for future changes (only if online)
-      if (navigator.onLine) {
-        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
-      }
+      // Add event listener for future changes
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
     } else {
       // Remove auto class and event listener when switching to manual mode
       darkModeBtn.classList.remove("auto");
@@ -1744,27 +1756,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  function systemThemeChangeHandler(e) {
-    if (themeSelector.value === "auto") {
-      const prefersDark = e.matches;
-      const preferredTheme = prefersDark ? "dark" : "light";
+  // Define systemThemeChangeHandler outside of DOMContentLoaded to ensure it's available when needed
+function systemThemeChangeHandler(e) {
+  if (themeSelector.value === "auto") {
+    const prefersDark = e.matches;
+    const preferredTheme = prefersDark ? "dark" : "light";
 
-      root.classList.toggle("dark-mode", preferredTheme === "dark");
-      darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+    root.classList.toggle("dark-mode", preferredTheme === "dark");
+    darkModeBtn.classList.toggle("active", preferredTheme === "dark");
 
-      localStorage.setItem("darkMode", preferredTheme);
-      chrome.storage.local.set({ ["darkMode"]: preferredTheme });
-      darkModeBtn.title = "Dark Mode - Auto";
-    }
-    if (themeSelector.value === "manual") {
-      darkModeBtn.classList.remove("auto");
-      if (darkModeBtn.classList.contains("active")) {
-        darkModeBtn.title = "Dark Mode - ON";
-      } else {
-        darkModeBtn.title = "Dark Mode - OFF";
-      }
+    localStorage.setItem("darkMode", preferredTheme);
+    chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+    darkModeBtn.title = "Dark Mode - Auto";
+  }
+  if (themeSelector.value === "manual") {
+    darkModeBtn.classList.remove("auto");
+    if (darkModeBtn.classList.contains("active")) {
+      darkModeBtn.title = "Dark Mode - ON";
+    } else {
+      darkModeBtn.title = "Dark Mode - OFF";
     }
   }
+}
   loadDarkMode();
 
   initializeApp(); // Initialize the app
