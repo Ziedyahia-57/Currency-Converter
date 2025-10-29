@@ -539,7 +539,8 @@ function formatNumber(num, currency) {
 }
 
 function parseNumber(text) {
-  return parseNumberWithFormatDetection(text.replace(/\s+/g, ""));
+  // Use parseNumberWithFormatDetection directly for consistent parsing
+  return parseNumberWithFormatDetection(text);
 }
 
 function getFlagElement(currencyCode) {
@@ -683,6 +684,35 @@ function detectCurrency(text) {
   return { currency: "", amount: "", type: "invalid" };
 }
 
+function parseThousandSeparatorCase(text) {
+  // Special handling for cases like "1.000 $" or "1,000$"
+  // where a comma or dot is used as a thousand separator
+  const match = text.match(/^\d+[,.]\s*\d{3}/);
+  if (match) {
+    const matchedText = match[0];
+    const separator = matchedText.includes(",") ? "," : ".";
+
+    // Check if there's also a decimal part after the thousand separator
+    // This handles cases like "usd1.000,5" or "$1,000.5"
+    const fullMatch = text.match(/^\d+[,.]\s*\d{3}[,.]\s*\d+/);
+    if (fullMatch) {
+      const fullText = fullMatch[0];
+      // If we have both separators, determine which is which
+      if (separator === ",") {
+        // Format: 1,000.5 (comma as thousand, dot as decimal)
+        return parseFloat(fullText.replace(/,/g, ""));
+      } else {
+        // Format: 1.000,5 (dot as thousand, comma as decimal)
+        return parseFloat(fullText.replace(/\./g, "").replace(",", "."));
+      }
+    }
+
+    // No decimal part, just thousand separator
+    return parseFloat(matchedText.replace(new RegExp("\\" + separator, "g"), ""));
+  }
+  return null;
+}
+
 function parseNumberWithFormatDetection(text) {
   if (!text) return null;
 
@@ -690,7 +720,15 @@ function parseNumberWithFormatDetection(text) {
   const numberMatch = text.match(/[\d ,.]+/);
   if (!numberMatch) return null;
 
-  const cleanText = numberMatch[0].replace(/\s+/g, ""); // Remove all whitespace first
+  // Keep the original text for special cases like "1.000 $" or "1,000$"
+  const originalText = numberMatch[0];
+  const cleanText = originalText.replace(/\s+/g, ""); // Remove all whitespace first
+
+  // Special case for thousand separators like "1.000 $" or "1,000$"
+  const thousandResult = parseThousandSeparatorCase(originalText);
+  if (thousandResult !== null) {
+    return thousandResult;
+  }
 
   // Step 2: Handle different formats
   // Case 1: Space as thousand, dot as decimal → "1 000.50" → 1000.50
