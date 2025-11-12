@@ -214,10 +214,15 @@
 /* Fix for deepseek padding */
 
 #detected-price {
-  border: solid 2px #00acc100;
-  border-radius: 4px;
-  background: #00dbc15e;
-  border-color: #00acc100;
-  color: var(--primary-color);
-  text-shadow: hsl(213 100% 50% / 1) 0px 0px 1px;
+  border: solid 2px #00acc100 !important;
+  border-radius: 4px !important;
+  background: #00dbc15e !important;
+  border-color: #00acc100 !important;
+  color: var(--primary-color) !important;
+  text-shadow: hsl(213 100% 50% / 1) 0px 0px 1px !important;
+  white-space: nowrap !important;
+  display: block !important;
+  width: fit-content !important;
+  height: fit-content !important;
+  margin: 0 !important;
 }
