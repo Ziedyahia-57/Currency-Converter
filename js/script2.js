@@ -1608,7 +1608,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Always set up listener for system theme changes, regardless of current theme
     // This ensures theme changes are detected in real-time when the extension launches
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
-    
+
     // If theme is set to auto, apply the system theme immediately
     if (theme === "auto" || themeSelector.value === "auto") {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -1833,12 +1833,10 @@ async function updateAllCurrencyDecimals() {
 
   // Use the last input the user typed in, if available
   let baseInput = lastUserInput;
-  
+
   // If no last input, get the first non-zero input to use as base
   if (!baseInput) {
-    baseInput = document.querySelector(
-      `.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])`
-    );
+    baseInput = document.querySelector(`.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])`);
   }
 
   // If no non-zero input found, use the first input
@@ -2133,7 +2131,7 @@ async function addCurrency(currency, shouldSave = true) {
 
     inputField.addEventListener("paste", async (event) => {
       event.preventDefault(); // Prevent default paste behavior
-      
+
       // Track this as the last input the user typed in
       lastUserInput = inputField;
 
@@ -2385,7 +2383,7 @@ async function processPastedValue(pastedText, inputField) {
 
   // Remove all thousand separators (both comma and dot initially)
   let cleanedValue = pastedText.replace(/[,.]/g, (match) => {
-    // We'll handle decimal separator replacement separately
+    // Decimal separator replacement will be handled separately
     return match;
   });
 
@@ -2395,7 +2393,17 @@ async function processPastedValue(pastedText, inputField) {
 
   // Determine which separator to treat as decimal
   let decimalSeparatorPos = -1;
-  if (lastCommaPos > lastDotPos) {
+
+  // Check if there's only one separator and exactly three digits after it
+  const separatorsCount = (cleanedValue.match(/[,.]/g) || []).length;
+  const digitsAfterLastSeparator = cleanedValue
+    .substring(Math.max(lastCommaPos, lastDotPos) + 1)
+    .replace(/[^0-9]/g, "").length;
+
+  if (separatorsCount === 1 && digitsAfterLastSeparator === 3) {
+    // Single separator with exactly three digits after it - treat as thousand separator
+    decimalSeparatorPos = -1;
+  } else if (lastCommaPos > lastDotPos) {
     decimalSeparatorPos = lastCommaPos;
   } else if (lastDotPos > lastCommaPos) {
     decimalSeparatorPos = lastDotPos;
@@ -2403,7 +2411,7 @@ async function processPastedValue(pastedText, inputField) {
 
   // Process the number
   if (decimalSeparatorPos >= 0) {
-    // We found a decimal separator - split the number
+    // Decimal separator found - split the number
     const beforeDecimal = cleanedValue.substring(0, decimalSeparatorPos).replace(/[^0-9]/g, ""); // Remove any remaining non-digits
     const afterDecimal = cleanedValue.substring(decimalSeparatorPos + 1).replace(/[^0-9]/g, ""); // Remove any remaining non-digits
 
