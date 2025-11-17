@@ -132,6 +132,7 @@
   color: var(--primary-color);
   font-weight: 300;
   justify-content: space-between;
+  line-height: 18px !important;
 }
 
 .currency-converter-ex-currency-error {
@@ -208,8 +209,8 @@
 }
 /*Fix for reddit img having margin*/
 
-#currency-converter-popup .currency-item {
-  line-height: 1.5 !important;
+#currency-converter-ex-currency-item {
+  line-height: normal !important;
 }
 /* Fix for deepseek padding */
 
@@ -225,4 +226,11 @@
   width: fit-content !important;
   height: fit-content !important;
   margin: 0 !important;
+}
+
+.currency-converter-ex-price {
+  line-height: 18px !important;
+  font-size: 12px;
+  width: 100%;
+  text-align: end;
 }
