@@ -1410,7 +1410,9 @@ class PriceDetector {
           if (
             !parent ||
             parent.offsetParent === null ||
-            parent.closest('script, style, noscript, template, [id*="detected-price"]')
+            parent.closest('script, style, noscript, template, [id*="detected-price"]') ||
+            parent.id == "currency-converter-popup-text" ||
+            parent.querySelector("#currency-converter-popup-text")
           ) {
             return NodeFilter.FILTER_REJECT;
           }
@@ -1519,6 +1521,14 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
     return;
   }
 
+  // Skip if element has id="currency-converter-popup-selection" or is a parent of it
+  if (
+    parent.id === "currency-converter-popup-selection" ||
+    parent.querySelector("#currency-converter-popup-selection")
+  ) {
+    return;
+  }
+
   // Get the first currency in the list along with formatting preferences
   chrome.storage.local.get(
     ["currencyOrder", "currencyData", "fiatDecimals", "cryptoDecimals", "numberFormat"],
@@ -1537,6 +1547,14 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
       const targetCurrency = result.currencyOrder[0];
       const rates = result.currencyData;
       const numericAmount = parseNumber(amount);
+
+      // Check if this is the main currency (first in the order)
+      // If it is, just highlight it without converting
+      if (currency === targetCurrency) {
+        // Create and apply the wrapper with original text (no conversion)
+        createPriceWrapper(textNode, originalText, parent);
+        return;
+      }
 
       // Convert the amount to the first currency in the list
       const convertedValue = convertCurrency(numericAmount, currency, targetCurrency, rates);
