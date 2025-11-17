@@ -22,6 +22,7 @@ const dateSelector = document.getElementById("date");
 const timeSelector = document.getElementById("time");
 const convertTargetSelector = document.getElementById("target");
 const pageConvertSelector = document.getElementById("page-convert");
+const pageConvertSlider = document.getElementById("slider-page-convert");
 const restoreBtn = document.getElementById("restore");
 const customTheme = document.getElementById("custom-theme");
 const customCryptoDecimals = document.getElementById("custom-crypto-decimal");
@@ -1733,6 +1734,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   pageConvertSelector.addEventListener("change", function () {
+    pageConvertSlider.classList.add("currency-converter-ex-disabled");
+    // Disable the selector to prevent rapid clicking
+    pageConvertSelector.disabled = true;
+
     savePageConvert();
 
     if (pageConvertSelector.checked !== false) {
@@ -1740,6 +1745,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       customPageConvert.classList.add("custom-hidden");
     }
+
+    // Re-enable the selector after 1 second
+    setTimeout(() => {
+      pageConvertSelector.disabled = false;
+      pageConvertSlider.classList.remove("currency-converter-ex-disabled");
+    }, 2000);
   });
 
   themeSelector.addEventListener("change", function () {

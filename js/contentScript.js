@@ -162,7 +162,7 @@ const CURRENCY_REPRESENTATIONS = {
   VUV: ["Vt", "Vanuatu Vatu"],
   WST: ["WS$", "$WS", "Samoan Tala"],
   FJD: ["FJ$", "$FJ", "Fijian Dollar", "Fijian Dollars"],
-  TOP: ["T$", "$T", "Tongan Paʻanga"],
+  TOP: ["T$", "$T", "Tongan Paʻanga", "Tongan Paanga"],
   SBD: ["SI$", "$SI", "Solomon Islands Dollar", "Solomon Islands Dollars"],
   XPF: ["CFP Franc", "CFP Francs"],
 
@@ -1295,40 +1295,220 @@ function updateExistingPriceElements() {
   );
 }
 
-function detectAndMarkPrices() {
-  // Get all text nodes on the page
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false); // Walk through all text nodes in the document
+// function detectAndMarkPrices() {
+//   // Get all text nodes on the page
+//   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false); // Walk through all text nodes in the document
 
-  const priceElements = [];
-  let node;
+//   const priceElements = [];
+//   let node;
 
-  while ((node = walker.nextNode())) {
-    const text = node.textContent.trim();
-    if (!text) continue;
+//   while ((node = walker.nextNode())) {
+//     const text = node.textContent.trim();
+//     if (!text) continue;
 
-    // Skip if this node is already inside a marked price element
-    if (node.parentElement.closest('[id*="detected-price"]')) {
-      continue;
+//     // Skip if this node is already inside a marked price element
+//     if (node.parentElement.closest('[id*="detected-price"]')) {
+//       continue;
+//     }
+
+//     // Use the same detection logic as the popup
+//     if (isCurrencyValue(text)) {
+//       const { currency, amount } = detectCurrency(text);
+//       if (currency && amount) {
+//         priceElements.push({
+//           node: node,
+//           text: text,
+//           currency: currency,
+//           amount: amount,
+//         });
+//       }
+//     }
+//   }
+
+//   // Process found prices and mark them
+//   priceElements.forEach((price, index) => {
+//     markPriceElement(price.node, price.text, price.currency, price.amount, index);
+//   });
+// }
+
+/**
+ * Optimized price detection and marking with performance improvements
+ */
+class PriceDetector {
+  constructor() {
+    this.currencyCache = new Map();
+    this.isProcessing = false;
+    this.pendingDetection = false;
+    this.processedElements = new Set();
+    this.MAX_ELEMENTS = 500;
+  }
+
+  /**
+   * Main function to detect and mark prices with performance optimizations
+   */
+  async detectAndMarkPrices() {
+    if (this.isProcessing) {
+      this.pendingDetection = true;
+      return;
     }
 
-    // Use the same detection logic as the popup
-    if (isCurrencyValue(text)) {
-      const { currency, amount } = detectCurrency(text);
-      if (currency && amount) {
-        priceElements.push({
-          node: node,
-          text: text,
-          currency: currency,
-          amount: amount,
-        });
+    this.isProcessing = true;
+    const startTime = performance.now();
+
+    try {
+      // Use a more efficient tree walker with better filtering
+      const walker = this.createOptimizedTreeWalker();
+      const priceElements = [];
+      let node;
+      let elementCount = 0;
+
+      while ((node = walker.nextNode()) && elementCount < this.MAX_ELEMENTS) {
+        const text = node.textContent.trim();
+        if (!text || this.processedElements.has(node)) continue;
+
+        const { currency, amount } = this.detectCurrency(text);
+        if (currency && amount) {
+          priceElements.push({ node, text, currency, amount });
+          elementCount++;
+        }
+      }
+
+      // Process in batches to avoid blocking
+      await this.processInBatches(priceElements, 25);
+
+      const duration = performance.now() - startTime;
+      if (duration > 100) {
+        console.warn(`Price detection took ${duration.toFixed(1)}ms - ${priceElements.length} elements`);
+      }
+    } finally {
+      this.isProcessing = false;
+
+      // Handle any pending detection requests
+      if (this.pendingDetection) {
+        this.pendingDetection = false;
+        setTimeout(() => this.detectAndMarkPrices(), 50);
       }
     }
   }
 
-  // Process found prices and mark them
-  priceElements.forEach((price, index) => {
-    markPriceElement(price.node, price.text, price.currency, price.amount, index);
-  });
+  /**
+   * Create optimized tree walker with better filtering
+   */
+  createOptimizedTreeWalker() {
+    return document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) => {
+          // Skip if already processed
+          if (this.processedElements.has(node)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          // Skip hidden elements and certain tags
+          const parent = node.parentElement;
+          if (
+            !parent ||
+            parent.offsetParent === null ||
+            parent.closest('script, style, noscript, template, [id*="detected-price"]')
+          ) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          // Quick text content check
+          const text = node.textContent.trim();
+          if (!text || text.length > 50) {
+            // Skip very long text nodes
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          // Preliminary currency check
+          return this.isLikelyCurrency(text) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        },
+      },
+      false
+    );
+  }
+
+  /**
+   * Fast preliminary currency check
+   */
+  isLikelyCurrency(text) {
+    // Quick regex check for common currency patterns
+    return /[$€£¥₹₽₩₺₴₸֏؋৳៛₠₡₢₣₤₥₦₧₨₩₪₫₭₮₯₰₱₲₳₴₵₶₷₸₹₺₻₼₽₾₿]|\d[.,]\d{2}\b|\b(USD|EUR|GBP|JPY|CNY|INR)\b/i.test(text);
+  }
+
+  /**
+   * Cached currency detection
+   */
+  detectCurrency(text) {
+    const cacheKey = text.trim();
+    if (this.currencyCache.has(cacheKey)) {
+      return this.currencyCache.get(cacheKey);
+    }
+
+    // Your existing detection logic here
+    const result = isCurrencyValue(text) ? detectCurrency(text) : { currency: null, amount: null };
+
+    this.currencyCache.set(cacheKey, result);
+    return result;
+  }
+
+  /**
+   * Process elements in batches with yielding
+   */
+  async processInBatches(elements, batchSize = 25) {
+    for (let i = 0; i < elements.length; i += batchSize) {
+      const batch = elements.slice(i, i + batchSize);
+
+      // Process current batch
+      batch.forEach((price, batchIndex) => {
+        const globalIndex = i + batchIndex;
+        markPriceElement(price.node, price.text, price.currency, price.amount, globalIndex);
+        this.processedElements.add(price.node);
+      });
+
+      // Yield to main thread between batches
+      if (i + batchSize < elements.length) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    }
+  }
+
+  /**
+   * Debounced detection for multiple rapid calls
+   */
+  debouncedDetect() {
+    if (this.detectionTimeout) {
+      clearTimeout(this.detectionTimeout);
+    }
+    this.detectionTimeout = setTimeout(() => {
+      this.detectAndMarkPrices();
+    }, 150);
+  }
+
+  /**
+   * Clear cache and reset state
+   */
+  reset() {
+    this.currencyCache.clear();
+    this.processedElements.clear();
+    this.isProcessing = false;
+    this.pendingDetection = false;
+  }
+}
+
+// Initialize the detector
+const priceDetector = new PriceDetector();
+
+// Export the optimized function
+function detectAndMarkPrices() {
+  return priceDetector.debouncedDetect();
+}
+
+// For immediate detection (use sparingly)
+function detectAndMarkPricesImmediate() {
+  return priceDetector.detectAndMarkPrices();
 }
 
 function markPriceElement(textNode, originalText, currency, amount, index) {
@@ -1419,26 +1599,6 @@ function createPriceWrapper(textNode, text, parent) {
 }
 
 // Enhanced currency detection for in-page prices
-// function isCurrencyValue(text) {
-//   const trimmedText = text.trim();
-//   if (!trimmedText) return false;
-
-//   // More lenient detection for in-page prices
-//   const patterns = [
-//     // Standard formats: $100, 100 USD, €50.00, etc.
-//     /[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE][\s]*[\d,.]+/i,
-//     /[\d,.]+[\s]*[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE]/i,
-//     /[\d,.]+[\s]*(USD|EUR|GBP|JPY|CNY|AUD|CAD|CHF|HKD|NZD|SEK|NOK|DKK|SGD|MXN|BRL|INR|RUB|TRY|ZAR|SAR|AED|QAR|KRW|THB|VND|MYR|IDR|PHP|TWD|BTC|EGP|NGN|KES|PLN|CZK|HUF|ARS|CLP|COP|PEN|DZD|MAD|TND|ZMW|RWF|UGX|SDG|BWP|MGA|MUR|SCR|GHS|XOF|XAF|LSL|SZL|MWK|NAD|SSP|BHD|KWD|OMR|JOD|IQD|IRR|YER|AFN|PKR|LKR|NPR|UZS|TMT|TJS|KGS|AZN|GEL|AMD|MMK|KHR|LAK|MOP|BND|PGK|VUV|WST|FJD|TOP|SBD|XPF|RON|RSD|MKD|ISK|UAH|BYN|MDL|BAM|HRK|DOP|GTQ|HNL|NIO|BZD|BSD|TTD|UYU|PYG|BOB|VEF|VES|XDR|XAG|XAU|XPT|XPD)/i,
-
-//     // Word representations: 100 dollars, 50 euros, etc.
-//     /[\d,.]+[\s]*(dollars?|euros?|pounds?|yen|yuan|renminbi|rmb|francs?|rupees?|pesos?|real|reais|rubles?|lira|rands?|riyals?|dirhams?|won|baht|dong|ringgit|rupiah|bitcoin|cedis?|kronor?|kroner?|krona|forints?|złoty|złote|sol|soles|dinars?|kwacha|shillings?|pula|ariary|lilangeni|emalangeni|tala|paʻanga|leu|lei|hryvnia|hryvnias?|kuna|kunas?|quetzal|quetzales|lempira|córdoba|boliviano|bolivianos|bolívar|bolívars?)/i,
-
-//     // With symbols and codes: $100 USD, €50 EUR, etc.
-//     /[$\u20AC\u00A3\u00A5\u20BD\u20B9\u20BA\u20A9\u20B4\u20B1\u20AB\u20AD\u20AE\u20AF\u20B0\u20B2\u20B3\u20B5\u20B8\u20B9\u20BA\u20BC\u20BD\u20BE][\s]*[\d,.]+[\s]*(USD|EUR|GBP|JPY|CNY|AUD|CAD|CHF|HKD|NZD|SEK|NOK|DKK|SGD|MXN|BRL|INR|RUB|TRY|ZAR|SAR|AED|QAR|KRW|THB|VND|MYR|IDR|PHP|TWD|BTC)/i,
-//   ];
-
-//   return patterns.some((pattern) => pattern.test(trimmedText));
-// }
 function isCurrencyValue(text) {
   const trimmedText = text.trim();
   if (!trimmedText) return false;
@@ -1537,10 +1697,11 @@ function initializePriceDetection() {
   chrome.storage.local.get(["pageConvert"], (result) => {
     // Clean up any existing price elements first
     uninitializePriceDetection();
+    console.log("pageConvert:", result.pageConvert);
 
     if (result.pageConvert) {
       // Initial detection
-      setTimeout(detectAndMarkPrices, 1000);
+      setTimeout(detectAndMarkPrices, 500);
 
       // Observe DOM changes for dynamic content
       const observer = new MutationObserver((mutations) => {
@@ -1776,85 +1937,6 @@ function initialize() {
         handleSelection();
       }
     };
-
-    // function isCurrencyValue(text) {
-    //   const trimmedText = text.trim();
-    //   if (!trimmedText) return false;
-
-    //   // Capitalize all letters and remove commas, dots, and spaces
-    //   let processedText = trimmedText.toUpperCase().replace(/[,.\s]/g, "");
-
-    //   if (!processedText) return false;
-
-    //   let currencyRemoved = false;
-    //   let priceRemoved = false;
-
-    //   // Store original text to count numbers before removal
-    //   const originalText = processedText;
-
-    //   // 1. Try to remove exactly ONE currency word
-    //   for (const [currencyCode, representations] of Object.entries(CURRENCY_REPRESENTATIONS)) {
-    //     for (const representation of representations) {
-    //       const capitalRep = representation.toUpperCase();
-    //       if (processedText.includes(capitalRep)) {
-    //         processedText = processedText.replace(capitalRep, "");
-    //         currencyRemoved = true;
-    //         break;
-    //       }
-    //     }
-    //     if (currencyRemoved) break;
-    //   }
-
-    //   // 2. If no currency word was removed, try to remove exactly ONE currency symbol
-    //   if (!currencyRemoved) {
-    //     // Check currency codes (keys)
-    //     for (const currencyCode of Object.keys(CURRENCY_SYMBOLS)) {
-    //       const capitalCode = currencyCode.toUpperCase();
-    //       if (processedText.includes(capitalCode)) {
-    //         processedText = processedText.replace(capitalCode, "");
-    //         currencyRemoved = true;
-    //         break;
-    //       }
-    //     }
-
-    //     // If no key was found, check symbol arrays (values)
-    //     if (!currencyRemoved) {
-    //       for (const [currencyCode, symbols] of Object.entries(CURRENCY_SYMBOLS)) {
-    //         for (const symbol of symbols) {
-    //           const capitalSymbol = symbol.toUpperCase();
-    //           if (processedText.includes(capitalSymbol)) {
-    //             processedText = processedText.replace(capitalSymbol, "");
-    //             currencyRemoved = true;
-    //             break;
-    //           }
-    //         }
-    //         if (currencyRemoved) break;
-    //       }
-    //     }
-    //   }
-
-    //   // 3. Count numbers in the text BEFORE removing any price
-    //   const numbersBefore = (originalText.match(/\d+/g) || []).length;
-
-    //   // Remove exactly ONE price/number (only if there's exactly one number)
-    //   if (numbersBefore === 1) {
-    //     const numberMatch = processedText.match(/\d+/);
-    //     if (numberMatch) {
-    //       processedText = processedText.replace(numberMatch[0], "");
-    //       priceRemoved = true;
-    //     }
-    //   }
-
-    //   // 4. Check if the final processed text is empty
-    //   const isEmptyAfterProcessing = processedText.length === 0;
-
-    //   // Show popup only if:
-    //   // - Exactly ONE currency was removed
-    //   // - Exactly ONE price was removed
-    //   // - Final text is empty
-    //   // - There was exactly ONE number in the original text
-    //   return currencyRemoved && priceRemoved && isEmptyAfterProcessing && numbersBefore === 1;
-    // }
 
     function isCurrencyValue(text) {
       const trimmedText = text.trim();

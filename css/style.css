@@ -998,3 +998,7 @@ body {
   background: var(--settings-content);
   margin: 8px;
 }
+.currency-converter-ex-disabled {
+  cursor: not-allowed !important;
+  background: hsl(180 0% 27% / 1) !important;
+}
