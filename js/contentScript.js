@@ -1960,81 +1960,74 @@ function initialize() {
       const trimmedText = text.trim();
       if (!trimmedText) return false;
 
-      // Capitalize all letters and remove commas, dots, and spaces
-      let processedText = trimmedText.toUpperCase().replace(/[,.\s]/g, "");
+      console.log("1.text: ", trimmedText);
 
-      if (!processedText) return false;
+      // Convert to uppercase for case-insensitive matching
+      const upperText = trimmedText.replace(/(?<=\d)[.,](?=\d)/g, "").toUpperCase();
+      console.log("2.clean uppertext: ", upperText);
 
-      let currencyRemoved = false;
-      let priceRemoved = false;
+      // Count numbers in the original text
+      const numbersBefore = (upperText.match(/\d+/g) || []).length;
+      if (numbersBefore !== 1) return false;
 
-      // Store original text to count numbers before removal
-      const originalText = processedText;
+      // Extract the number (price)
+      const numberMatch = upperText.replace(/[,.\s]/g, "").match(/\d+/);
+      if (!numberMatch) return false;
 
-      // 1. Try to remove exactly ONE currency word from CURRENCY_REPRESENTATIONS values
-      if (!currencyRemoved) {
-        for (const representations of Object.values(CURRENCY_REPRESENTATIONS)) {
-          for (const representation of representations) {
-            const capitalRep = representation.toUpperCase();
-            if (processedText.includes(capitalRep)) {
-              processedText = processedText.replace(capitalRep, "");
-              currencyRemoved = true;
-              break;
-            }
+      const price = numberMatch[0];
+      console.log("3.price: ", price);
+
+      // Remove the price and trim
+      let textWithoutPrice = upperText.replace(price, "").trim();
+      console.log("4.Remaining Text: ", textWithoutPrice);
+
+      // // Remove common separators
+      // textWithoutPrice = textWithoutPrice.replace(/[,.\s]/g, "").trim();
+      // console.log("5.Remaining Text (No separators): ", textWithoutPrice);
+
+      if (!textWithoutPrice) return false;
+
+      // Check if the remaining text exactly matches any currency representation
+      let isCurrency = false;
+
+      // 1. Check CURRENCY_REPRESENTATIONS values
+      for (const representations of Object.values(CURRENCY_REPRESENTATIONS)) {
+        for (const representation of representations) {
+          if (textWithoutPrice === representation.toUpperCase()) {
+            console.log("6a.Currency Representation detected!");
+            isCurrency = true;
+            break;
           }
-          if (currencyRemoved) break;
         }
+        if (isCurrency) break;
       }
 
-      // 2. If no currency word was removed, try to remove exactly ONE currency symbol
-      // First check CURRENCY_SYMBOLS keys (currency codes)
-      if (!currencyRemoved) {
-        for (const currencyCode of Object.keys(CURRENCY_SYMBOLS)) {
-          const capitalCode = currencyCode.toUpperCase();
-          if (processedText.includes(capitalCode)) {
-            processedText = processedText.replace(capitalCode, "");
-            currencyRemoved = true;
+      // 2. If not found, check CURRENCY_SYMBOLS keys (symbols like $, €, £)
+      if (!isCurrency) {
+        for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
+          if (textWithoutPrice === symbol.toUpperCase()) {
+            console.log("6b.Currency Symbol KEY detected!");
+            isCurrency = true;
             break;
           }
         }
       }
 
-      // Then check CURRENCY_SYMBOLS values (symbol arrays)
-      if (!currencyRemoved) {
-        for (const symbols of Object.values(CURRENCY_SYMBOLS)) {
-          for (const symbol of symbols) {
-            const capitalSymbol = symbol.toUpperCase();
-            if (processedText.includes(capitalSymbol)) {
-              processedText = processedText.replace(capitalSymbol, "");
-              currencyRemoved = true;
+      // 3. If still not found, check CURRENCY_SYMBOLS values (currency codes)
+      if (!isCurrency) {
+        for (const currencyCodes of Object.values(CURRENCY_SYMBOLS)) {
+          for (const currencyCode of currencyCodes) {
+            if (textWithoutPrice === currencyCode.toUpperCase()) {
+              console.log("6b.Currency Symbol VALUE detected!");
+              isCurrency = true;
               break;
             }
           }
-          if (currencyRemoved) break;
+          if (isCurrency) break;
         }
       }
 
-      // 3. Count numbers in the text BEFORE removing any price
-      const numbersBefore = (originalText.match(/\d+/g) || []).length;
-
-      // Remove exactly ONE price/number (only if there's exactly one number)
-      if (numbersBefore === 1) {
-        const numberMatch = processedText.match(/\d+/);
-        if (numberMatch) {
-          processedText = processedText.replace(numberMatch[0], "");
-          priceRemoved = true;
-        }
-      }
-
-      // 4. Check if the final processed text is empty
-      const isEmptyAfterProcessing = processedText.length === 0;
-
-      // Show popup only if:
-      // - Exactly ONE currency was removed
-      // - Exactly ONE price was removed
-      // - Final text is empty
-      // - There was exactly ONE number in the original text
-      return currencyRemoved && priceRemoved && isEmptyAfterProcessing && numbersBefore === 1;
+      return isCurrency;
     }
 
     function escapeRegExp(string) {
