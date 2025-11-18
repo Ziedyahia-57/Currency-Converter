@@ -33,8 +33,8 @@ const CURRENCY_REPRESENTATIONS = {
 
   SGD: ["S$", "$S", "Singapore Dollar", "Singapore Dollars"],
   MXN: ["Mex$", "$Mex", "Mexican Peso", "Mexican Pesos"],
-  BRL: ["R$", "$R", "Brazilian Real", "Brazilian Reais"],
-  INR: ["Indian Rupee", "Indian Rupees"],
+  BRL: ["R$", "$R", "Brazilian Real", "Brazilian Reais", "Real", "Reais"],
+  INR: ["Indian Rupee", "Indian Rupees", "Rupee", "Rupees"],
   RUB: ["Russian Ruble", "Russian Rubles"],
   TRY: ["TL", "Turkish Lira"],
   ZAR: [
@@ -283,6 +283,58 @@ const CURRENCY_SYMBOLS = {
     "JMD", // Jamaica
     "NAD", // Namibia
   ],
+  Dollar: [
+    "USD",
+    "CAD",
+    "AUD",
+    "NZD",
+    "SGD",
+    "HKD",
+    "MXN",
+    "BRL",
+    "CLP",
+    "COP",
+    "ZWL",
+    "TTD",
+    "BSD",
+    "BZD",
+    "BBD",
+    "XCD",
+    "SBD", // Solomon Islands
+    "LRD", // Liberia
+    "SRD", // Suriname
+    "GYD", // Guyana
+    "KYD", // Cayman Islands
+    "FJD", // Fiji
+    "JMD", // Jamaica
+    "NAD", // Namibia
+  ],
+  دولار: [
+    "USD",
+    "CAD",
+    "AUD",
+    "NZD",
+    "SGD",
+    "HKD",
+    "MXN",
+    "BRL",
+    "CLP",
+    "COP",
+    "ZWL",
+    "TTD",
+    "BSD",
+    "BZD",
+    "BBD",
+    "XCD",
+    "SBD", // Solomon Islands
+    "LRD", // Liberia
+    "SRD", // Suriname
+    "GYD", // Guyana
+    "KYD", // Cayman Islands
+    "FJD", // Fiji
+    "JMD", // Jamaica
+    "NAD", // Namibia
+  ],
   "€": ["EUR"],
   "£": ["GBP", "EGP", "LBP", "SYP", "FKP", "GIP", "SDG", "SSP"],
   "₹": ["INR"],
@@ -292,18 +344,45 @@ const CURRENCY_SYMBOLS = {
   "₺": ["TRY"],
   "₴": ["UAH"],
   "﷼": ["SAR", "IRR", "YER", "OMR", "QAR"],
+  ريالات: ["SAR", "IRR", "YER", "OMR", "QAR"],
+  ريال: ["SAR", "IRR", "YER", "OMR", "QAR"],
+  Riyal: ["SAR", "IRR", "YER", "OMR", "QAR"],
+  Riyals: ["SAR", "IRR", "YER", "OMR", "QAR"],
   "ر.س": ["SAR"],
+  "ر.س.": ["SAR"],
   "ر.ع": ["OMR"],
+  "ر.ع.": ["OMR"],
   "ر.ق": ["QAR"],
+  "ر.ق.": ["QAR"],
   "د.إ": ["AED"],
-  "د.ا": ["JOD"],
+  "د.إ.": ["AED"],
+  دراهم: ["MAD", "AED"],
+  درهم: ["MAD", "AED"],
+  Dirham: ["MAD", "AED"],
+  Dirhams: ["MAD", "AED"],
+  "د.ا": ["AED", "JOD"],
+  "د.ا.": ["AED", "JOD"],
   "د.ج": ["DZD"],
+  "د.ج.": ["DZD"],
   "د.م": ["MAD"],
+  "د.م.": ["MAD"],
   "د.ت": ["TND"],
+  "د.ت.": ["TND"],
   "د.ب": ["BHD"],
+  "د.ب.": ["BHD"],
   "د.ك": ["KWD"],
-  "ع.د": ["IQD"],
+  "د.ك.": ["KWD"],
+  دينارات: ["TND", "DZD", "BHD", "KWD", "JOD"],
+  دنانير: ["TND", "DZD", "BHD", "KWD", "JOD"],
+  دينار: ["TND", "DZD", "BHD", "KWD", "JOD"],
+  Dinar: ["TND", "DZD", "BHD", "KWD", "JOD"],
+  Dinars: ["TND", "DZD", "BHD", "KWD", "JOD"],
+  "د.ع": ["IQD"],
+  "د.ع.": ["IQD"],
   "ج.م": ["EGP"],
+  "ج.م.": ["EGP"],
+  "ل.س": ["SYP"],
+  "ل.س.": ["SYP"],
   CFA: ["XOF", "XAF"],
   $C: ["CAD", "NIO"],
   C$: ["CAD", "NIO"],
@@ -1621,56 +1700,315 @@ function isCurrencyValue(text) {
   const trimmedText = text.trim();
   if (!trimmedText) return false;
 
-  // Create a variable to process the selection
-  let processedText = trimmedText;
+  console.log("1.original text: ", trimmedText);
 
-  // 1. Remove exactly one currency word
-  let currencyWordRemoved = false;
-  for (const [currencyCode, representations] of Object.entries(CURRENCY_REPRESENTATIONS)) {
+  // Build comprehensive lists of all currency symbols and representations
+  const allCurrencySymbols = new Set();
+  const allCurrencyRepresentationsSet = new Set();
+
+  // Get all currency symbols from CURRENCY_SYMBOLS keys
+  for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
+    allCurrencySymbols.add(symbol);
+    allCurrencySymbols.add(symbol.toUpperCase());
+  }
+
+  // Get all currency representations from CURRENCY_REPRESENTATIONS
+  for (const representations of Object.values(CURRENCY_REPRESENTATIONS)) {
     for (const representation of representations) {
-      const repRegex = new RegExp(`\\b${representation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
-      if (repRegex.test(processedText)) {
-        processedText = processedText.replace(repRegex, "").trim();
-        currencyWordRemoved = true;
-        break;
-      }
-    }
-    if (currencyWordRemoved) break;
-  }
-
-  // 2. If no currency word was removed, try to remove exactly one currency symbol
-  if (!currencyWordRemoved) {
-    for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
-      const escapedSymbol = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const symbolRegex = new RegExp(escapedSymbol, "g");
-      if (symbolRegex.test(processedText)) {
-        // Remove only the first occurrence
-        processedText = processedText.replace(symbol, "").trim();
-        currencyWordRemoved = true;
-        break;
-      }
+      allCurrencyRepresentationsSet.add(representation);
+      allCurrencyRepresentationsSet.add(representation.toUpperCase());
     }
   }
 
-  // 3. Remove exactly one price/number
-  const numberMatch = processedText.match(/[+-]?[\d ,.]+/);
-  if (numberMatch) {
-    const numberPart = numberMatch[0];
-    processedText = processedText.replace(numberPart, "").trim();
+  // Get all currency codes from CURRENCY_SYMBOLS values
+  for (const currencyCodes of Object.values(CURRENCY_SYMBOLS)) {
+    for (const currencyCode of currencyCodes) {
+      allCurrencyRepresentationsSet.add(currencyCode);
+      allCurrencyRepresentationsSet.add(currencyCode.toUpperCase());
+    }
   }
 
-  // 4. Check the variable's length
-  const finalLength = processedText.length;
+  // Convert to arrays for easier processing
+  const allCurrencySymbolsArray = Array.from(allCurrencySymbols);
+  const allCurrencyRepresentationsArray = Array.from(allCurrencyRepresentationsSet);
 
-  // Popup should appear only if:
-  // - A currency word OR symbol was removed
-  // - A price/number was removed
-  // - The final length is 0 (only whitespace remaining)
-  const currencyRemoved = currencyWordRemoved;
-  const priceRemoved = !!numberMatch;
-  const isEmptyAfterProcessing = finalLength === 0;
+  // VALIDATION 1: Check for adjacent separators or separator-currency issues
+  const invalidPatterns = [
+    /[.,]{2,}/, // Multiple separators in a row: "..", ",,", ".,", ",."
+    /[.,]\s*[.,]/, // Separators with only whitespace between: ". ,", ", ."
+    /[.,]$/, // Separator at the end: "1234.$", "1234.,"
+    /^[.,]/, // Separator at the beginning: ".1234", ",1234"
+    /[.,]\s*[$€£¥₹₩₽₺]/, // Separator followed by currency symbol: "1234.,$"
+    /[$€£¥₹₩₽₺]\s*[.,]/, // Currency symbol followed by separator: "$.1234"
+  ];
 
-  return currencyRemoved && priceRemoved && isEmptyAfterProcessing;
+  for (const pattern of invalidPatterns) {
+    if (pattern.test(trimmedText)) {
+      console.log("2.invalid pattern detected:", pattern);
+      return false;
+    }
+  }
+
+  // VALIDATION 2: Check for separator next to currency representations
+  for (const representation of allCurrencyRepresentationsArray) {
+    const escapedRep = representation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const repWithSeparatorPatterns = [
+      new RegExp(`[.,]\\s*${escapedRep}`), // Separator before currency: "1234.,USD"
+      new RegExp(`${escapedRep}\\s*[.,]`), // Currency before separator: "USD.1234"
+    ];
+
+    for (const pattern of repWithSeparatorPatterns) {
+      if (pattern.test(trimmedText)) {
+        console.log("3.invalid currency-separator pattern:", pattern);
+        return false;
+      }
+    }
+  }
+
+  // Extract currency symbol/representation and number parts
+  let currencyPart = "";
+  let numberPart = trimmedText;
+  let currencyPosition = ""; // 'prefix', 'suffix', or ''
+
+  // First, check for prefix currency symbols
+  for (const symbol of allCurrencySymbolsArray) {
+    if (trimmedText.startsWith(symbol)) {
+      currencyPart = symbol;
+      numberPart = trimmedText.slice(symbol.length).trim();
+      currencyPosition = "prefix";
+      break;
+    }
+  }
+
+  // If no prefix symbol found, check for prefix currency representations
+  if (!currencyPart) {
+    // Sort by length (longest first) to avoid partial matches
+    const sortedRepresentations = [...allCurrencyRepresentationsArray].sort((a, b) => b.length - a.length);
+
+    for (const representation of sortedRepresentations) {
+      const upperRepresentation = representation.toUpperCase();
+      const upperText = trimmedText.toUpperCase();
+
+      if (upperText.startsWith(upperRepresentation)) {
+        // Check if there's a number after the currency representation
+        const remainingText = trimmedText.slice(representation.length).trim();
+        const numberMatch = remainingText.match(/^[\d.,\s]/);
+
+        if (numberMatch) {
+          currencyPart = representation;
+          numberPart = remainingText;
+          currencyPosition = "prefix";
+          break;
+        }
+      }
+    }
+  }
+
+  // If no prefix currency found, try to separate number from suffix currency
+  if (!currencyPart) {
+    // Match numbers with or without thousand separators
+    const numberWithSeparatorsMatch = numberPart.match(/^[\d.,\s]+/);
+    if (numberWithSeparatorsMatch) {
+      const potentialNumber = numberWithSeparatorsMatch[0];
+      const remainingText = numberPart.slice(potentialNumber.length).trim();
+
+      if (remainingText) {
+        // Check if remaining text is a valid currency
+        const upperRemaining = remainingText.toUpperCase();
+        let isValidSuffixCurrency = false;
+
+        // Check against all currency representations and symbols
+        if (allCurrencyRepresentationsSet.has(upperRemaining) || allCurrencySymbols.has(upperRemaining)) {
+          numberPart = potentialNumber;
+          currencyPart = remainingText;
+          currencyPosition = "suffix";
+        }
+      }
+    }
+  }
+
+  console.log("4.number part: ", numberPart);
+  console.log("5.currency part: ", currencyPart);
+  console.log("6.currency position: ", currencyPosition);
+
+  // VALIDATION 3: Check number part for invalid separator patterns
+  const numberWithSeparators = numberPart.trim();
+
+  // Check for adjacent separators in number part
+  if (/[.,]{2,}/.test(numberWithSeparators) || /[.,]\s*[.,]/.test(numberWithSeparators)) {
+    console.log("7.adjacent separators in number part");
+    return false;
+  }
+
+  // Check for separator at start/end of number part
+  if (/^[.,]/.test(numberWithSeparators) || /[.,]$/.test(numberWithSeparators)) {
+    console.log("8.separator at start/end of number part");
+    return false;
+  }
+
+  // Basic validation - must contain at least one digit
+  if (!/\d/.test(numberWithSeparators)) {
+    console.log("9.no digits found in number part");
+    return false;
+  }
+
+  // Check for invalid characters in number part
+  if (/[^\d.,\s]/.test(numberWithSeparators)) {
+    console.log("10.invalid characters in number part");
+    return false;
+  }
+
+  // SEPARATE DECIMAL AND DIGIT GROUPS (thousand separators are optional)
+  const lastCommaPos = numberWithSeparators.lastIndexOf(",");
+  const lastDotPos = numberWithSeparators.lastIndexOf(".");
+  const decimalSeparatorPos = Math.max(lastCommaPos, lastDotPos);
+
+  let thousandDigitGroups = [];
+  let decimalDigitGroups = [];
+
+  if (decimalSeparatorPos > -1) {
+    // We have a decimal part
+    const decimalSeparator = numberWithSeparators[decimalSeparatorPos];
+
+    // Split into integer and decimal parts
+    const integerPart = numberWithSeparators.substring(0, decimalSeparatorPos);
+    const decimalPart = numberWithSeparators.substring(decimalSeparatorPos + 1);
+
+    console.log("11.integer part: ", integerPart);
+    console.log("12.decimal part: ", decimalPart);
+
+    // Extract digit groups from integer part (thousand separators are optional)
+    thousandDigitGroups = integerPart.split(/[.,\s]/).filter((group) => {
+      return group.length > 0 && /^\d+$/.test(group);
+    });
+
+    // Extract decimal digit groups
+    decimalDigitGroups = decimalPart.split(/[^\d]/).filter((group) => {
+      return group.length > 0 && /^\d+$/.test(group);
+    });
+
+    console.log("13.thousand digit groups: ", thousandDigitGroups);
+    console.log("14.decimal digit groups: ", decimalDigitGroups);
+
+    // Validate decimal part (should be 1-3 digits typically)
+    if (decimalDigitGroups.length > 1 || (decimalDigitGroups[0] && decimalDigitGroups[0].length > 3)) {
+      console.log("15.invalid decimal format");
+      return false;
+    }
+
+    // Validate thousand groups if separators are present
+    if (thousandDigitGroups.length > 1) {
+      for (let i = 0; i < thousandDigitGroups.length; i++) {
+        const group = thousandDigitGroups[i];
+
+        // First group can be 1-3 digits, subsequent groups should be exactly 3 digits
+        if (i === 0) {
+          if (group.length < 1 || group.length > 3) {
+            console.log("16.invalid first thousand group size:", group.length);
+            return false;
+          }
+        } else {
+          if (group.length !== 3) {
+            console.log("17.invalid thousand group size (not 3):", group.length);
+            return false;
+          }
+        }
+      }
+    }
+  } else {
+    // No decimal part, extract digit groups (thousand separators are optional)
+    thousandDigitGroups = numberWithSeparators.split(/[.,\s]/).filter((group) => {
+      return group.length > 0 && /^\d+$/.test(group);
+    });
+
+    console.log("11.thousand digit groups (no decimal): ", thousandDigitGroups);
+
+    // Validate thousand groups if separators are present
+    if (thousandDigitGroups.length > 1) {
+      for (let i = 0; i < thousandDigitGroups.length; i++) {
+        const group = thousandDigitGroups[i];
+
+        if (i === 0) {
+          if (group.length < 1 || group.length > 3) {
+            console.log("12.invalid first thousand group size:", group.length);
+            return false;
+          }
+        } else {
+          if (group.length !== 3) {
+            console.log("13.invalid thousand group size (not 3):", group.length);
+            return false;
+          }
+        }
+      }
+    }
+  }
+
+  // VALIDATION 4: Final check for separator-currency adjacency
+  if (currencyPart) {
+    const fullText = trimmedText.toUpperCase();
+    const upperCurrency = currencyPart.toUpperCase();
+
+    // Check if currency is adjacent to separators in the full text
+    const currencyAdjacencyPatterns = [
+      new RegExp(`[.,]\\s*${upperCurrency.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
+      new RegExp(`${upperCurrency.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*[.,]`),
+    ];
+
+    for (const pattern of currencyAdjacencyPatterns) {
+      if (pattern.test(fullText)) {
+        console.log("18.currency adjacent to separator in full text");
+        return false;
+      }
+    }
+  }
+
+  // VALIDATE AT LEAST ONE DIGIT GROUP EXISTS
+  if (thousandDigitGroups.length === 0 && decimalDigitGroups.length === 0) {
+    console.log("19.no valid digit groups found");
+    return false;
+  }
+
+  // BUILD CLEAN NUMBER FOR PARSING
+  let cleanNumber = "";
+
+  // Reconstruct integer part (join all thousand groups)
+  if (thousandDigitGroups.length > 0) {
+    cleanNumber = thousandDigitGroups.join("");
+  } else if (decimalDigitGroups.length > 0) {
+    // Handle case like ".50" - assume 0 before decimal
+    cleanNumber = "0";
+  }
+
+  // Add decimal part if exists
+  if (decimalDigitGroups.length > 0) {
+    cleanNumber += "." + decimalDigitGroups[0];
+  }
+
+  console.log("20.clean number: ", cleanNumber);
+
+  // Validate it's a proper number
+  const price = parseFloat(cleanNumber);
+  if (isNaN(price)) {
+    console.log("21.invalid number");
+    return false;
+  }
+
+  console.log("21.parsed price: ", price);
+
+  // FINAL CURRENCY VALIDATION
+  const upperCurrency = currencyPart.toUpperCase().trim();
+  console.log("22.currency part upper: ", upperCurrency);
+
+  if (!upperCurrency) {
+    console.log("23.no currency part found");
+    return false;
+  }
+
+  // Check if the currency part matches any known representation
+  let isCurrency = allCurrencyRepresentationsSet.has(upperCurrency) || allCurrencySymbols.has(upperCurrency);
+
+  console.log("24.final result: ", isCurrency);
+  return isCurrency;
 }
 
 // Consolidated selection handler
@@ -1960,78 +2298,315 @@ function initialize() {
       const trimmedText = text.trim();
       if (!trimmedText) return false;
 
-      console.log("1.text: ", trimmedText);
+      console.log("1.original text: ", trimmedText);
 
-      // Convert to uppercase for case-insensitive matching
-      const upperText = trimmedText.replace(/(?<=\d)[.,](?=\d)/g, "").toUpperCase();
-      console.log("2.clean uppertext: ", upperText);
+      // Build comprehensive lists of all currency symbols and representations
+      const allCurrencySymbols = new Set();
+      const allCurrencyRepresentationsSet = new Set();
 
-      // Count numbers in the original text
-      const numbersBefore = (upperText.match(/\d+/g) || []).length;
-      if (numbersBefore !== 1) return false;
+      // Get all currency symbols from CURRENCY_SYMBOLS keys
+      for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
+        allCurrencySymbols.add(symbol);
+        allCurrencySymbols.add(symbol.toUpperCase());
+      }
 
-      // Extract the number (price)
-      const numberMatch = upperText.replace(/[,.\s]/g, "").match(/\d+/);
-      if (!numberMatch) return false;
-
-      const price = numberMatch[0];
-      console.log("3.price: ", price);
-
-      // Remove the price and trim
-      let textWithoutPrice = upperText.replace(price, "").trim();
-      console.log("4.Remaining Text: ", textWithoutPrice);
-
-      // // Remove common separators
-      // textWithoutPrice = textWithoutPrice.replace(/[,.\s]/g, "").trim();
-      // console.log("5.Remaining Text (No separators): ", textWithoutPrice);
-
-      if (!textWithoutPrice) return false;
-
-      // Check if the remaining text exactly matches any currency representation
-      let isCurrency = false;
-
-      // 1. Check CURRENCY_REPRESENTATIONS values
+      // Get all currency representations from CURRENCY_REPRESENTATIONS
       for (const representations of Object.values(CURRENCY_REPRESENTATIONS)) {
         for (const representation of representations) {
-          if (textWithoutPrice === representation.toUpperCase()) {
-            console.log("6a.Currency Representation detected!");
-            isCurrency = true;
-            break;
-          }
-        }
-        if (isCurrency) break;
-      }
-
-      // 2. If not found, check CURRENCY_SYMBOLS keys (symbols like $, €, £)
-      if (!isCurrency) {
-        for (const symbol of Object.keys(CURRENCY_SYMBOLS)) {
-          if (textWithoutPrice === symbol.toUpperCase()) {
-            console.log("6b.Currency Symbol KEY detected!");
-            isCurrency = true;
-            break;
-          }
+          allCurrencyRepresentationsSet.add(representation);
+          allCurrencyRepresentationsSet.add(representation.toUpperCase());
         }
       }
 
-      // 3. If still not found, check CURRENCY_SYMBOLS values (currency codes)
-      if (!isCurrency) {
-        for (const currencyCodes of Object.values(CURRENCY_SYMBOLS)) {
-          for (const currencyCode of currencyCodes) {
-            if (textWithoutPrice === currencyCode.toUpperCase()) {
-              console.log("6b.Currency Symbol VALUE detected!");
-              isCurrency = true;
+      // Get all currency codes from CURRENCY_SYMBOLS values
+      for (const currencyCodes of Object.values(CURRENCY_SYMBOLS)) {
+        for (const currencyCode of currencyCodes) {
+          allCurrencyRepresentationsSet.add(currencyCode);
+          allCurrencyRepresentationsSet.add(currencyCode.toUpperCase());
+        }
+      }
+
+      // Convert to arrays for easier processing
+      const allCurrencySymbolsArray = Array.from(allCurrencySymbols);
+      const allCurrencyRepresentationsArray = Array.from(allCurrencyRepresentationsSet);
+
+      // VALIDATION 1: Check for adjacent separators or separator-currency issues
+      const invalidPatterns = [
+        /[.,]{2,}/, // Multiple separators in a row: "..", ",,", ".,", ",."
+        /[.,]\s*[.,]/, // Separators with only whitespace between: ". ,", ", ."
+        /[.,]$/, // Separator at the end: "1234.$", "1234.,"
+        /^[.,]/, // Separator at the beginning: ".1234", ",1234"
+        /[.,]\s*[$€£¥₹₩₽₺]/, // Separator followed by currency symbol: "1234.,$"
+        /[$€£¥₹₩₽₺]\s*[.,]/, // Currency symbol followed by separator: "$.1234"
+      ];
+
+      for (const pattern of invalidPatterns) {
+        if (pattern.test(trimmedText)) {
+          console.log("2.invalid pattern detected:", pattern);
+          return false;
+        }
+      }
+
+      // VALIDATION 2: Check for separator next to currency representations
+      for (const representation of allCurrencyRepresentationsArray) {
+        const escapedRep = representation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const repWithSeparatorPatterns = [
+          new RegExp(`[.,]\\s*${escapedRep}`), // Separator before currency: "1234.,USD"
+          new RegExp(`${escapedRep}\\s*[.,]`), // Currency before separator: "USD.1234"
+        ];
+
+        for (const pattern of repWithSeparatorPatterns) {
+          if (pattern.test(trimmedText)) {
+            console.log("3.invalid currency-separator pattern:", pattern);
+            return false;
+          }
+        }
+      }
+
+      // Extract currency symbol/representation and number parts
+      let currencyPart = "";
+      let numberPart = trimmedText;
+      let currencyPosition = ""; // 'prefix', 'suffix', or ''
+
+      // First, check for prefix currency symbols
+      for (const symbol of allCurrencySymbolsArray) {
+        if (trimmedText.startsWith(symbol)) {
+          currencyPart = symbol;
+          numberPart = trimmedText.slice(symbol.length).trim();
+          currencyPosition = "prefix";
+          break;
+        }
+      }
+
+      // If no prefix symbol found, check for prefix currency representations
+      if (!currencyPart) {
+        // Sort by length (longest first) to avoid partial matches
+        const sortedRepresentations = [...allCurrencyRepresentationsArray].sort((a, b) => b.length - a.length);
+
+        for (const representation of sortedRepresentations) {
+          const upperRepresentation = representation.toUpperCase();
+          const upperText = trimmedText.toUpperCase();
+
+          if (upperText.startsWith(upperRepresentation)) {
+            // Check if there's a number after the currency representation
+            const remainingText = trimmedText.slice(representation.length).trim();
+            const numberMatch = remainingText.match(/^[\d.,\s]/);
+
+            if (numberMatch) {
+              currencyPart = representation;
+              numberPart = remainingText;
+              currencyPosition = "prefix";
               break;
             }
           }
-          if (isCurrency) break;
         }
       }
 
-      return isCurrency;
-    }
+      // If no prefix currency found, try to separate number from suffix currency
+      if (!currencyPart) {
+        // Match numbers with or without thousand separators
+        const numberWithSeparatorsMatch = numberPart.match(/^[\d.,\s]+/);
+        if (numberWithSeparatorsMatch) {
+          const potentialNumber = numberWithSeparatorsMatch[0];
+          const remainingText = numberPart.slice(potentialNumber.length).trim();
 
-    function escapeRegExp(string) {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          if (remainingText) {
+            // Check if remaining text is a valid currency
+            const upperRemaining = remainingText.toUpperCase();
+            let isValidSuffixCurrency = false;
+
+            // Check against all currency representations and symbols
+            if (allCurrencyRepresentationsSet.has(upperRemaining) || allCurrencySymbols.has(upperRemaining)) {
+              numberPart = potentialNumber;
+              currencyPart = remainingText;
+              currencyPosition = "suffix";
+            }
+          }
+        }
+      }
+
+      console.log("4.number part: ", numberPart);
+      console.log("5.currency part: ", currencyPart);
+      console.log("6.currency position: ", currencyPosition);
+
+      // VALIDATION 3: Check number part for invalid separator patterns
+      const numberWithSeparators = numberPart.trim();
+
+      // Check for adjacent separators in number part
+      if (/[.,]{2,}/.test(numberWithSeparators) || /[.,]\s*[.,]/.test(numberWithSeparators)) {
+        console.log("7.adjacent separators in number part");
+        return false;
+      }
+
+      // Check for separator at start/end of number part
+      if (/^[.,]/.test(numberWithSeparators) || /[.,]$/.test(numberWithSeparators)) {
+        console.log("8.separator at start/end of number part");
+        return false;
+      }
+
+      // Basic validation - must contain at least one digit
+      if (!/\d/.test(numberWithSeparators)) {
+        console.log("9.no digits found in number part");
+        return false;
+      }
+
+      // Check for invalid characters in number part
+      if (/[^\d.,\s]/.test(numberWithSeparators)) {
+        console.log("10.invalid characters in number part");
+        return false;
+      }
+
+      // SEPARATE DECIMAL AND DIGIT GROUPS (thousand separators are optional)
+      const lastCommaPos = numberWithSeparators.lastIndexOf(",");
+      const lastDotPos = numberWithSeparators.lastIndexOf(".");
+      const decimalSeparatorPos = Math.max(lastCommaPos, lastDotPos);
+
+      let thousandDigitGroups = [];
+      let decimalDigitGroups = [];
+
+      if (decimalSeparatorPos > -1) {
+        // We have a decimal part
+        const decimalSeparator = numberWithSeparators[decimalSeparatorPos];
+
+        // Split into integer and decimal parts
+        const integerPart = numberWithSeparators.substring(0, decimalSeparatorPos);
+        const decimalPart = numberWithSeparators.substring(decimalSeparatorPos + 1);
+
+        console.log("11.integer part: ", integerPart);
+        console.log("12.decimal part: ", decimalPart);
+
+        // Extract digit groups from integer part (thousand separators are optional)
+        thousandDigitGroups = integerPart.split(/[.,\s]/).filter((group) => {
+          return group.length > 0 && /^\d+$/.test(group);
+        });
+
+        // Extract decimal digit groups
+        decimalDigitGroups = decimalPart.split(/[^\d]/).filter((group) => {
+          return group.length > 0 && /^\d+$/.test(group);
+        });
+
+        console.log("13.thousand digit groups: ", thousandDigitGroups);
+        console.log("14.decimal digit groups: ", decimalDigitGroups);
+
+        // Validate decimal part (should be 1-3 digits typically)
+        if (decimalDigitGroups.length > 1 || (decimalDigitGroups[0] && decimalDigitGroups[0].length > 3)) {
+          console.log("15.invalid decimal format");
+          return false;
+        }
+
+        // Validate thousand groups if separators are present
+        if (thousandDigitGroups.length > 1) {
+          for (let i = 0; i < thousandDigitGroups.length; i++) {
+            const group = thousandDigitGroups[i];
+
+            // First group can be 1-3 digits, subsequent groups should be exactly 3 digits
+            if (i === 0) {
+              if (group.length < 1 || group.length > 3) {
+                console.log("16.invalid first thousand group size:", group.length);
+                return false;
+              }
+            } else {
+              if (group.length !== 3) {
+                console.log("17.invalid thousand group size (not 3):", group.length);
+                return false;
+              }
+            }
+          }
+        }
+      } else {
+        // No decimal part, extract digit groups (thousand separators are optional)
+        thousandDigitGroups = numberWithSeparators.split(/[.,\s]/).filter((group) => {
+          return group.length > 0 && /^\d+$/.test(group);
+        });
+
+        console.log("11.thousand digit groups (no decimal): ", thousandDigitGroups);
+
+        // Validate thousand groups if separators are present
+        if (thousandDigitGroups.length > 1) {
+          for (let i = 0; i < thousandDigitGroups.length; i++) {
+            const group = thousandDigitGroups[i];
+
+            if (i === 0) {
+              if (group.length < 1 || group.length > 3) {
+                console.log("12.invalid first thousand group size:", group.length);
+                return false;
+              }
+            } else {
+              if (group.length !== 3) {
+                console.log("13.invalid thousand group size (not 3):", group.length);
+                return false;
+              }
+            }
+          }
+        }
+      }
+
+      // VALIDATION 4: Final check for separator-currency adjacency
+      if (currencyPart) {
+        const fullText = trimmedText.toUpperCase();
+        const upperCurrency = currencyPart.toUpperCase();
+
+        // Check if currency is adjacent to separators in the full text
+        const currencyAdjacencyPatterns = [
+          new RegExp(`[.,]\\s*${upperCurrency.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
+          new RegExp(`${upperCurrency.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*[.,]`),
+        ];
+
+        for (const pattern of currencyAdjacencyPatterns) {
+          if (pattern.test(fullText)) {
+            console.log("18.currency adjacent to separator in full text");
+            return false;
+          }
+        }
+      }
+
+      // VALIDATE AT LEAST ONE DIGIT GROUP EXISTS
+      if (thousandDigitGroups.length === 0 && decimalDigitGroups.length === 0) {
+        console.log("19.no valid digit groups found");
+        return false;
+      }
+
+      // BUILD CLEAN NUMBER FOR PARSING
+      let cleanNumber = "";
+
+      // Reconstruct integer part (join all thousand groups)
+      if (thousandDigitGroups.length > 0) {
+        cleanNumber = thousandDigitGroups.join("");
+      } else if (decimalDigitGroups.length > 0) {
+        // Handle case like ".50" - assume 0 before decimal
+        cleanNumber = "0";
+      }
+
+      // Add decimal part if exists
+      if (decimalDigitGroups.length > 0) {
+        cleanNumber += "." + decimalDigitGroups[0];
+      }
+
+      console.log("20.clean number: ", cleanNumber);
+
+      // Validate it's a proper number
+      const price = parseFloat(cleanNumber);
+      if (isNaN(price)) {
+        console.log("21.invalid number");
+        return false;
+      }
+
+      console.log("21.parsed price: ", price);
+
+      // FINAL CURRENCY VALIDATION
+      const upperCurrency = currencyPart.toUpperCase().trim();
+      console.log("22.currency part upper: ", upperCurrency);
+
+      if (!upperCurrency) {
+        console.log("23.no currency part found");
+        return false;
+      }
+
+      // Check if the currency part matches any known representation
+      let isCurrency = allCurrencyRepresentationsSet.has(upperCurrency) || allCurrencySymbols.has(upperCurrency);
+
+      console.log("24.final result: ", isCurrency);
+      return isCurrency;
     }
 
     document.addEventListener("selectionchange", handleSelection);
