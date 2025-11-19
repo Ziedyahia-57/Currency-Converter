@@ -145,7 +145,7 @@
                   Number Formatting<span class="custom custom-hidden" id="custom-format" title="custom">*</span>
                 </p>
                 <select id="format">
-                  <option value="comma-dot" selected="">1,000.00 (default)</option>
+                  <option value="comma-dot" selected>1,000.00 (Default)</option>
                   <option value="dot-comma">1.000,00</option>
                   <option value="space-dot">1 000.00</option>
                   <option value="space-comma">1 000,00</option>
@@ -160,7 +160,7 @@
                 <select id="fiat-round">
                   <option value="0">Integer Only</option>
                   <option value="1">1 Decimal</option>
-                  <option value="2" selected>2 Decimals (default)</option>
+                  <option value="2" selected>2 Decimals (Default)</option>
                   <option value="3">3 Decimals</option>
                   <option value="4">4 Decimals</option>
                   <option value="5">5 Decimals</option>
@@ -182,7 +182,7 @@
                   <option value="5">5 Decimals</option>
                   <option value="6">6 Decimals</option>
                   <option value="7">7 Decimals</option>
-                  <option value="8" selected="">8 Decimals (default)</option>
+                  <option value="8" selected>8 Decimals (Default)</option>
                 </select>
               </div>
             </div>
@@ -208,10 +208,19 @@
               </div>
               <div class="row">
                 <p class="option-name">
+                  Filter Mode<span class="custom custom-hidden" id="custom-filter-mode" title="custom">*</span>
+                </p>
+                <select id="filter">
+                  <option value="blacklist" selected>Blacklist (Default)</option>
+                  <option value="whitelist">Whitelist</option>
+                </select>
+              </div>
+              <div class="row">
+                <p class="option-name">
                   Convert Selection<span class="custom custom-hidden" id="custom-convert-target" title="custom">*</span>
                 </p>
                 <select id="target">
-                  <option value="all" selected>All Currencies (default)</option>
+                  <option value="all" selected>All Currencies (Default)</option>
                   <option value="one">First Currency Only</option>
                 </select>
               </div>
@@ -231,7 +240,7 @@
                 </p>
                 <select id="theme">
                   <option value="manual">Manual</option>
-                  <option value="auto" selected="">Browser (default)</option>
+                  <option value="auto" selected>Browser (Default)</option>
                 </select>
               </div>
             </div>
@@ -249,7 +258,7 @@
                   Time<span class="custom custom-hidden" id="custom-time" title="custom">*</span>
                 </p>
                 <select id="time">
-                  <option value="ampm" selected>12-Hour Clock (default)</option>
+                  <option value="ampm" selected>12-Hour Clock (Default)</option>
                   <option value="24h">24-Hour Clock</option>
                 </select>
               </div>
@@ -258,7 +267,7 @@
                   Date<span class="custom custom-hidden" id="custom-date" title="custom">*</span>
                 </p>
                 <select id="date">
-                  <option value="dd/mm/yyyy" selected>DD/MM/YYYY (default)</option>
+                  <option value="dd/mm/yyyy" selected>DD/MM/YYYY (Default)</option>
                   <option value="mm/dd/yyyy">MM/DD/YYYY (US)</option>
                   <option value="yyyy/mm/dd">YYYY/MM/DD (ISO)</option>
                 </select>

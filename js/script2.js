@@ -15,6 +15,7 @@ const supportDevBtn = document.getElementById("support-dev-btn");
 const settingsBtn = document.getElementById("settings-btn");
 const donationButton = document.getElementById("support-dev-btn");
 const formatSelector = document.getElementById("format");
+const filterModeSelector = document.getElementById("filter");
 const fiatDecimalSelector = document.getElementById("fiat-round");
 const cryptoDecimalSelector = document.getElementById("crypto-round");
 const themeSelector = document.getElementById("theme");
@@ -28,6 +29,7 @@ const customTheme = document.getElementById("custom-theme");
 const customCryptoDecimals = document.getElementById("custom-crypto-decimal");
 const customFiatDecimals = document.getElementById("custom-fiat-decimal");
 const customFormat = document.getElementById("custom-format");
+const customFilterMode = document.getElementById("custom-filter-mode");
 const customDate = document.getElementById("custom-date");
 const customTime = document.getElementById("custom-time");
 const customPageConvert = document.getElementById("custom-page-convert");
@@ -239,6 +241,36 @@ async function loadThemePreference() {
 }
 
 //⚪------------------------------------------------------------*/
+//⚪                        FILTER MODE                         */
+//⚪------------------------------------------------------------*/
+async function saveFilterMode() {
+  //🟣 Save user's filter mode preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("filterMode", filterModeSelector.value);
+    chrome.storage.local.set({ filterMode: filterModeSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("filter mode saved:", filterModeSelector.value);
+        resolve();
+      }
+    });
+  });
+}
+async function loadFilterMode() {
+  //🟣 Load user's filter mode preference
+
+  const result = await chrome.storage.local.get("filterMode");
+  const savedFormat = result.filterMode;
+  if (savedFormat) {
+    filterModeSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
 //⚪                        DATE FORMAT                         */
 //⚪------------------------------------------------------------*/
 async function saveDateFormat() {
@@ -369,6 +401,7 @@ restoreBtn.addEventListener("click", async () => {
   formatSelector.value = "comma-dot";
   fiatDecimalSelector.value = "2";
   cryptoDecimalSelector.value = "8";
+  filterModeSelector.value = "blacklist";
   dateSelector.value = "dd/mm/yyyy";
   timeSelector.value = "ampm";
   convertTargetSelector.value = "all";
@@ -396,6 +429,9 @@ restoreBtn.addEventListener("click", async () => {
   localStorage.setItem("convertTarget", convertTargetSelector.value);
   chrome.storage.local.set({ ["convertTarget"]: convertTargetSelector.value });
 
+  localStorage.setItem("filterMode", filterModeSelector.value);
+  chrome.storage.local.set({ ["filterMode"]: filterModeSelector.value });
+
   localStorage.setItem("pageConvert", pageConvertSelector.checked);
   chrome.storage.local.set({ ["pageConvert"]: pageConvertSelector.checked });
 
@@ -418,6 +454,7 @@ restoreBtn.addEventListener("click", async () => {
   // Manually update UI for immediate effect
   customTheme.classList.add("custom-hidden");
   customFormat.classList.add("custom-hidden");
+  customFilterMode.classList.add("custom-hidden");
   customFiatDecimals.classList.add("custom-hidden");
   customCryptoDecimals.classList.add("custom-hidden");
   customDate.classList.add("custom-hidden");
@@ -449,6 +486,7 @@ restoreBtn.addEventListener("click", async () => {
 async function checkCustomSettings() {
   //🟣 Show "*" indicator for custom settings
   const formatSettings = await chrome.storage.local.get("numberFormat");
+  const filterSettings = await chrome.storage.local.get("filterMode");
   const fiatDecimalsSettings = await chrome.storage.local.get("fiatDecimals");
   const cryptoDecimalsSettings = await chrome.storage.local.get("cryptoDecimals");
   const themeSettings = await chrome.storage.local.get("theme");
@@ -460,6 +498,11 @@ async function checkCustomSettings() {
   if (formatSettings.numberFormat && formatSettings.numberFormat !== "comma-dot") {
     console.log("formatSettings: ", formatSettings.numberFormat);
     customFormat.classList.remove("custom-hidden");
+  }
+
+  if (filterSettings.filterMode && filterSettings.filterMode !== "blacklist") {
+    console.log("filterSettings: ", filterSettings.filterMode);
+    customFilterMode.classList.remove("custom-hidden");
   }
 
   if (fiatDecimalsSettings.fiatDecimals && fiatDecimalsSettings.fiatDecimals != 2) {
@@ -1626,6 +1669,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadFiatDecimal();
   loadCryptoDecimal();
   loadPageConvert();
+  loadFilterMode();
   loadConvertTarget();
   loadTimeFormat();
   loadDateFormat();
@@ -1720,6 +1764,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       customTime.classList.remove("custom-hidden");
     } else {
       customTime.classList.add("custom-hidden");
+    }
+  });
+
+  filterModeSelector.addEventListener("change", function () {
+    saveFilterMode();
+
+    if (filterModeSelector.value !== "blacklist") {
+      customFilterMode.classList.remove("custom-hidden");
+    } else {
+      customFilterMode.classList.add("custom-hidden");
     }
   });
 

@@ -109,7 +109,11 @@
   color: var(--primary-color);
 }
 
-.currency-converter-ex img.currency-converter-ex-icon {
+#currency-converter-popup img {
+  margin: 0 !important;
+}
+
+.currency-converter-popup img.currency-converter-ex-icon {
   width: 16px;
   height: 16px;
   object-fit: contain;
