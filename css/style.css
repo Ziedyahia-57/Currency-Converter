@@ -1,6 +1,6 @@
 /* General Styles */
 :root {
-  --primary-color: #00d4aa;
+  --primary-color: #00be98;
   --primary-hover: #00b892;
   --fill-color: #c1c6cb;
   --font-color: #6d777e;
@@ -22,8 +22,9 @@
 
 /* Dark mode colors */
 :root.dark-mode {
+  --primary-color: #00d4aa;
   --light-gray: #010d10;
-  --dark-gray: #0a1f258f;
+  --dark-gray: hsl(193deg 7% 30% / 26%);
   --border-dark: #00000040;
   --font-color: #c1c6cb;
   --fill-color: #6d777e;
@@ -711,7 +712,7 @@ body {
   border-bottom: 1px solid var(--primary-color);
 }
 .currency-converter-ex .title-row svg {
-  fill: var(--primary-color);
+  stroke: var(--primary-color);
   height: 14px;
   width: 14px;
   margin-right: 8px;
@@ -723,6 +724,11 @@ body {
   color: var(--font-color2);
   align-self: center;
   font-weight: 200;
+}
+
+.currency-converter-ex option {
+  color: var(--font-color);
+  background-color: var(--gray);
 }
 
 .currency-converter-ex select#format,
@@ -774,7 +780,8 @@ body {
   margin: 4px;
 }
 
-.currency-converter-ex button#restore {
+.currency-converter-ex button#restore,
+.currency-converter-ex button#edit {
   height: 26px;
   user-select: none;
   width: fit-content;
@@ -795,7 +802,22 @@ body {
   cursor: pointer;
   background: #ff03032b;
   color: red;
-  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.currency-converter-ex select#format:hover,
+.currency-converter-ex select#fiat-round:hover,
+.currency-converter-ex select#crypto-round:hover,
+.currency-converter-ex select#time:hover,
+.currency-converter-ex select#date:hover,
+.currency-converter-ex select#theme:hover,
+.currency-converter-ex select#target:hover,
+.currency-converter-ex select#filter:hover,
+.currency-converter-ex button#edit:hover {
+  cursor: pointer;
+  background: #03ffc02b;
+  color: var(--primary-color);
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .currency-converter-ex p.section-title {
@@ -927,7 +949,7 @@ body {
 }
 .currency-converter-ex button:focus-visible,
 .currency-converter-ex select:focus-visible {
-  outline: 2px solid var(--primary-color);
+  outline: 1px solid var(--primary-color);
   outline-offset: 1px;
   box-shadow: none;
 }
