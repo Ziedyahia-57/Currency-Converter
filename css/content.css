@@ -226,7 +226,7 @@
   color: var(--primary-color) !important;
   text-shadow: hsl(213 100% 50% / 1) 0px 0px 1px !important;
   white-space: nowrap !important;
-  display: block !important;
+  display: inline !important;
   width: fit-content !important;
   height: fit-content !important;
   margin: 0 !important;
