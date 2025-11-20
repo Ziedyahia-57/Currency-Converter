@@ -1658,6 +1658,10 @@ function createPriceWrapper(textNode, text, parent) {
   // Store the original text for restoration when in-page convert is turned off
   wrapper.dataset.originalText = textNode.textContent;
 
+  // Add title attribute to show original price on hover
+  wrapper.title = `💲Original price: ${textNode.textContent}`;
+  wrapper.style.cursor = `help`;
+
   // Copy all attributes from parent if it's a simple element
   if (parent.nodeType === Node.ELEMENT_NODE && parent.childNodes.length === 1) {
     Array.from(parent.attributes).forEach((attr) => {
