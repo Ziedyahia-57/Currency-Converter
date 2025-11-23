@@ -782,11 +782,12 @@ body {
 }
 
 .currency-converter-ex button#restore,
-.currency-converter-ex button#remove-link-btn,
+.currency-converter-ex button.remove-link-btn,
 .currency-converter-ex button#edit-blacklist-btn,
 .currency-converter-ex button#edit-whitelist-btn,
 .currency-converter-ex button#edit-link-btn,
-.currency-converter-ex button#add-link-btn {
+.currency-converter-ex button#add-whitelist-link-btn,
+.currency-converter-ex button#add-blacklist-link-btn {
   height: 26px;
   user-select: none;
   width: fit-content;
@@ -803,11 +804,11 @@ body {
   padding: 4px;
   box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
 }
-.currency-converter-ex button#remove-link-btn{
+.currency-converter-ex button.remove-link-btn{
   width: 26px;
 }
 .currency-converter-ex button#restore:hover,
-.currency-converter-ex button#remove-link-btn:hover {
+.currency-converter-ex button.remove-link-btn:hover {
   cursor: pointer;
   background: #ff03032b;
   color: red;
@@ -825,7 +826,8 @@ body {
 .currency-converter-ex button#edit-blacklist-btn:hover,
 .currency-converter-ex button#edit-whitelist-btn:hover,
 .currency-converter-ex button#edit-link-btn:hover,
-.currency-converter-ex button#add-link-btn:hover {
+.currency-converter-ex button#add-whitelist-link-btn:hover,
+.currency-converter-ex button#add-blacklist-link-btn:hover {
   cursor: pointer;
   background: #03ffc02b;
   color: var(--primary-color);
@@ -1042,7 +1044,8 @@ body {
 .added-link {
      width: -webkit-fill-available;   
 }
-.add-link {
+.add-whitelist-link,
+.add-blacklist-link {
     position: absolute;
     bottom: 0;
     width: -webkit-fill-available;
@@ -1050,7 +1053,8 @@ body {
     background: var(--dark-bg);
     display: flex;
 }
-.currency-converter-ex .add-link input {
+.currency-converter-ex .add-whitelist-link input,
+.currency-converter-ex .add-blacklist-link input {
   align-self: center;
     width: -webkit-fill-available;
     height: 26px;

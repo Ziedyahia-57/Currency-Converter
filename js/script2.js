@@ -941,9 +941,16 @@ hideSettingsTab.addEventListener("click", () => {
 //⚪------------------------------------------------------------*/
 //⚪                       WHITELIST TAB                        */
 //⚪------------------------------------------------------------*/
+const addLinkBtn = document.getElementById("add-whitelist-link-btn");
+const addLinkInput = document.getElementById("add-whitelist-link");
+const whitelistContent = document.getElementById("whitelist-content");
+const WHITELIST_KEY = "whitelistedWebsites";
+let whitelist = [];
+
 function openWhitelistTab() {
   whitelistTab.classList.add("show");
   whitelistTab.classList.remove("hidden");
+  loadWhitelist(); // Load fresh data when opening tab
 }
 editWhitelistBtn.addEventListener("click", () => {
   openWhitelistTab();
@@ -954,6 +961,230 @@ function closeWhitelistTab() {
 }
 hideWhitelistTab.addEventListener("click", () => {
   closeWhitelistTab();
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                     WHITELIST LOGIC                        */
+//⚪------------------------------------------------------------*/
+
+async function saveWhitelist() {
+  return new Promise((resolve, reject) => {
+    localStorage.setItem(WHITELIST_KEY, JSON.stringify(whitelist));
+    chrome.storage.local.set({ [WHITELIST_KEY]: whitelist }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("Whitelist saved:", whitelist);
+        resolve();
+      }
+    });
+  });
+}
+
+async function loadWhitelist() {
+  try {
+    const result = await chrome.storage.local.get(WHITELIST_KEY);
+    const savedWhitelist = result[WHITELIST_KEY];
+
+    if (savedWhitelist && Array.isArray(savedWhitelist)) {
+      whitelist = savedWhitelist;
+    } else {
+      // Fallback to localStorage or empty
+      const localSaved = localStorage.getItem(WHITELIST_KEY);
+      whitelist = localSaved ? JSON.parse(localSaved) : [];
+    }
+    renderWhitelist();
+  } catch (error) {
+    console.error("Error loading whitelist:", error);
+    whitelist = [];
+    renderWhitelist();
+  }
+}
+
+function renderWhitelist() {
+  // Remove existing links (but keep the add-whitelist-link div)
+  const existingLinks = whitelistContent.querySelectorAll(".link");
+  existingLinks.forEach((link) => link.remove());
+
+  // Get the add-whitelist-link container to insert before it
+  const addLinkContainer = whitelistContent.querySelector(".add-whitelist-link");
+
+  whitelist.forEach((url) => {
+    const linkDiv = document.createElement("div");
+    linkDiv.classList.add("link");
+    linkDiv.innerHTML = `
+      <p class="added-link">${url}</p>
+      <button class="remove-link-btn" title="Remove Link" data-url="${url}">✕</button>
+    `;
+    whitelistContent.insertBefore(linkDiv, addLinkContainer);
+  });
+
+  // Re-attach event listeners for remove buttons
+  const removeButtons = whitelistContent.querySelectorAll(".remove-link-btn");
+  removeButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const urlToRemove = e.target.dataset.url;
+      removeLink(urlToRemove);
+    });
+  });
+}
+
+async function addLink(url) {
+  if (!url) return;
+  
+  // Basic validation/cleanup
+  url = url.trim();
+  if (!url) return;
+
+  if (!whitelist.includes(url)) {
+    whitelist.push(url);
+    await saveWhitelist();
+    renderWhitelist();
+  }
+  addLinkInput.value = ""; // Clear input
+}
+
+async function removeLink(url) {
+  whitelist = whitelist.filter((item) => item !== url);
+  await saveWhitelist();
+  renderWhitelist();
+}
+
+// Event Listeners for Whitelist
+addLinkBtn.addEventListener("click", () => {
+  addLink(addLinkInput.value);
+});
+
+addLinkInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    addLink(addLinkInput.value);
+  }
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                       BLACKLIST TAB                        */
+//⚪------------------------------------------------------------*/
+const editBlacklistBtn = document.getElementById("edit-blacklist-btn");
+const blacklistTab = document.getElementById("blacklist-tab");
+const hideBlacklistTab = document.getElementById("hide-blacklist-tab");
+const addBlacklistLinkBtn = document.getElementById("add-blacklist-link-btn");
+const addBlacklistLinkInput = document.getElementById("add-blacklist-link");
+const blacklistContent = document.getElementById("blacklist-content");
+const BLACKLIST_KEY = "blacklistedWebsites";
+let blacklist = [];
+
+function openBlacklistTab() {
+  blacklistTab.classList.add("show");
+  blacklistTab.classList.remove("hidden");
+  loadBlacklist(); // Load fresh data when opening tab
+}
+editBlacklistBtn.addEventListener("click", () => {
+  openBlacklistTab();
+});
+function closeBlacklistTab() {
+  blacklistTab.classList.remove("show");
+  blacklistTab.classList.add("hidden");
+}
+hideBlacklistTab.addEventListener("click", () => {
+  closeBlacklistTab();
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                     BLACKLIST LOGIC                        */
+//⚪------------------------------------------------------------*/
+
+async function saveBlacklist() {
+  return new Promise((resolve, reject) => {
+    localStorage.setItem(BLACKLIST_KEY, JSON.stringify(blacklist));
+    chrome.storage.local.set({ [BLACKLIST_KEY]: blacklist }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("Blacklist saved:", blacklist);
+        resolve();
+      }
+    });
+  });
+}
+
+async function loadBlacklist() {
+  try {
+    const result = await chrome.storage.local.get(BLACKLIST_KEY);
+    const savedBlacklist = result[BLACKLIST_KEY];
+
+    if (savedBlacklist && Array.isArray(savedBlacklist)) {
+      blacklist = savedBlacklist;
+    } else {
+      // Fallback to localStorage or empty
+      const localSaved = localStorage.getItem(BLACKLIST_KEY);
+      blacklist = localSaved ? JSON.parse(localSaved) : [];
+    }
+    renderBlacklist();
+  } catch (error) {
+    console.error("Error loading blacklist:", error);
+    blacklist = [];
+    renderBlacklist();
+  }
+}
+
+function renderBlacklist() {
+  // Remove existing links (but keep the add-whitelist-link div)
+  const existingLinks = blacklistContent.querySelectorAll(".link");
+  existingLinks.forEach((link) => link.remove());
+
+  // Get the add-whitelist-link container to insert before it
+  const addLinkContainer = blacklistContent.querySelector(".add-whitelist-link");
+
+  blacklist.forEach((url) => {
+    const linkDiv = document.createElement("div");
+    linkDiv.classList.add("link");
+    linkDiv.innerHTML = `
+      <p class="added-link">${url}</p>
+      <button class="remove-link-btn" title="Remove Link" data-url="${url}">✕</button>
+    `;
+    blacklistContent.insertBefore(linkDiv, addLinkContainer);
+  });
+
+  // Re-attach event listeners for remove buttons
+  const removeButtons = blacklistContent.querySelectorAll(".remove-link-btn");
+  removeButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const urlToRemove = e.target.dataset.url;
+      removeBlacklistLink(urlToRemove);
+    });
+  });
+}
+
+async function addBlacklistLink(url) {
+  if (!url) return;
+  
+  // Basic validation/cleanup
+  url = url.trim();
+  if (!url) return;
+
+  if (!blacklist.includes(url)) {
+    blacklist.push(url);
+    await saveBlacklist();
+    renderBlacklist();
+  }
+  addBlacklistLinkInput.value = ""; // Clear input
+}
+
+async function removeBlacklistLink(url) {
+  blacklist = blacklist.filter((item) => item !== url);
+  await saveBlacklist();
+  renderBlacklist();
+}
+
+// Event Listeners for Blacklist
+addBlacklistLinkBtn.addEventListener("click", () => {
+  addBlacklistLink(addBlacklistLinkInput.value);
+});
+
+addBlacklistLinkInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    addBlacklistLink(addBlacklistLinkInput.value);
+  }
 });
 
 //⚪------------------------------------------------------------*/
@@ -1087,10 +1318,22 @@ document.addEventListener("keydown", (event) => {
       closeDonationTab();
     }
   }
-  if (!settingsTab.classList.contains("hidden")) {
+  if (!settingsTab.classList.contains("hidden") && whitelistTab.classList.contains("hidden")) {
     if (event.key === "Escape") {
       event.preventDefault();
       closeSettingsTab();
+    }
+  }
+  if (!whitelistTab.classList.contains("hidden")) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeWhitelistTab();
+    }
+  }
+  if (!blacklistTab.classList.contains("hidden")) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeBlacklistTab();
     }
   }
   if (!currencyTab.classList.contains("hidden")) {
@@ -1694,6 +1937,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadConvertTarget();
   loadTimeFormat();
   loadDateFormat();
+  loadWhitelist();
+  loadBlacklist();
 
   loadCheckboxState();
   checkCurrencyCount();
