@@ -9,10 +9,13 @@ const currencyList = document.getElementById("currency-list");
 const hideCurrencyTab = document.getElementById("hide-currency-tab");
 const hideDonationTab = document.getElementById("hide-donation-tab");
 const hideSettingsTab = document.getElementById("hide-settings-tab");
+const hideWhitelistTab = document.getElementById("hide-whitelist-tab");
 const donationTab = document.getElementById("donation-tab");
 const settingsTab = document.getElementById("settings-tab");
+const whitelistTab = document.getElementById("whitelist-tab");
 const supportDevBtn = document.getElementById("support-dev-btn");
 const settingsBtn = document.getElementById("settings-btn");
+const editWhitelistBtn = document.getElementById("edit-whitelist-btn");
 const donationButton = document.getElementById("support-dev-btn");
 const formatSelector = document.getElementById("format");
 const filterModeSelector = document.getElementById("filter");
@@ -933,6 +936,24 @@ function closeSettingsTab() {
 }
 hideSettingsTab.addEventListener("click", () => {
   closeSettingsTab();
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                       WHITELIST TAB                        */
+//⚪------------------------------------------------------------*/
+function openWhitelistTab() {
+  whitelistTab.classList.add("show");
+  whitelistTab.classList.remove("hidden");
+}
+editWhitelistBtn.addEventListener("click", () => {
+  openWhitelistTab();
+});
+function closeWhitelistTab() {
+  whitelistTab.classList.remove("show");
+  whitelistTab.classList.add("hidden");
+}
+hideWhitelistTab.addEventListener("click", () => {
+  closeWhitelistTab();
 });
 
 //⚪------------------------------------------------------------*/

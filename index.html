@@ -288,12 +288,12 @@
 
               <div class="row">
                 <p class="option-name" id="editBlacklist">Blacklisted Websites</p>
-                <button id="edit">Edit List</button>
+                <button id="edit-blacklist-btn">Edit List</button>
               </div>
 
               <div class="row">
                 <p class="option-name" id="editWhitelist">Whitelisted Websites</p>
-                <button id="edit">Edit List</button>
+                <button id="edit-whitelist-btn">Edit List</button>
               </div>
             </div>
             <div class="settings-content">
@@ -374,8 +374,66 @@
           </div>
         </div>
 
-        <script src="js/script2.js" type="module"></script>
+        <div class="whitelist-tab hidden" id="whitelist-tab">
+          <h3 class="title">
+            <button class="hide-tab" id="hide-whitelist-tab" title="Back (Esc)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 321 513">
+                <!--Font Awesome Free 7.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+                <path d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"></path>
+              </svg>
+            </button>
+            Whitelist
+          </h3>
+          <div class="link-content">
+            <div class="link">
+              <p class="added-link">https://example.com</p>
+              <!-- <button id="edit-link-btn" title="Edit Link">Edit</button> -->
+              <button id="remove-link-btn" title="Remove Link">✕</button>
+            </div>
+            <div class="link">
+              <p class="added-link">https://example.com</p>
+              <!-- <button id="edit-link-btn" title="Edit Link">Edit</button> -->
+              <button id="remove-link-btn" title="Remove Link">✕</button>
+            </div>
+            <div class="link">
+              <p class="added-link">https://example.com</p>
+              <!-- <button id="edit-link-btn" title="Edit Link">Edit</button> -->
+              <button id="remove-link-btn" title="Remove Link">✕</button>
+            </div>
+            <div class="link">
+              <p class="added-link">https://example.com</p>
+              <!-- <button id="edit-link-btn" title="Edit Link">Edit</button> -->
+              <button id="remove-link-btn" title="Remove Link">✕</button>
+            </div>
+            <div class="link">
+              <p class="added-link">https://example.com</p>
+              <!-- <button id="edit-link-btn" title="Edit Link">Edit</button> -->
+              <button id="remove-link-btn" title="Remove Link">✕</button>
+            </div>
+            <div class="link">
+              <p class="added-link">https://example.com</p>
+              <!-- <button id="edit-link-btn" title="Edit Link">Edit</button> -->
+              <button id="remove-link-btn" title="Remove Link">✕</button>
+            </div>
+            <div class="link">
+              <p class="added-link">https://example.com</p>
+              <!-- <button id="edit-link-btn" title="Edit Link">Edit</button> -->
+              <button id="remove-link-btn" title="Remove Link">✕</button>
+            </div>
+            <div class="link">
+              <p class="added-link">https://example.com</p>
+              <!-- <button id="edit-link-btn" title="Edit Link">Edit</button> -->
+              <button id="remove-link-btn" title="Remove Link">✕</button>
+            </div>
+            <div class="add-link">
+              <input type="text" placeholder="Add Link" id="add-link">
+              <button id="add-link-btn" title="Add Link">Add</button>
+            </div>
+          </div>
+        </div>
       </div>
+
+        <script src="js/script2.js" type="module"></script>
     </div>
   </body>
 </html>

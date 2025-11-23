@@ -100,7 +100,7 @@ body {
 }
 
 /* Currency Input */
-.currency-converter-ex .currency-input {
+.currency-converter-ex .currency-input{
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -112,8 +112,8 @@ body {
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: transparent solid 1px;
   border-radius: 8px;
-  margin: 5px 0px 5px 9px;
   background: var(--gray);
+  margin: 5px 0px 5px 9px;
   padding: 0;
   width: 270px;
   box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
@@ -757,14 +757,9 @@ body {
   box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
 }
 
-.currency-converter-ex .settings-content {
-  border-radius: 4px;
-  background: #191c23;
-  margin: 4px;
-  box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
-}
-
-.currency-converter-ex .settings-tab {
+.currency-converter-ex .settings-tab,
+.currency-converter-ex .whitelist-tab,
+.currency-converter-ex .blacklist-tab {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* This enables the smooth transition */
   position: absolute;
   z-index: 3;
@@ -774,14 +769,24 @@ body {
   height: 100%;
 }
 
-.currency-converter-ex .settings-content {
+.currency-converter-ex .settings-content,
+.currency-converter-ex .link {
+  background: var(--settings-content);
+  margin: 8px;
   border-radius: 4px;
-  background: var(--light-gray);
-  margin: 4px;
+  box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
+}
+.currency-converter-ex .link {
+  display: flex;
+  padding: 0 0 0 8px;
 }
 
 .currency-converter-ex button#restore,
-.currency-converter-ex button#edit {
+.currency-converter-ex button#remove-link-btn,
+.currency-converter-ex button#edit-blacklist-btn,
+.currency-converter-ex button#edit-whitelist-btn,
+.currency-converter-ex button#edit-link-btn,
+.currency-converter-ex button#add-link-btn {
   height: 26px;
   user-select: none;
   width: fit-content;
@@ -798,7 +803,11 @@ body {
   padding: 4px;
   box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
 }
-.currency-converter-ex button#restore:hover {
+.currency-converter-ex button#remove-link-btn{
+  width: 26px;
+}
+.currency-converter-ex button#restore:hover,
+.currency-converter-ex button#remove-link-btn:hover {
   cursor: pointer;
   background: #ff03032b;
   color: red;
@@ -813,7 +822,10 @@ body {
 .currency-converter-ex select#theme:hover,
 .currency-converter-ex select#target:hover,
 .currency-converter-ex select#filter:hover,
-.currency-converter-ex button#edit:hover {
+.currency-converter-ex button#edit-blacklist-btn:hover,
+.currency-converter-ex button#edit-whitelist-btn:hover,
+.currency-converter-ex button#edit-link-btn:hover,
+.currency-converter-ex button#add-link-btn:hover {
   cursor: pointer;
   background: #03ffc02b;
   color: var(--primary-color);
@@ -846,19 +858,25 @@ body {
   margin: 0 0 0 2px;
 }
 
-.currency-converter-ex .content {
+.currency-converter-ex .content, .currency-converter-ex .link-content {
   overflow-y: overlay;
   scrollbar-color: #6e6e6e73 transparent;
   scrollbar-width: thin;
   scrollbar-gutter: stable;
   display: block;
   width: -webkit-fill-available;
+}
+.currency-converter-ex .content {
   height: fit-content;
   max-height: 374px;
   min-height: 340px;
 }
+.currency-converter-ex .link-content {
+  height: 325px;
+}
 
-.currency-converter-ex .currency-input {
+.currency-converter-ex .currency-input
+ {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   /* overflow: hidden; */
@@ -1017,11 +1035,29 @@ body {
   border-radius: 4px 0 0 4px;
   z-index: 1;
 }
-.currency-converter-ex .settings-content {
-  background: var(--settings-content);
-  margin: 8px;
-}
 .currency-converter-ex-disabled {
   cursor: not-allowed !important;
   background: hsl(180 0% 27% / 1) !important;
+}
+.added-link {
+     width: -webkit-fill-available;   
+}
+.add-link {
+    position: absolute;
+    bottom: 0;
+    width: -webkit-fill-available;
+    padding: 4px 12px 4px 8px;
+    background: var(--dark-bg);
+    display: flex;
+}
+.currency-converter-ex .add-link input {
+  align-self: center;
+    width: -webkit-fill-available;
+    height: 26px;
+    border: transparent solid 1px;
+    border-radius: 8px;
+    background: var(--gray);
+    box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
+    padding: 0 8px;
+    color: var(--font-color2);
 }
