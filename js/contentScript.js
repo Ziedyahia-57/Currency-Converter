@@ -1411,6 +1411,24 @@ function updateExistingPriceElements() {
 // }
 
 /**
+ * Helper function to check if page should be converted
+ */
+function shouldConvertPage(url) {
+  const settings = window.currencyConverterSettings || { filterMode: 'blacklist', whitelist: [], blacklist: [] };
+  const { filterMode, whitelist, blacklist } = settings;
+  
+  if (filterMode === 'whitelist') {
+      return whitelist && whitelist.some(site => url.includes(site));
+  } else {
+      // Blacklist mode (default)
+      if (blacklist && blacklist.some(site => url.includes(site))) {
+          return false;
+      }
+      return true;
+  }
+}
+
+/**
  * Optimized price detection and marking with performance improvements
  */
 class PriceDetector {
@@ -1429,6 +1447,11 @@ class PriceDetector {
     if (this.isProcessing) {
       this.pendingDetection = true;
       return;
+    }
+
+    // Check if we should convert this page
+    if (!shouldConvertPage(window.location.href)) {
+        return;
     }
 
     this.isProcessing = true;
@@ -1756,12 +1779,25 @@ const handleSelection = () => {
 // Initialize price detection when the page loads and when changes occur
 function initializePriceDetection() {
   // Check storage for the setting
-  chrome.storage.local.get(["pageConvert"], (result) => {
+  chrome.storage.local.get(["pageConvert", "filterMode", "whitelistedWebsites", "blacklistedWebsites"], (result) => {
     // Clean up any existing price elements first
     uninitializePriceDetection();
     console.log("pageConvert:", result.pageConvert);
 
+    // Initialize settings
+    window.currencyConverterSettings = {
+        filterMode: result.filterMode || 'blacklist',
+        whitelist: result.whitelistedWebsites || [],
+        blacklist: result.blacklistedWebsites || []
+    };
+
     if (result.pageConvert) {
+      // Check if we should convert this page before setting up observers
+      if (!shouldConvertPage(window.location.href)) {
+          console.log("Page conversion blocked by filter settings");
+          return;
+      }
+
       // Initial detection
       setTimeout(detectAndMarkPrices, 500);
 
@@ -2098,6 +2134,15 @@ function initialize() {
             root.classList.remove("currency-converter-ex-dark-mode");
           }
         });
+      }
+
+      // 9. Handle filter settings changes
+      if (changes.filterMode || changes.whitelistedWebsites || changes.blacklistedWebsites) {
+          chrome.storage.local.get(["pageConvert"], (result) => {
+              if (result.pageConvert) {
+                  initializePriceDetection();
+              }
+          });
       }
 
       // Refresh display if needed and we're in currencies view
