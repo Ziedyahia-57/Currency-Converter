@@ -1318,7 +1318,7 @@ document.addEventListener("keydown", (event) => {
       closeDonationTab();
     }
   }
-  if (!settingsTab.classList.contains("hidden") && whitelistTab.classList.contains("hidden")) {
+  if (!settingsTab.classList.contains("hidden") && whitelistTab.classList.contains("hidden") && blacklistTab.classList.contains("hidden")) {
     if (event.key === "Escape") {
       event.preventDefault();
       closeSettingsTab();
