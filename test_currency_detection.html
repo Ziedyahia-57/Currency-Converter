@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Detection Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .test-case { margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Currency Detection Test</h1>
+    <p>Enable "Convert prices on page" in the extension settings and check if the following are detected:</p>
+
+    <div class="test-case">100 USD</div>
+    <div class="test-case">$100</div>
+    <div class="test-case">USD100</div>
+    <div class="test-case">100EUR</div>
+    <div class="test-case">100 €</div>
+    <div class="test-case">€100</div>
+    <div class="test-case">100 GBP</div>
+    <div class="test-case">100 £</div>
+    <div class="test-case">100 AUD</div>
+    <div class="test-case">100 CAD</div>
+    <div class="test-case">100 JPY</div>
+    <div class="test-case">100 CNY</div>
+    <div class="test-case">100 INR</div>
+    <div class="test-case">100.50 USD</div>
+    <div class="test-case">100.500 USD</div>
+    <div class="test-case">100,50 USD</div>
+    <div class="test-case">100,500 USD</div>
+    <p> must return same value</p>
+    <div class="test-case">1,000.00 USD</div>
+    <div class="test-case">1.000,00 USD</div>
+    <div class="test-case">1,000.000 USD</div>
+    <div class="test-case">1.000,000 USD</div>
+    <div class="test-case">1 000.000 USD</div>
+    <div class="test-case">1 000,000 USD</div>
+    <div class="test-case">1 000.000 USD</div>
+    <div class="test-case">1 000,000 USD</div>
+    <p> closed</p>
+    
+    <!-- Edge cases that might have failed before -->
+    <div class="test-case">US$ 100</div>
+    <div class="test-case">100 US Dollar</div>
+    <div class="test-case">100 American Dollars</div>
+    
+    <!-- Compact formats (no space) -->
+    <div class="test-case">100USD</div>
+    <div class="test-case">EUR10</div>
+    <div class="test-case">GBP50</div>
+    <div class="test-case">100AUD</div>
+</body>
+</html>
