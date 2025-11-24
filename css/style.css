@@ -1070,3 +1070,14 @@ body {
     color: var(--font-color) !important;
     background: var(--fill-color) !important;
 }
+
+#blacklist-status,
+#whitelist-status {
+    color: var(--primary-color);
+    font-weight: 500;
+    padding-left: 4px;
+    opacity: 0;
+}
+.selected{
+  opacity: 1 !important;
+}

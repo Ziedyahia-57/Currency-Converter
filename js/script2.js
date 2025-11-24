@@ -10,12 +10,17 @@ const hideCurrencyTab = document.getElementById("hide-currency-tab");
 const hideDonationTab = document.getElementById("hide-donation-tab");
 const hideSettingsTab = document.getElementById("hide-settings-tab");
 const hideWhitelistTab = document.getElementById("hide-whitelist-tab");
+const hideBlacklistTab = document.getElementById("hide-blacklist-tab");
 const donationTab = document.getElementById("donation-tab");
 const settingsTab = document.getElementById("settings-tab");
 const whitelistTab = document.getElementById("whitelist-tab");
+const blacklistTab = document.getElementById("blacklist-tab");
 const supportDevBtn = document.getElementById("support-dev-btn");
 const settingsBtn = document.getElementById("settings-btn");
 const editWhitelistBtn = document.getElementById("edit-whitelist-btn");
+const editBlacklistBtn = document.getElementById("edit-blacklist-btn");
+const whitelistStatus = document.getElementById("whitelist-status");
+const blacklistStatus = document.getElementById("blacklist-status");
 const donationButton = document.getElementById("support-dev-btn");
 const formatSelector = document.getElementById("format");
 const filterModeSelector = document.getElementById("filter");
@@ -458,6 +463,8 @@ restoreBtn.addEventListener("click", async () => {
   customTheme.classList.add("custom-hidden");
   customFormat.classList.add("custom-hidden");
   customFilterMode.classList.add("custom-hidden");
+  blacklistStatus.classList.add("selected");
+  whitelistStatus.classList.remove("selected");
   customFiatDecimals.classList.add("custom-hidden");
   customCryptoDecimals.classList.add("custom-hidden");
   customDate.classList.add("custom-hidden");
@@ -506,6 +513,11 @@ async function checkCustomSettings() {
   if (filterSettings.filterMode && filterSettings.filterMode !== "blacklist") {
     console.log("filterSettings: ", filterSettings.filterMode);
     customFilterMode.classList.remove("custom-hidden");
+    blacklistStatus.classList.remove("selected");
+    whitelistStatus.classList.add("selected");
+  }else{
+    blacklistStatus.classList.add("selected");
+    whitelistStatus.classList.remove("selected");
   }
 
   if (fiatDecimalsSettings.fiatDecimals && fiatDecimalsSettings.fiatDecimals != 2) {
@@ -1115,9 +1127,6 @@ addLinkInput.addEventListener("keydown", (e) => {
 //⚪------------------------------------------------------------*/
 //⚪                       BLACKLIST TAB                        */
 //⚪------------------------------------------------------------*/
-const editBlacklistBtn = document.getElementById("edit-blacklist-btn");
-const blacklistTab = document.getElementById("blacklist-tab");
-const hideBlacklistTab = document.getElementById("hide-blacklist-tab");
 const addBlacklistLinkBtn = document.getElementById("add-blacklist-link-btn");
 const addBlacklistLinkInput = document.getElementById("add-blacklist-link");
 const blacklistContent = document.getElementById("blacklist-content");
@@ -2106,8 +2115,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (filterModeSelector.value !== "blacklist") {
       customFilterMode.classList.remove("custom-hidden");
+      blacklistStatus.classList.remove("selected");
+      whitelistStatus.classList.add("selected");
     } else {
       customFilterMode.classList.add("custom-hidden");
+      blacklistStatus.classList.add("selected");
+      whitelistStatus.classList.remove("selected");
     }
   });
 
