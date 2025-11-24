@@ -1065,3 +1065,8 @@ body {
     padding: 0 8px;
     color: var(--font-color2);
 }
+
+.disabled-btn {
+    color: var(--font-color) !important;
+    background: var(--fill-color) !important;
+}

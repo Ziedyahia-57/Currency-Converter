@@ -967,6 +967,40 @@ hideWhitelistTab.addEventListener("click", () => {
 //⚪                     WHITELIST LOGIC                        */
 //⚪------------------------------------------------------------*/
 
+function isValidUrl(string) {
+  const res = string.match(/^((http|https):\/\/)?([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/);
+  return (res !== null);
+}
+
+function validateInput(inputElement, buttonElement) {
+  const url = inputElement.value.trim();
+  
+  if (!url) {
+    // Empty input
+    inputElement.style.outline = "";
+    buttonElement.disabled = true;
+    buttonElement.style.cursor = "not-allowed";
+    buttonElement.classList.add("disabled-btn");
+    return false;
+  }
+
+  if (isValidUrl(url)) {
+    // Valid URL
+    inputElement.style.outline = "1px solid var(--primary-color)";
+    buttonElement.disabled = false;
+    buttonElement.style.cursor = "pointer";
+    buttonElement.classList.remove("disabled-btn");
+    return true;
+  } else {
+    // Invalid URL
+    inputElement.style.outline = "1px solid #f8312f";
+    buttonElement.disabled = true;
+    buttonElement.style.cursor = "not-allowed";
+    buttonElement.classList.add("disabled-btn");
+    return false;
+  }
+}
+
 async function saveWhitelist() {
   return new Promise((resolve, reject) => {
     localStorage.setItem(WHITELIST_KEY, JSON.stringify(whitelist));
@@ -1010,10 +1044,11 @@ function renderWhitelist() {
   const addLinkContainer = whitelistContent.querySelector(".add-whitelist-link");
 
   whitelist.forEach((url) => {
+    const displayUrl = url.length > 30 ? url.substring(0, 30) + "..." : url;
     const linkDiv = document.createElement("div");
     linkDiv.classList.add("link");
     linkDiv.innerHTML = `
-      <p class="added-link">${url}</p>
+      <p class="added-link" title="${url}">${displayUrl}</p>
       <button class="remove-link-btn" title="Remove Link" data-url="${url}">✕</button>
     `;
     whitelistContent.insertBefore(linkDiv, addLinkContainer);
@@ -1036,12 +1071,18 @@ async function addLink(url) {
   url = url.trim();
   if (!url) return;
 
+  if (!isValidUrl(url)) {
+    // Should be handled by UI validation, but double check
+    return;
+  }
+
   if (!whitelist.includes(url)) {
     whitelist.push(url);
     await saveWhitelist();
     renderWhitelist();
   }
   addLinkInput.value = ""; // Clear input
+  validateInput(addLinkInput, addLinkBtn); // Re-validate to disable button
 }
 
 async function removeLink(url) {
@@ -1051,13 +1092,23 @@ async function removeLink(url) {
 }
 
 // Event Listeners for Whitelist
+// Event Listeners for Whitelist
 addLinkBtn.addEventListener("click", () => {
   addLink(addLinkInput.value);
 });
 
+addLinkInput.addEventListener("input", () => {
+  validateInput(addLinkInput, addLinkBtn);
+});
+
+// Initialize button state
+validateInput(addLinkInput, addLinkBtn);
+
 addLinkInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
-    addLink(addLinkInput.value);
+    if (!addLinkBtn.disabled) {
+      addLink(addLinkInput.value);
+    }
   }
 });
 
@@ -1136,10 +1187,11 @@ function renderBlacklist() {
   const addLinkContainer = blacklistContent.querySelector(".add-whitelist-link");
 
   blacklist.forEach((url) => {
+    const displayUrl = url.length > 30 ? url.substring(0, 30) + "..." : url;
     const linkDiv = document.createElement("div");
     linkDiv.classList.add("link");
     linkDiv.innerHTML = `
-      <p class="added-link">${url}</p>
+      <p class="added-link" title="${url}">${displayUrl}</p>
       <button class="remove-link-btn" title="Remove Link" data-url="${url}">✕</button>
     `;
     blacklistContent.insertBefore(linkDiv, addLinkContainer);
@@ -1162,12 +1214,18 @@ async function addBlacklistLink(url) {
   url = url.trim();
   if (!url) return;
 
+  if (!isValidUrl(url)) {
+    // Should be handled by UI validation
+    return;
+  }
+
   if (!blacklist.includes(url)) {
     blacklist.push(url);
     await saveBlacklist();
     renderBlacklist();
   }
   addBlacklistLinkInput.value = ""; // Clear input
+  validateInput(addBlacklistLinkInput, addBlacklistLinkBtn); // Re-validate
 }
 
 async function removeBlacklistLink(url) {
@@ -1177,13 +1235,23 @@ async function removeBlacklistLink(url) {
 }
 
 // Event Listeners for Blacklist
+// Event Listeners for Blacklist
 addBlacklistLinkBtn.addEventListener("click", () => {
   addBlacklistLink(addBlacklistLinkInput.value);
 });
 
+addBlacklistLinkInput.addEventListener("input", () => {
+  validateInput(addBlacklistLinkInput, addBlacklistLinkBtn);
+});
+
+// Initialize button state
+validateInput(addBlacklistLinkInput, addBlacklistLinkBtn);
+
 addBlacklistLinkInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
-    addBlacklistLink(addBlacklistLinkInput.value);
+    if (!addBlacklistLinkBtn.disabled) {
+      addBlacklistLink(addBlacklistLinkInput.value);
+    }
   }
 });
 
