@@ -6,50 +6,286 @@
     <title>Currency Detection Test</title>
     <style>
         body { font-family: sans-serif; padding: 20px; }
-        .test-case { margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; }
+        .pass { color: green; }
+        .fail { color: red; font-weight: bold; }
+        .test-case { margin-bottom: 5px; }
     </style>
 </head>
 <body>
     <h1>Currency Detection Test</h1>
-    <p>Enable "Convert prices on page" in the extension settings and check if the following are detected:</p>
+    <div id="results">Running tests...</div>
 
-    <div class="test-case">100 USD</div>
-    <div class="test-case">$100</div>
-    <div class="test-case">USD100</div>
-    <div class="test-case">100EUR</div>
-    <div class="test-case">100 €</div>
-    <div class="test-case">€100</div>
-    <div class="test-case">100 GBP</div>
-    <div class="test-case">100 £</div>
-    <div class="test-case">100 AUD</div>
-    <div class="test-case">100 CAD</div>
-    <div class="test-case">100 JPY</div>
-    <div class="test-case">100 CNY</div>
-    <div class="test-case">100 INR</div>
-    <div class="test-case">100.50 USD</div>
-    <div class="test-case">100.500 USD</div>
-    <div class="test-case">100,50 USD</div>
-    <div class="test-case">100,500 USD</div>
-    <p> must return same value</p>
-    <div class="test-case">1,000.00 USD</div>
-    <div class="test-case">1.000,00 USD</div>
-    <div class="test-case">1,000.000 USD</div>
-    <div class="test-case">1.000,000 USD</div>
-    <div class="test-case">1 000.000 USD</div>
-    <div class="test-case">1 000,000 USD</div>
-    <div class="test-case">1 000.000 USD</div>
-    <div class="test-case">1 000,000 USD</div>
-    <p> closed</p>
-    
-    <!-- Edge cases that might have failed before -->
-    <div class="test-case">US$ 100</div>
-    <div class="test-case">100 US Dollar</div>
-    <div class="test-case">100 American Dollars</div>
-    
-    <!-- Compact formats (no space) -->
-    <div class="test-case">100USD</div>
-    <div class="test-case">EUR10</div>
-    <div class="test-case">GBP50</div>
-    <div class="test-case">100AUD</div>
+    <!-- Mock chrome API -->
+    <script>
+        window.chrome = {
+            runtime: {
+                getURL: (path) => path
+            },
+            storage: {
+                local: {
+                    get: (keys, cb) => cb({})
+                }
+            }
+        };
+    </script>
+
+    <!-- Load the script to test -->
+    <script src="reproduce_detection_new.js"></script>
+
+    <script>
+        const testCases = [
+            // Valid Patterns
+            { text: "$ 100", expected: "valid", currency: "USD" }, // symbol NUM (default USD for $)
+            { text: "100 $", expected: "valid", currency: "USD" }, // NUM symbol
+            { text: "US$ 100", expected: "valid", currency: "USD" }, // rep NUM
+            { text: "100 US$", expected: "valid", currency: "USD" }, // NUM rep
+            { text: "100 $ US$", expected: "valid", currency: "USD" }, // NUM symbol rep
+            { text: "100 US$ $", expected: "valid", currency: "USD" }, // NUM rep symbol
+            { text: "100 $ USD", expected: "valid", currency: "USD" }, // NUM symbol cc
+            { text: "100 USD $", expected: "valid", currency: "USD" }, // NUM cc symbol
+            { text: "$ US$ 100", expected: "valid", currency: "USD" }, // symbol rep NUM
+            { text: "US$ $ 100", expected: "valid", currency: "USD" }, // rep symbol NUM
+            { text: "$ USD 100", expected: "valid", currency: "USD" }, // symbol cc NUM
+            { text: "USD $ 100", expected: "valid", currency: "USD" }, // cc symbol NUM
+            { text: "$ 100 US$", expected: "valid", currency: "USD" }, // symbol NUM rep
+            { text: "US$ 100 $", expected: "valid", currency: "USD" }, // rep NUM symbol
+            { text: "$ 100 USD", expected: "valid", currency: "USD" }, // symbol NUM cc
+            { text: "USD 100 $", expected: "valid", currency: "USD" }, // cc NUM symbol
+
+            // Spacing variations
+            { text: "$100", expected: "valid", currency: "USD" },
+            { text: "100$", expected: "valid", currency: "USD" },
+            { text: "$US$100", expected: "valid", currency: "USD" },
+            { text: "100$US$", expected: "valid", currency: "USD" },
+
+            // Other currencies
+            { text: "€ 100", expected: "valid", currency: "EUR" },
+            { text: "100 EUR", expected: "valid", currency: "EUR" },
+            { text: "100 Euro", expected: "valid", currency: "EUR" },
+            { text: "¥ 100", expected: "valid", currency: "JPY" }, // JPY is first for ¥
+
+            // Case-insensitive tests
+            { text: "usd 100", expected: "valid", currency: "USD" }, // lowercase currency code
+            { text: "100 eur", expected: "valid", currency: "EUR" }, // lowercase currency code
+            { text: "100 gbp", expected: "valid", currency: "GBP" }, // lowercase currency code
+            { text: "100 jpy", expected: "valid", currency: "JPY" }, // lowercase currency code
+            { text: "100 cny", expected: "valid", currency: "CNY" }, // lowercase currency code
+            { text: "100 aud", expected: "valid", currency: "AUD" }, // lowercase currency code
+            { text: "100 cad", expected: "valid", currency: "CAD" }, // lowercase currency code
+            { text: "100 chf", expected: "valid", currency: "CHF" }, // lowercase currency code
+            { text: "100 hkd", expected: "valid", currency: "HKD" }, // lowercase currency code
+            { text: "100 nzd", expected: "valid", currency: "NZD" }, // lowercase currency code
+            { text: "100 sek", expected: "valid", currency: "SEK" }, // lowercase currency code
+            { text: "100 nok", expected: "valid", currency: "NOK" }, // lowercase currency code
+            { text: "100 dkk", expected: "valid", currency: "DKK" }, // lowercase currency code
+            { text: "100 sgd", expected: "valid", currency: "SGD" }, // lowercase currency code
+            { text: "100 mxn", expected: "valid", currency: "MXN" }, // lowercase currency code
+            { text: "100 brl", expected: "valid", currency: "BRL" }, // lowercase currency code
+            { text: "100 inr", expected: "valid", currency: "INR" }, // lowercase currency code
+            { text: "100 rub", expected: "valid", currency: "RUB" }, // lowercase currency code
+            { text: "100 try", expected: "valid", currency: "TRY" }, // lowercase currency code
+            { text: "100 zar", expected: "valid", currency: "ZAR" }, // lowercase currency code
+            { text: "100 sar", expected: "valid", currency: "SAR" }, // lowercase currency code
+            { text: "100 aed", expected: "valid", currency: "AED" }, // lowercase currency code
+            { text: "100 qar", expected: "valid", currency: "QAR" }, // lowercase currency code
+            { text: "100 krw", expected: "valid", currency: "KRW" }, // lowercase currency code
+            { text: "100 thb", expected: "valid", currency: "THB" }, // lowercase currency code
+            { text: "100 vnd", expected: "valid", currency: "VND" }, // lowercase currency code
+            { text: "100 myr", expected: "valid", currency: "MYR" }, // lowercase currency code
+            { text: "100 idr", expected: "valid", currency: "IDR" }, // lowercase currency code
+            { text: "100 php", expected: "valid", currency: "PHP" }, // lowercase currency code
+            { text: "100 twd", expected: "valid", currency: "TWD" }, // lowercase currency code
+            { text: "100 btc", expected: "valid", currency: "BTC" }, // lowercase currency code
+            { text: "100 egp", expected: "valid", currency: "EGP" }, // lowercase currency code
+            { text: "100 ngn", expected: "valid", currency: "NGN" }, // lowercase currency code
+            { text: "100 kes", expected: "valid", currency: "KES" }, // lowercase currency code
+            { text: "100 pln", expected: "valid", currency: "PLN" }, // lowercase currency code
+            { text: "100 czk", expected: "valid", currency: "CZK" }, // lowercase currency code
+            { text: "100 huf", expected: "valid", currency: "HUF" }, // lowercase currency code
+            { text: "100 ars", expected: "valid", currency: "ARS" }, // lowercase currency code
+            { text: "100 clp", expected: "valid", currency: "CLP" }, // lowercase currency code
+            { text: "100 cop", expected: "valid", currency: "COP" }, // lowercase currency code
+            { text: "100 pen", expected: "valid", currency: "PEN" }, // lowercase currency code
+            { text: "100 dzd", expected: "valid", currency: "DZD" }, // lowercase currency code
+            { text: "100 mad", expected: "valid", currency: "MAD" }, // lowercase currency code
+            { text: "100 tnd", expected: "valid", currency: "TND" }, // lowercase currency code
+            { text: "100 zmw", expected: "valid", currency: "ZMW" }, // lowercase currency code
+            { text: "100 rwf", expected: "valid", currency: "RWF" }, // lowercase currency code
+            { text: "100 ugx", expected: "valid", currency: "UGX" }, // lowercase currency code
+            { text: "100 sdg", expected: "valid", currency: "SDG" }, // lowercase currency code
+            { text: "100 bwp", expected: "valid", currency: "BWP" }, // lowercase currency code
+            { text: "100 mga", expected: "valid", currency: "MGA" }, // lowercase currency code
+            { text: "100 mur", expected: "valid", currency: "MUR" }, // lowercase currency code
+            { text: "100 scr", expected: "valid", currency: "SCR" }, // lowercase currency code
+            { text: "100 xof", expected: "valid", currency: "XOF" }, // lowercase currency code
+            { text: "100 xaf", expected: "valid", currency: "XAF" }, // lowercase currency code
+            { text: "100 lsl", expected: "valid", currency: "LSL" }, // lowercase currency code
+            { text: "100 szl", expected: "valid", currency: "SZL" }, // lowercase currency code
+            { text: "100 mwk", expected: "valid", currency: "MWK" }, // lowercase currency code
+            { text: "100 nad", expected: "valid", currency: "NAD" }, // lowercase currency code
+            { text: "100 ttd", expected: "valid", currency: "TTD" }, // lowercase currency code
+            { text: "100 uyu", expected: "valid", currency: "UYU" }, // lowercase currency code
+            { text: "100 pyg", expected: "valid", currency: "PYG" }, // lowercase currency code
+            { text: "100 bob", expected: "valid", currency: "BOB" }, // lowercase currency code
+            { text: "100 vef", expected: "valid", currency: "VEF" }, // lowercase currency code
+            { text: "100 ves", expected: "valid", currency: "VES" }, // lowercase currency code
+            { text: "100 xdr", expected: "valid", currency: "XDR" }, // lowercase currency code
+            { text: "100 xag", expected: "valid", currency: "XAG" }, // lowercase currency code
+            { text: "100 xau", expected: "valid", currency: "XAU" }, // lowercase currency code
+            { text: "100 xpt", expected: "valid", currency: "XPT" }, // lowercase currency code
+            { text: "100 xpd", expected: "valid", currency: "XPD" }, // lowercase currency code
+            { text: "100 zwl", expected: "valid", currency: "ZWL" }, // lowercase currency code
+            { text: "100 bbd", expected: "valid", currency: "BBD" }, // lowercase currency code
+            { text: "100 xcd", expected: "valid", currency: "XCD" }, // lowercase currency code
+            { text: "100 lrd", expected: "valid", currency: "LRD" }, // lowercase currency code
+            { text: "100 srd", expected: "valid", currency: "SRD" }, // lowercase currency code
+            { text: "100 gyd", expected: "valid", currency: "GYD" }, // lowercase currency code
+            { text: "100 kyd", expected: "valid", currency: "KYD" }, // lowercase currency code
+            { text: "100 jmd", expected: "valid", currency: "JMD" }, // lowercase currency code
+
+            // Case-insensitive representation tests
+            { text: "us$ 100", expected: "valid", currency: "USD" }, // lowercase representation
+            { text: "100 euro", expected: "valid", currency: "EUR" }, // lowercase representation
+            { text: "100 pounds", expected: "valid", currency: "GBP" }, // lowercase representation
+            { text: "100 yen", expected: "valid", currency: "JPY" }, // lowercase representation
+            { text: "100 yuan", expected: "valid", currency: "CNY" }, // lowercase representation
+            { text: "100 dollars", expected: "valid", currency: "USD" }, // lowercase representation
+            { text: "100 pesos", expected: "valid", currency: "MXN" }, // lowercase representation
+            { text: "100 reais", expected: "valid", currency: "BRL" }, // lowercase representation
+            { text: "100 rupees", expected: "valid", currency: "INR" }, // lowercase representation
+            { text: "100 rubles", expected: "valid", currency: "RUB" }, // lowercase representation
+            { text: "100 lira", expected: "valid", currency: "TRY" }, // lowercase representation
+            { text: "100 rand", expected: "valid", currency: "ZAR" }, // lowercase representation
+            { text: "100 riyal", expected: "valid", currency: "SAR" }, // lowercase representation
+            { text: "100 dirham", expected: "valid", currency: "AED" }, // lowercase representation
+            { text: "100 won", expected: "valid", currency: "KRW" }, // lowercase representation
+            { text: "100 baht", expected: "valid", currency: "THB" }, // lowercase representation
+            { text: "100 dong", expected: "valid", currency: "VND" }, // lowercase representation
+            { text: "100 ringgit", expected: "valid", currency: "MYR" }, // lowercase representation
+            { text: "100 rupiah", expected: "valid", currency: "IDR" }, // lowercase representation
+            { text: "100 franc", expected: "valid", currency: "CHF" }, // lowercase representation
+            { text: "100 krona", expected: "valid", currency: "SEK" }, // lowercase representation
+            { text: "100 krone", expected: "valid", currency: "NOK" }, // lowercase representation
+
+            // Number format tests
+            // Valid formats
+            { text: "1,234.56 EUR", expected: "valid", currency: "EUR" }, // Comma thousand, dot decimal
+            { text: "1.234,56 EUR", expected: "valid", currency: "EUR" }, // Dot thousand, comma decimal
+            { text: "1 234.56 EUR", expected: "valid", currency: "EUR" }, // Space thousand, dot decimal
+            { text: "1 234,56 EUR", expected: "valid", currency: "EUR" }, // Space thousand, comma decimal
+            { text: "1,234 EUR", expected: "valid", currency: "EUR" }, // Comma thousand, no decimal
+            { text: "1.234 EUR", expected: "valid", currency: "EUR" }, // Dot thousand, no decimal
+            { text: "1234,56 EUR", expected: "valid", currency: "EUR" }, // No thousand, comma decimal
+            { text: "1234.56 EUR", expected: "valid", currency: "EUR" }, // No thousand, dot decimal
+            { text: "1234 EUR", expected: "valid", currency: "EUR" }, // No separators
+            { text: "1 234 567.89 EUR", expected: "valid", currency: "EUR" }, // Multiple space thousand separators
+            { text: "1,234,567.89 EUR", expected: "valid", currency: "EUR" }, // Multiple comma thousand separators
+            { text: "1.234.567,89 EUR", expected: "valid", currency: "EUR" }, // Multiple dot thousand separators
+
+            // Invalid formats
+            { text: ",1234 EUR", expected: "invalid" }, // Starts with comma
+            { text: ".1234 EUR", expected: "invalid" }, // Starts with dot
+            { text: "1234, EUR", expected: "invalid" }, // Ends with comma
+            { text: "1234. EUR", expected: "invalid" }, // Ends with dot
+            { text: "1,,234 EUR", expected: "invalid" }, // Double comma
+            { text: "1..234 EUR", expected: "invalid" }, // Double dot
+            { text: "1, .234 EUR", expected: "invalid" }, // Comma space dot
+            { text: "1. ,234 EUR", expected: "invalid" }, // Dot space comma
+            { text: "1.234.56 EUR", expected: "invalid" }, // Double dot
+            { text: "1,234,56 EUR", expected: "invalid" }, // Double comma
+            { text: "1,234.56.78 EUR", expected: "invalid" }, // Mixed double dot
+            { text: "1.234,56,78 EUR", expected: "invalid" }, // Mixed double comma
+            { text: "12,34.56 EUR", expected: "invalid" }, // Incorrect thousand separator placement
+            { text: "12.34,56 EUR", expected: "invalid" }, // Incorrect thousand separator placement
+            { text: "123,4.56 EUR", expected: "invalid" }, // Incorrect thousand separator placement
+            { text: "123.4,56 EUR", expected: "invalid" }, // Incorrect thousand separator placement
+
+            // Invalid Patterns / False Positives
+            { text: "100", expected: "invalid" }, // Just number
+            { text: "$ $ 100", expected: "invalid" }, // symbol symbol NUM (not in list)
+            { text: "100 $ $", expected: "invalid" },
+            { text: "USD USD 100", expected: "invalid" },
+            { text: "abc 100", expected: "invalid" },
+            { text: "$ 100 abc", expected: "invalid" },
+            { text: "100 200", expected: "invalid" },
+
+            // Consistency Checks
+            { text: "$ 100 EUR", expected: "invalid" }, // $ is not EUR (usually)
+            { text: "€ 100 USD", expected: "invalid" },
+            { text: "US$ 100 EUR", expected: "invalid" },
+            { text: "US$ 100 CAD", expected: "invalid" }, // US$ implies USD, CAD is CAD
+            { text: "C$ 100 CAD", expected: "valid", currency: "CAD" }, // C$ is CAD
+            { text: "$ 100 CAD", expected: "valid", currency: "CAD" }, // $ allows CAD, CAD allows CAD -> Intersection CAD
+
+            //country code checks
+            { text: "100 eu", expected: "invalid" }, // NUM CC
+            { text: "100eu", expected: "invalid" }, // NUM CC (no space)
+            { text: "eu 100", expected: "invalid" }, // CC NUM
+            { text: "eu100", expected: "invalid" }, // CC NUM (no space)
+            { text: "€100 eu", expected: "valid", currency: "EUR" }, // Symbol NUM cc
+            { text: "€ 100 eu", expected: "valid", currency: "EUR" }, // Symbol NUM cc (no space)
+            { text: "eu 100 €", expected: "valid", currency: "EUR" }, // cc NUM symbol
+            { text: "eu100€", expected: "valid", currency: "EUR" }, // cc NUM symbol (no space)
+            { text: "100 € eu", expected: "valid", currency: "EUR" }, // NUM symbol cc
+            { text: "100€eu", expected: "valid", currency: "EUR" }, //  NUM symbol cc(no space)
+            { text: "100 eu €", expected: "valid", currency: "EUR" }, // NUM cc symbol
+            { text: "100eu€", expected: "valid", currency: "EUR" }, // NUM cc symbol(no space)
+
+            { text: "100 us", expected: "invalid" }, // NUM CC
+            { text: "100us", expected: "invalid" }, // NUM CC (no space)
+            { text: "us 100", expected: "invalid" }, // CC NUM
+            { text: "us100", expected: "invalid" }, // CC NUM (no space)
+            { text: "$100 us", expected: "valid", currency: "USD" }, // Symbol NUM cc
+            { text: "$ 100 us", expected: "valid", currency: "USD" }, // Symbol NUM cc (no space)
+            { text: "us 100 $", expected: "valid", currency: "USD" }, // cc NUM symbol
+            { text: "us100$", expected: "valid", currency: "USD" }, // cc NUM symbol (no space)
+            { text: "100 $ us", expected: "valid", currency: "USD" }, // NUM symbol cc
+            { text: "100$us", expected: "valid", currency: "USD" }, // NUM symbol cc(no space)
+            { text: "100 us $", expected: "valid", currency: "USD" }, // NUM cc symbol
+            { text: "100us$", expected: "valid", currency: "USD" }, // NUM cc symbol(no space)
+        ];
+
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+
+        let passed = 0;
+        let failed = 0;
+
+        testCases.forEach((tc, index) => {
+            try {
+                const result = detectCurrency(tc.text);
+                const isValid = result.type !== 'invalid';
+                const expectedValid = tc.expected === 'valid';
+                
+                let success = (isValid === expectedValid);
+                if (success && expectedValid && tc.currency) {
+                    success = (result.currency === tc.currency);
+                }
+
+                const div = document.createElement('div');
+                div.className = `test-case ${success ? 'pass' : 'fail'}`;
+                div.textContent = `Test ${index + 1}: "${tc.text}" -> Expected: ${tc.expected} (${tc.currency || ''}), Got: ${isValid ? 'valid' : 'invalid'} (${result.currency || ''}) - ${success ? 'PASS' : 'FAIL'}`;
+                resultsDiv.appendChild(div);
+
+                if (success) passed++; else failed++;
+            } catch (e) {
+                const div = document.createElement('div');
+                div.className = 'test-case fail';
+                div.textContent = `Test ${index + 1}: "${tc.text}" -> Error: ${e.message}`;
+                resultsDiv.appendChild(div);
+                failed++;
+                console.error(e);
+            }
+        });
+
+        const summary = document.createElement('div');
+        summary.innerHTML = `<h3>Summary: ${passed} Passed, ${failed} Failed</h3>`;
+        resultsDiv.prepend(summary);
+        
+        // Signal completion for browser tool
+        const done = document.createElement('div');
+        done.id = 'tests-complete';
+        document.body.appendChild(done);
+    </script>
 </body>
 </html>

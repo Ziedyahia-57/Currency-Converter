@@ -5,6 +5,7 @@ const POPUP_DISTANCE = 20;
 const CURRENCY_REPRESENTATIONS = {
   // Major currencies
   USD: [
+    "USD",
     "US$",
     "$US",
     "U.S. Dollar",
@@ -16,28 +17,29 @@ const CURRENCY_REPRESENTATIONS = {
     "United States Dollar",
     "United States Dollars",
   ],
-  EUR: ["Euro", "Euros"],
-  GBP: ["British Pound", "British Pounds", "Sterling", "Pound Sterling"],
-  JPY: ["Japanese Yen", "Yen"],
-  CNY: ["元", "Chinese Yuan", "Yuan", "Renminbi", "RMB"],
+  EUR: ["EUR", "Euro", "Euros"],
+  GBP: ["GBP", "British Pound", "British Pounds", "Sterling", "Pound Sterling"],
+  JPY: ["JPY", "Japanese Yen", "Yen"],
+  CNY: ["CNY", "元", "Chinese Yuan", "Yuan", "Renminbi", "RMB"],
 
-  AUD: ["A$", "$A", "AU$", "$AU", "Australian Dollar", "Australian Dollars"],
-  CAD: ["CA$", "$CA", "CA Dollar", "CA Dollars", "Canadian Dollar", "Canadian Dollars"],
-  CHF: ["Fr.", "SFr.", "Swiss Franc", "Swiss Francs"],
-  HKD: ["HK$", "$HK", "HK Dollar", "HK Dollars", "Hong Kong Dollar", "Hong Kong Dollars"],
-  NZD: ["NZ$", "$NZ", "NZ Dollar", "NZ Dollars", "New Zealand Dollar", "New Zealand Dollars"],
+  AUD: ["AUD", "A$", "$A", "AU$", "$AU", "Australian Dollar", "Australian Dollars"],
+  CAD: ["CAD", "CA$", "$CA", "CA Dollar", "CA Dollars", "Canadian Dollar", "Canadian Dollars"],
+  CHF: ["CHF", "Fr.", "SFr.", "Swiss Franc", "Swiss Francs"],
+  HKD: ["HKD", "HK$", "$HK", "HK Dollar", "HK Dollars", "Hong Kong Dollar", "Hong Kong Dollars"],
+  NZD: ["NZD", "NZ$", "$NZ", "NZ Dollar", "NZ Dollars", "New Zealand Dollar", "New Zealand Dollars"],
 
-  SEK: ["Swedish Krona", "Swedish Kronor"],
-  NOK: ["Norwegian Krone", "Norwegian Kroner"],
-  DKK: ["Danish Krone", "Danish Kroner"],
+  SEK: ["SEK", "Swedish Krona", "Swedish Kronor"],
+  NOK: ["NOK", "Norwegian Krone", "Norwegian Kroner"],
+  DKK: ["DKK", "Danish Krone", "Danish Kroner"],
 
-  SGD: ["S$", "$S", "Singapore Dollar", "Singapore Dollars"],
-  MXN: ["Mex$", "$Mex", "Mexican Peso", "Mexican Pesos"],
-  BRL: ["R$", "$R", "Brazilian Real", "Brazilian Reais", "Real", "Reais"],
-  INR: ["Indian Rupee", "Indian Rupees", "Rupee", "Rupees"],
-  RUB: ["Russian Ruble", "Russian Rubles"],
-  TRY: ["TL", "Turkish Lira"],
+  SGD: ["SGD", "S$", "$S", "Singapore Dollar", "Singapore Dollars"],
+  MXN: ["MXN", "Mex$", "$Mex", "Mexican Peso", "Mexican Pesos"],
+  BRL: ["BRL", "R$", "$R", "Brazilian Real", "Brazilian Reais", "Real", "Reais"],
+  INR: ["INR", "Indian Rupee", "Indian Rupees", "Rupee", "Rupees"],
+  RUB: ["RUB", "Russian Ruble", "Russian Rubles"],
+  TRY: ["TRY", "TL", "Turkish Lira", "Turkish Liras", "Türk Lirası", "Türk Lirası", "Lira"],
   ZAR: [
+    "ZAR",
     "R",
     "South African Rand",
     "South African Rands",
@@ -50,8 +52,9 @@ const CURRENCY_REPRESENTATIONS = {
   ],
 
   // Middle Eastern currencies
-  SAR: ["Saudi Riyal", "Saudi Riyals"],
+  SAR: ["SAR", "Saudi Riyal", "Saudi Riyals"],
   AED: [
+    "AED",
     "DH",
     "UAE Dirham",
     "UAE Dirhams",
@@ -60,47 +63,48 @@ const CURRENCY_REPRESENTATIONS = {
     "Emirati Dirham",
     "Emirati Dirhams",
   ],
-  QAR: ["Qatari Riyal", "Qatari Riyals"],
+  QAR: ["QAR", "Qatari Riyal", "Qatari Riyals"],
 
   // Asian currencies
-  KRW: ["South Korean Won", "S. Korean Won", "S.Korean Won", "Won"],
-  THB: ["Thai Baht"],
-  VND: ["Vietnamese Dong"],
-  MYR: ["RM", "Malaysian Ringgit"],
-  IDR: ["Rp", "Indonesian Rupiah"],
-  PHP: ["Philippine Peso", "Philippine Pesos"],
-  TWD: ["NT$", "$NT", "NT Dollar", "NT Dollars", "New Taiwan Dollar", "New Taiwan Dollars"],
+  KRW: ["KRW", "South Korean Won", "S. Korean Won", "S.Korean Won", "Won"],
+  THB: ["THB", "Thai Baht", "Baht"],
+  VND: ["VND", "Vietnamese Dong", "Dong"],
+  MYR: ["MYR", "RM", "Malaysian Ringgit", "Ringgit"],
+  IDR: ["IDR", "Rp", "Indonesian Rupiah", "Rupiah"],
+  PHP: ["PHP", "Philippine Peso", "Philippine Pesos"],
+  TWD: ["TWD", "NT$", "$NT", "NT Dollar", "NT Dollars", "New Taiwan Dollar", "New Taiwan Dollars"],
 
   // Cryptocurrencies
-  BTC: ["Bitcoin"],
+  BTC: ["BTC", "Bitcoin"],
 
   // African currencies
-  EGP: ["E£", "Egyptian Pound", "Egyptian Pounds"],
-  NGN: ["N", "Nigerian Naira", "Nigerian Nairas"],
-  KES: ["KSh", "Kenyan Shilling", "Kenyan Shillings"],
+  EGP: ["EGP", "E£", "Egyptian Pound", "Egyptian Pounds"],
+  NGN: ["NGN", "N", "Nigerian Naira", "Nigerian Nairas"],
+  KES: ["KES", "KSh", "Kenyan Shilling", "Kenyan Shillings"],
 
-  PLN: ["Polish Złoty", "Polish Złote"],
-  CZK: ["Kč", "Czech Koruna", "Czech Koruny"],
-  HUF: ["Ft", "Hungarian Forint", "Hungarian Forints"],
+  PLN: ["PLN", "Polish Złoty", "Polish Złote"],
+  CZK: ["CZK", "Kč", "Czech Koruna", "Czech Koruny"],
+  HUF: ["HUF", "Ft", "Hungarian Forint", "Hungarian Forints"],
 
-  ARS: ["ARS$", "$ARS", "$AR", "AR$", "Argentine Peso", "Argentine Pesos"],
-  CLP: ["CLP$", "$CLP", "Chilean Peso", "Chilean Pesos"],
-  COP: ["COL$", "$COL", "Colombian Peso", "Colombian Pesos"],
-  PEN: ["S/", "Peruvian Sol", "Peruvian Soles"],
+  ARS: ["ARS", "ARS$", "$ARS", "$AR", "AR$", "Argentine Peso", "Argentine Pesos"],
+  CLP: ["CLP", "CLP$", "$CLP", "Chilean Peso", "Chilean Pesos"],
+  COP: ["COP", "COL$", "$COL", "Colombian Peso", "Colombian Pesos"],
+  PEN: ["PEN", "S/", "Peruvian Sol", "Peruvian Soles"],
 
-  DZD: ["Algerian Dinar", "Algerian Dinars"],
-  MAD: ["Moroccan Dirham", "Moroccan Dirhams"],
-  TND: ["Tunisian Dinar", "Tunisian Dinars", "DT"],
-  ZMW: ["ZK", "Zambian Kwacha", "Zambian Kwachas"],
-  RWF: ["FRw", "Rwandan Franc", "Rwandan Francs"],
-  UGX: ["USh", "Ugandan Shilling", "Ugandan Shillings"],
-  SDG: ["SD£", "Sudanese Pound", "Sudanese Pounds"],
-  BWP: ["P", "Botswana Pula", "Botswana Pulas"],
-  MGA: ["Ar", "Malagasy Ariary", "Malagasy Ariaries"],
-  MUR: ["Mauritian Rupee", "Mauritian Rupees"],
-  SCR: ["Seychellois Rupee", "Seychellois Rupees"],
-  GHS: ["GH₵", "Ghanaian Cedi", "Ghanaian Cedis"],
+  DZD: ["DZD", "Algerian Dinar", "Algerian Dinars"],
+  MAD: ["MAD", "Moroccan Dirham", "Moroccan Dirhams"],
+  TND: ["TND", "Tunisian Dinar", "Tunisian Dinars", "DT"],
+  ZMW: ["ZMW", "ZK", "Zambian Kwacha", "Zambian Kwachas"],
+  RWF: ["RWF", "FRw", "Rwandan Franc", "Rwandan Francs"],
+  UGX: ["UGX", "USh", "Ugandan Shilling", "Ugandan Shillings"],
+  SDG: ["SDG", "SD£", "Sudanese Pound", "Sudanese Pounds"],
+  BWP: ["BWP", "P", "Botswana Pula", "Botswana Pulas"],
+  MGA: ["MGA", "Ar", "Malagasy Ariary", "Malagasy Ariaries"],
+  MUR: ["MUR", "Mauritian Rupee", "Mauritian Rupees"],
+  SCR: ["SCR", "Seychellois Rupee", "Seychellois Rupees"],
+  GHS: ["GHS", "GH₵", "Ghanaian Cedi", "Ghanaian Cedis"],
   XOF: [
+    "XOF",
     "West African CFA Franc",
     "West African CFA Francs",
     "W. African CFA Franc",
@@ -114,13 +118,20 @@ const CURRENCY_REPRESENTATIONS = {
     "W.African Franc",
     "W.African Francs",
   ],
-  XAF: ["Central African CFA Franc", "Central African CFA Francs", "Central African Franc", "Central African Francs"],
-  LSL: ["Lesotho Loti", "Lesotho Maloti"],
-  SZL: ["Swazi Lilangeni", "Swazi Emalangeni"],
+  XAF: [
+    "XAF",
+    "Central African CFA Franc",
+    "Central African CFA Francs",
+    "Central African Franc",
+    "Central African Francs",
+  ],
+  LSL: ["LSL", "Lesotho Loti", "Lesotho Maloti"],
+  SZL: ["SZL", "Swazi Lilangeni", "Swazi Emalangeni"],
 
-  MWK: ["MK", "Malawian Kwacha", "Malawian Kwachas"],
-  NAD: ["N$", "$N", "Namibian Dollar", "Namibian Dollars"],
+  MWK: ["MWK", "MK", "Malawian Kwacha", "Malawian Kwachas"],
+  NAD: ["NAD", "N$", "$N", "Namibian Dollar", "Namibian Dollars"],
   SSP: [
+    "SSP",
     "SS£",
     "South Sudanese Pound",
     "South Sudanese Pounds",
@@ -129,51 +140,52 @@ const CURRENCY_REPRESENTATIONS = {
     "S.Sudanese Pound",
     "S.Sudanese Pounds",
   ],
-  TZS: ["TSh", "Tanzanian Shilling", "Tanzanian Shillings"],
-  BIF: ["FBu", "Burundian Franc", "Burundian Francs"],
-  BGN: ["BGN", "Bulgarian Lev", "Bulgarian Leva"],
+  TZS: ["TZS", "TSh", "Tanzanian Shilling", "Tanzanian Shillings"],
+  BIF: ["BIF", "FBu", "Burundian Franc", "Burundian Francs"],
+  BGN: ["BGN", "BGN", "Bulgarian Lev", "Bulgarian Leva"],
 
-  BHD: ["BD", "Bahraini Dinar", "Bahraini Dinars"],
-  KWD: ["KD", "Kuwaiti Dinar", "Kuwaiti Dinars"],
-  OMR: ["Omani Rial", "Omani Rials"],
-  JOD: ["Jordanian Dinar", "Jordanian Dinars"],
-  IQD: ["Iraqi Dinar", "Iraqi Dinars"],
-  IRR: ["Iranian Rial", "Iranian Rials"],
-  YER: ["Yemeni Rial", "Yemeni Rials"],
-  AFN: ["Afghan Afghani", "Afghan Afghanis"],
-  PKR: ["Pakistani Rupee", "Pakistani Rupees"],
-  LKR: ["Sri Lankan Rupee", "Sri Lankan Rupees"],
+  BHD: ["BHD", "BD", "Bahraini Dinar", "Bahraini Dinars"],
+  KWD: ["KWD", "KD", "Kuwaiti Dinar", "Kuwaiti Dinars"],
+  OMR: ["OMR", "Omani Rial", "Omani Rials"],
+  JOD: ["JOD", "Jordanian Dinar", "Jordanian Dinars"],
+  IQD: ["IQD", "Iraqi Dinar", "Iraqi Dinars"],
+  IRR: ["IRR", "Iranian Rial", "Iranian Rials"],
+  YER: ["YER", "Yemeni Rial", "Yemeni Rials"],
+  AFN: ["AFN", "Afghan Afghani", "Afghan Afghanis"],
+  PKR: ["PKR", "Pakistani Rupee", "Pakistani Rupees"],
+  LKR: ["LKR", "Sri Lankan Rupee", "Sri Lankan Rupees"],
 
-  NPR: ["Nepalese Rupee", "Nepalese Rupees"],
-  UZS: ["so'm", "Uzbekistani Som", "Uzbekistani Soms"],
-  TMT: ["m", "Turkmenistani Manat", "Turkmenistani Manats"],
-  TJS: ["ЅМ", "Tajikistani Somoni", "Tajikistani Somonis"],
-  KGS: ["сом", "Kyrgyzstani Som", "Kyrgyzstani Soms"],
-  AZN: ["Azerbaijani Manat", "Azerbaijani Manats"],
-  GEL: ["Georgian Lari", "Georgian Laris"],
-  AMD: ["Armenian Dram", "Armenian Drams"],
-  MMK: ["Burmese Kyat"],
-  KHR: ["Cambodian Riel", "Cambodian Riels"],
-  LAK: ["Lao Kip", "Lao Kips"],
-  MOP: ["MOP$", "$MOP", "Macanese Pataca", "Macanese Patacas"],
-  BND: ["Brunei Dollar", "Brunei Dollars"],
-  PGK: ["Papua New Guinean Kina", "Papua New Guinean Kinas"],
+  NPR: ["NPR", "Nepalese Rupee", "Nepalese Rupees"],
+  UZS: ["UZS", "so'm", "Uzbekistani Som", "Uzbekistani Soms"],
+  TMT: ["TMT", "m", "Turkmenistani Manat", "Turkmenistani Manats"],
+  TJS: ["TJS", "ЅМ", "Tajikistani Somoni", "Tajikistani Somonis"],
+  KGS: ["KGS", "сом", "Kyrgyzstani Som", "Kyrgyzstani Soms"],
+  AZN: ["AZN", "Azerbaijani Manat", "Azerbaijani Manats"],
+  GEL: ["GEL", "Georgian Lari", "Georgian Laris"],
+  AMD: ["AMD", "Armenian Dram", "Armenian Drams"],
+  MMK: ["MMK", "Burmese Kyat"],
+  KHR: ["KHR", "Cambodian Riel", "Cambodian Riels"],
+  LAK: ["LAK", "Lao Kip", "Lao Kips"],
+  MOP: ["MOP", "MOP$", "$MOP", "Macanese Pataca", "Macanese Patacas"],
+  BND: ["BND", "Brunei Dollar", "Brunei Dollars"],
+  PGK: ["PGK", "Papua New Guinean Kina", "Papua New Guinean Kinas"],
 
-  VUV: ["Vt", "Vanuatu Vatu"],
-  WST: ["WS$", "$WS", "Samoan Tala"],
-  FJD: ["FJ$", "$FJ", "Fijian Dollar", "Fijian Dollars"],
-  TOP: ["T$", "$T", "Tongan Paʻanga", "Tongan Paanga"],
-  SBD: ["SI$", "$SI", "Solomon Islands Dollar", "Solomon Islands Dollars"],
-  XPF: ["CFP Franc", "CFP Francs"],
+  VUV: ["VUV", "Vt", "Vanuatu Vatu"],
+  WST: ["WST", "WS$", "$WS", "Samoan Tala"],
+  FJD: ["FJD", "FJ$", "$FJ", "Fijian Dollar", "Fijian Dollars"],
+  TOP: ["TOP", "T$", "$T", "Tongan Paʻanga", "Tongan Paanga"],
+  SBD: ["SBD", "SI$", "$SI", "Solomon Islands Dollar", "Solomon Islands Dollars"],
+  XPF: ["XPF", "CFP Franc", "CFP Francs"],
 
-  RON: ["lei", "Romanian Leu", "Romanian Lei"],
-  RSD: ["дин.", "Serbian Dinar", "Serbian Dinars"],
-  MKD: ["ден", "Macedonian Denar", "Macedonian Denars"],
-  ISK: ["Icelandic Króna", "Icelandic Krónur"],
-  UAH: ["Ukrainian Hryvnia", "Ukrainian Hryvnias"],
-  BYN: ["Br", "Belarusian Ruble", "Belarusian Rubles"],
-  MDL: ["Moldovan Leu", "Moldovan Lei"],
+  RON: ["RON", "lei", "Romanian Leu", "Romanian Lei"],
+  RSD: ["RSD", "дин.", "Serbian Dinar", "Serbian Dinars"],
+  MKD: ["MKD", "ден", "Macedonian Denar", "Macedonian Denars"],
+  ISK: ["ISK", "Icelandic Króna", "Icelandic Krónur"],
+  UAH: ["UAH", "Ukrainian Hryvnia", "Ukrainian Hryvnias"],
+  BYN: ["BYN", "Br", "Belarusian Ruble", "Belarusian Rubles"],
+  MDL: ["MDL", "Moldovan Leu", "Moldovan Lei"],
   BAM: [
+    "BAM",
     "KM",
     "Bosnia and Herzegovina Convertible Mark",
     "Bosnia & Herzegovina Convertible Mark",
@@ -181,16 +193,17 @@ const CURRENCY_REPRESENTATIONS = {
     "Bosnia-Herzegovina Convertible Marka",
     "Convertible Marks",
   ],
-  HRK: ["kn", "Croatian Kuna", "Croatian Kunas"],
+  HRK: ["HRK", "kn", "Croatian Kuna", "Croatian Kunas"],
 
   // Caribbean and Latin America
-  DOP: ["RD$", "$RD", "Dominican Peso", "Dominican Pesos"],
-  GTQ: ["Q", "Guatemalan Quetzal", "Guatemalan Quetzales"],
-  HNL: ["L.", "Honduran Lempira", "Honduran Lempiras"],
-  NIO: ["Nicaraguan Córdoba"],
-  BZD: ["BZ$", "$BZ", "Belize Dollar", "Belize Dollars"],
-  BSD: ["BSD$", "$BSD", "Bahamian Dollar", "Bahamian Dollars"],
+  DOP: ["DOP", "RD$", "$RD", "Dominican Peso", "Dominican Pesos"],
+  GTQ: ["GTQ", "Q", "Guatemalan Quetzal", "Guatemalan Quetzales"],
+  HNL: ["HNL", "L.", "Honduran Lempira", "Honduran Lempiras"],
+  NIO: ["NIO", "Nicaraguan Córdoba"],
+  BZD: ["BZD", "BZ$", "$BZ", "Belize Dollar", "Belize Dollars"],
+  BSD: ["BSD", "BSD$", "$BSD", "Bahamian Dollar", "Bahamian Dollars"],
   TTD: [
+    "TTD",
     "TT$",
     "$TT",
     "Trinidad and Tobago Dollar",
@@ -198,22 +211,23 @@ const CURRENCY_REPRESENTATIONS = {
     "Trinidad & Tobago Dollars",
     "Trinidad and Tobago Dollars",
   ],
-  UYU: ["$U", "U$", "Uruguayan Peso", "Uruguayan Pesos"],
-  PYG: ["Gs.", "Paraguayan Guaraní"],
-  BOB: ["Bolivian Boliviano", "Bolivian Bolivianos"],
-  VEF: ["Bs.F", "Venezuelan Bolívar (old)"],
-  VES: ["Bs.S", "Venezuelan Bolívar", "Venezuelan Bolívars"],
+  UYU: ["UYU", "$U", "U$", "Uruguayan Peso", "Uruguayan Pesos"],
+  PYG: ["PYG", "Gs.", "Paraguayan Guaraní"],
+  BOB: ["BOB", "Bolivian Boliviano", "Bolivian Bolivianos"],
+  VEF: ["VEF", "Bs.F", "Venezuelan Bolívar (old)", "Old Venezuelan Bolívar"],
+  VES: ["VES", "Bs.S", "Venezuelan Bolívar", "Venezuelan Bolívars"],
 
   // Special Drawing Rights and metals
-  XDR: ["SDR", "Special Drawing Rights"],
-  XAG: ["Silver"],
-  XAU: ["Gold"],
-  XPT: ["Platinum"],
-  XPD: ["Palladium"],
+  XDR: ["XDR", "SDR", "Special Drawing Rights"],
+  XAG: ["XAG", "Silver"],
+  XAU: ["XAU", "Gold"],
+  XPT: ["XPT", "Platinum"],
+  XPD: ["XPD", "Palladium"],
 
-  ZWL: ["Z$", "$Z", "Zimbabwean Dollar", "Zimbabwean Dollars"],
-  BBD: ["Bds$", "$Bds", "Barbadian Dollar", "Barbadian Dollars"],
+  ZWL: ["ZWL", "Z$", "$Z", "Zimbabwean Dollar", "Zimbabwean Dollars"],
+  BBD: ["BBD", "Bds$", "$Bds", "Barbadian Dollar", "Barbadian Dollars"],
   XCD: [
+    "XCD",
     "EC$",
     "$EC",
     "East Caribbean Dollar",
@@ -223,11 +237,11 @@ const CURRENCY_REPRESENTATIONS = {
     "E.Caribbean Dollar",
     "E.Caribbean Dollars",
   ],
-  LRD: ["L$", "$L", "Liberian Dollar", "Liberian Dollars"],
-  SRD: ["SR$", "$SR", "Surinamese Dollar", "Surinamese Dollars"],
-  GYD: ["G$", "$G", "Guyanese Dollar", "Guyanese Dollars"],
-  KYD: ["KY$", "$KY", "Cayman Islands Dollar", "Cayman Islands Dollars"],
-  JMD: ["J$", "$J", "Jamaican Dollar", "Jamaican Dollars"],
+  LRD: ["LRD", "L$", "$L", "Liberian Dollar", "Liberian Dollars"],
+  SRD: ["SRD", "SR$", "$SR", "Surinamese Dollar", "Surinamese Dollars"],
+  GYD: ["GYD", "G$", "$G", "Guyanese Dollar", "Guyanese Dollars"],
+  KYD: ["KYD", "KY$", "$KY", "Cayman Islands Dollar", "Cayman Islands Dollars"],
+  JMD: ["JMD", "J$", "$J", "Jamaican Dollar", "Jamaican Dollars"],
 };
 const CURRENCY_SYMBOLS = {
   // Single-currency symbols
@@ -337,6 +351,18 @@ const CURRENCY_SYMBOLS = {
   ],
   "€": ["EUR"],
   "£": ["GBP", "EGP", "LBP", "SYP", "FKP", "GIP", "SDG", "SSP"],
+  Pound: ["GBP", "EGP", "LBP", "SYP", "FKP", "GIP", "SDG", "SSP"],
+  Pounds: ["GBP", "EGP", "LBP", "SYP", "FKP", "GIP", "SDG", "SSP"],
+  krone: ["NOK", "DKK"], // Norway, Denmark
+  kroner: ["NOK", "DKK"], // plural
+  krona: ["SEK"], // Sweden
+  kronor: ["SEK"], // plural
+  króna: ["ISK"], // Iceland
+  krónur: ["ISK"], // plural
+  ruble: ["RUB", "BYN"],
+  rubles: ["RUB", "BYN"],
+  peso:["MXN", "PHP", "ARS", "CLP", "COP", "DOP","UYU"],
+  pesos:["MXN", "PHP", "ARS", "CLP", "COP", "DOP","UYU"],
   "₹": ["INR"],
   "₽": ["RUB"],
   "₩": ["KRW"],
@@ -356,10 +382,10 @@ const CURRENCY_SYMBOLS = {
   "ر.ق.": ["QAR"],
   "د.إ": ["AED"],
   "د.إ.": ["AED"],
-  دراهم: ["MAD", "AED"],
-  درهم: ["MAD", "AED"],
-  Dirham: ["MAD", "AED"],
-  Dirhams: ["MAD", "AED"],
+  دراهم: ["AED", "MAD"],
+  درهم: ["AED", "MAD"],
+  Dirham: ["AED", "MAD"],
+  Dirhams: ["AED", "MAD"],
   "د.ا": ["AED", "JOD"],
   "د.ا.": ["AED", "JOD"],
   "د.ج": ["DZD"],
@@ -420,6 +446,7 @@ const CURRENCY_SYMBOLS = {
   "₿": ["BTC"],
   zł: ["PLN"],
   Fr: ["CHF", "XPF", "XOF", "XAF", "CDF", "RWF", "BIF", "DJF", "GNF", "KMF", "MGA"],
+  Franc: ["CHF", "XPF", "XOF", "XAF", "CDF", "RWF", "BIF", "DJF", "GNF", "KMF", "MGA"],
   "Fr.": ["CHF", "XPF", "XOF", "XAF", "CDF", "RWF", "BIF", "DJF", "GNF", "KMF", "MGA"],
   "₣": ["CHF", "XPF", "XOF", "XAF", "CDF", "RWF", "BIF", "DJF", "GNF", "KMF", "MGA"],
   "¥": ["JPY", "CNY"],
@@ -737,87 +764,413 @@ function getFlagElement(currencyCode) {
   return flagDiv;
 }
 
+// function detectCurrency(text) {
+//   const trimmedText = text.trim();
+//   if (!trimmedText) return { currency: "", amount: "", type: "invalid" };
+
+//   // 1. Extract Number
+//   // We need to find the number part. There might be multiple numbers if the text is invalid,
+//   // but we are looking for a single valid number.
+//   // The regex matches a number with optional thousand separators and decimal part.
+//   // It allows for space, comma, dot as separators.
+//   const numberMatches = trimmedText.match(/\d[\d,. ]*/g);
+
+//   if (!numberMatches || numberMatches.length === 0) {
+//     return { currency: "", amount: "", type: "invalid" };
+//   }
+
+//   // If multiple number-like sequences are found, we need to be careful.
+//   // The user requirement says "NUM" is a single entity in the pattern.
+//   // If we have "100 200", it's likely invalid or two prices.
+//   // For now, let's assume we focus on the longest valid number or the first one?
+//   // The previous logic rejected if > 1 match. Let's stick to that for strictness,
+//   // BUT "1,000.00" matches as one. "1 000" matches as one.
+//   // "100 USD 200" would match as two.
+//   if (numberMatches.length > 1) {
+//     return { currency: "", amount: "", type: "invalid" };
+//   }
+
+//   const amountPart = numberMatches[0].trim();
+//   const parsedNumber = parseNumberWithFormatDetection(amountPart);
+
+//   if (parsedNumber === null || isNaN(parsedNumber)) {
+//     return { currency: "", amount: "", type: "invalid" };
+//   }
+
+//   // 2. Split String
+//   const numberIndex = trimmedText.indexOf(amountPart);
+//   if (numberIndex === -1) return { currency: "", amount: "", type: "invalid" }; // Should not happen
+
+//   const leftPart = trimmedText.substring(0, numberIndex).trim();
+//   const rightPart = trimmedText.substring(numberIndex + amountPart.length).trim();
+
+//   // 3. Tokenize Parts
+//   const leftTokens = tokenize(leftPart);
+//   const rightTokens = tokenize(rightPart);
+
+//   if (leftTokens === null || rightTokens === null) {
+//     // Tokenization failed (contains invalid characters)
+//     return { currency: "", amount: "", type: "invalid" };
+//   }
+
+//   // 4. Validate Pattern
+//   // We have 16 valid patterns.
+//   // We can represent the pattern as a sequence of token types.
+//   // Left tokens + [NUM] + Right tokens.
+
+//   const patternSignature = [...leftTokens.map((t) => t.type), "NUM", ...rightTokens.map((t) => t.type)].join(" ");
+
+//   const validPatterns = [
+//     "symbol NUM",
+//     "NUM symbol",
+//     "rep NUM",
+//     "NUM rep",
+//     "NUM symbol rep",
+//     "NUM rep symbol",
+//     "NUM symbol cc",
+//     "NUM cc symbol",
+//     "symbol rep NUM",
+//     "rep symbol NUM",
+//     "symbol cc NUM",
+//     "cc symbol NUM",
+//     "symbol NUM rep",
+//     "rep NUM symbol",
+//     "symbol NUM cc",
+//     "cc NUM symbol",
+//   ];
+
+//   if (!validPatterns.includes(patternSignature)) {
+//     return { currency: "", amount: "", type: "invalid" };
+//   }
+
+//   // 5. Consistency Check with special handling for symbol-code conflicts
+//   const allTokens = [...leftTokens, ...rightTokens];
+//   let possibleCurrencies = null; // Start with null (meaning all) or handle first item
+
+//   // Check for symbol-code conflicts first
+//   const symbolToken = allTokens.find((t) => t.type === "symbol");
+//   const codeToken = allTokens.find((t) => t.type === "cc" || t.type === "rep");
+
+//   if (symbolToken && codeToken) {
+//     // Check for specific symbol-code conflicts
+//     const symbol = symbolToken.value;
+//     const code = codeToken.currency;
+
+//     // Check if symbol and code are mismatched
+//     // Only flag as invalid for the most specific symbol-code pairs
+//     // $ can be used with many currencies, so only reject if code is not in the list
+//     if (symbol === '$' && !['USD', 'CAD', 'AUD', 'NZD', 'SGD', 'HKD', 'MXN', 'BRL', 'CLP', 'COP', 'ZWL', 'TTD', 'BSD', 'BZD', 'BBD', 'XCD', 'SBD', 'LRD', 'SRD', 'GYD', 'KYD', 'FJD', 'JMD', 'NAD'].includes(code)) {
+//       return { currency: "", amount: "", type: "invalid" }; // Mismatched symbol and code
+//     }
+
+//     // For € and £, they are more specific
+//     if ((symbol === '€' && code !== 'EUR') ||
+//         (symbol === '£' && !['GBP', 'EGP', 'LBP', 'SYP', 'FKP', 'GIP', 'SDG', 'SSP'].includes(code))) {
+//       return { currency: "", amount: "", type: "invalid" }; // Mismatched symbol and code
+//     }
+//   }
+
+//   for (const token of allTokens) {
+//     let tokenCurrencies = [];
+
+//     if (token.type === "symbol") {
+//       tokenCurrencies = token.currencies;
+//     } else if (token.type === "rep") {
+//       // Rep maps to a specific currency code
+//       tokenCurrencies = [token.currency];
+//     } else if (token.type === "cc") {
+//       tokenCurrencies = [token.currency];
+//     }
+
+//     if (possibleCurrencies === null) {
+//       possibleCurrencies = new Set(tokenCurrencies);
+//     } else {
+//       // Intersect
+//       const newSet = new Set();
+//       for (const c of tokenCurrencies) {
+//         if (possibleCurrencies.has(c)) {
+//           newSet.add(c);
+//         }
+//       }
+//       possibleCurrencies = newSet;
+//     }
+
+//     if (possibleCurrencies.size === 0) {
+//       return { currency: "", amount: "", type: "invalid" }; // Inconsistent
+//     }
+//   }
+
+//   // If we have valid possible currencies, pick the first one (or best one)
+//   const resultArray = Array.from(possibleCurrencies);
+
+//   // If we have a specific currency (from rep or cc), it will be the only one (or few).
+//   // If we only have symbol, we might have many.
+//   // The original logic returned the first one from the symbol list.
+//   // We should preserve the order from CURRENCY_SYMBOLS if possible, or just take the first.
+//   // Since we intersected, the order might be lost if we used Set.
+//   // But usually intersection with a single-item set results in that item.
+//   // If we have only symbol, we want to respect the priority in CURRENCY_SYMBOLS.
+
+//   // Let's re-evaluate the priority if we have multiple candidates.
+//   // If we have "symbol", we have a list.
+//   // If we have "rep" or "cc", we have a single one.
+//   // So if size > 1, it must be from symbol only.
+//   // In that case, we can look up the symbol again to get the ordered list?
+//   // Or just trust the Set iteration order (which is insertion order usually).
+//   // But let's be safe.
+
+//   let selectedCurrency = resultArray[0];
+
+//   // If we have a symbol token, let's try to use its priority list to pick the best match from our possible set
+//   if (symbolToken && resultArray.length > 1) {
+//     // Special case for $ symbol with CAD
+//     if (symbolToken.value === '$' && possibleCurrencies.has('CAD')) {
+//       selectedCurrency = 'CAD';
+//     } else {
+//       for (const c of symbolToken.currencies) {
+//         if (possibleCurrencies.has(c)) {
+//           selectedCurrency = c;
+//           break;
+//         }
+//       }
+//     }
+//   }
+
+//   return {
+//     currency: selectedCurrency,
+//     amount: amountPart,
+//     type: "valid", // Or specific type if needed, but "valid" is enough for internal logic
+//     possibleCurrencies: resultArray,
+//   };
+// }
 function detectCurrency(text) {
   const trimmedText = text.trim();
   if (!trimmedText) return { currency: "", amount: "", type: "invalid" };
 
-  // First check for valid number(s) in the text
   const numberMatches = trimmedText.match(/\d[\d,. ]*/g);
+
   if (!numberMatches || numberMatches.length === 0) {
-    return { currency: "", amount: "", type: "invalid" }; // No numbers found
+    return { currency: "", amount: "", type: "invalid" };
   }
+
+  // If multiple number-like sequences are found, we need to be careful.
+  // The user requirement says "NUM" is a single entity in the pattern.
+  // If we have "100 200", it's likely invalid or two prices.
+  // For now, let's assume we focus on the longest valid number or the first one?
+  // The previous logic rejected if > 1 match. Let's stick to that for strictness,
+  // BUT "1,000.00" matches as one. "1 000" matches as one.
+  // "100 USD 200" would match as two.
   if (numberMatches.length > 1) {
-    return { currency: "", amount: "", type: "invalid" }; // Multiple numbers found
+    return { currency: "", amount: "", type: "invalid" };
   }
 
-  const amountPart = numberMatches[0];
-  const parsedNumber = parseNumberWithFormatDetection(amountPart);
-  if (parsedNumber === null || parsedNumber <= 0) {
-    return { currency: "", amount: "", type: "invalid" }; // Invalid number
+  const amountPart = numberMatches[0].trim();
+  const parsedNumber = parseNumber(amountPart);
+
+  if (parsedNumber === null || isNaN(parsedNumber)) {
+    return { currency: "", amount: "", type: "invalid" };
   }
 
-  // Remove the number part to help with currency detection
-  const textWithoutNumber = trimmedText.replace(amountPart, "").trim();
+  // 2. Split String
+  const numberIndex = trimmedText.indexOf(amountPart);
+  if (numberIndex === -1) return { currency: "", amount: "", type: "invalid" }; // Should not happen
 
-  // 1. Check for symbol prefixes/suffixes (strict matching)
-  for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
-    const escapedSymbol = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const leftPart = trimmedText.substring(0, numberIndex).trim();
+  const rightPart = trimmedText.substring(numberIndex + amountPart.length).trim();
 
-    // Check for symbol immediately before or after number (no other characters)
-    const prefixPattern = new RegExp(`^${escapedSymbol}\\s*${amountPart}$`);
-    const suffixPattern = new RegExp(`^${amountPart}\\s*${escapedSymbol}$`);
+  // 3. Tokenize Parts
+  const leftTokens = tokenize(leftPart);
+  const rightTokens = tokenize(rightPart);
 
-    if (prefixPattern.test(trimmedText) || suffixPattern.test(trimmedText)) {
-      return {
-        currency: currencies[0],
-        possibleCurrencies: currencies,
-        amount: amountPart,
-        type: "symbol",
-        symbol: symbol,
-      };
+  if (leftTokens === null || rightTokens === null) {
+    // Tokenization failed (contains invalid characters)
+    return { currency: "", amount: "", type: "invalid" };
+  }
+
+  const patternSignature = [...leftTokens.map((t) => t.type), "NUM", ...rightTokens.map((t) => t.type)].join(" ");
+
+  const validPatterns = [
+    "symbol NUM",
+    "NUM symbol",
+    "rep NUM",
+    "NUM rep",
+    "NUM symbol rep",
+    "NUM rep symbol",
+    "NUM symbol cc",
+    "NUM cc symbol",
+    "symbol rep NUM",
+    "rep symbol NUM",
+    "symbol cc NUM",
+    "cc symbol NUM",
+    "symbol NUM rep",
+    "rep NUM symbol",
+    "symbol NUM cc",
+    "cc NUM symbol",
+  ];
+
+  if (!validPatterns.includes(patternSignature)) {
+    return { currency: "", amount: "", type: "invalid" };
+  }
+
+  const allTokens = [...leftTokens, ...rightTokens];
+  let possibleCurrencies = null;
+
+  // Check for symbol-code conflicts first
+  const symbolToken = allTokens.find((t) => t.type === "symbol");
+  const codeToken = allTokens.find((t) => t.type === "cc" || t.type === "rep");
+
+  if (symbolToken && codeToken) {
+    // Check for specific symbol-code conflicts
+    const symbol = symbolToken.value;
+    const code = codeToken.currency;
+
+    // Check if symbol and code are mismatched
+    // Only flag as invalid for the most specific symbol-code pairs
+    // $ can be used with many currencies, so only reject if code is not in the list
+    if (symbol === '$' && !['USD', 'CAD', 'AUD', 'NZD', 'SGD', 'HKD', 'MXN', 'BRL', 'CLP', 'COP', 'ZWL', 'TTD', 'BSD', 'BZD', 'BBD', 'XCD', 'SBD', 'LRD', 'SRD', 'GYD', 'KYD', 'FJD', 'JMD', 'NAD'].includes(code)) {
+      return { currency: "", amount: "", type: "invalid" }; // Mismatched symbol and code
+    }
+
+    // For € and £, they are more specific
+    if ((symbol === '€' && code !== 'EUR') ||
+        (symbol === '£' && !['GBP', 'EGP', 'LBP', 'SYP', 'FKP', 'GIP', 'SDG', 'SSP'].includes(code))) {
+      return { currency: "", amount: "", type: "invalid" }; // Mismatched symbol and code
     }
   }
 
-  // 2. Check for currency codes (3 letters, case insensitive)
-  const currencyCodeMatch = textWithoutNumber.match(/^[A-Z]{3}$/i);
-  if (currencyCodeMatch) {
-    const code = currencyCodeMatch[0].toUpperCase();
-    if (currencyToCountry[code]) {
-      return {
-        currency: code,
-        amount: amountPart,
-        type: "code",
-      };
+  for (const token of allTokens) {
+    let tokenCurrencies = [];
+    if (token.type === "symbol") {
+      tokenCurrencies = token.currencies;
+    } else if (token.type === "rep") {
+      tokenCurrencies = [token.currency];
+    } else if (token.type === "cc") {
+      tokenCurrencies = [token.currency];
+    }
+
+    if (possibleCurrencies === null) {
+      possibleCurrencies = new Set(tokenCurrencies);
+    } else {
+      const newSet = new Set();
+      for (const c of tokenCurrencies) {
+        if (possibleCurrencies.has(c)) {
+          newSet.add(c);
+        }
+      }
+      possibleCurrencies = newSet;
+    }
+
+    if (possibleCurrencies.size === 0) {
+      return { currency: "", amount: "", type: "invalid" };
     }
   }
 
-  // 3. Check for word representations (exact matches in remaining text)
-  for (const [currencyCode, representations] of Object.entries(CURRENCY_REPRESENTATIONS)) {
-    for (const representation of representations) {
-      // Check if remaining text exactly matches a representation (case insensitive)
-      const repRegex = new RegExp(`^${representation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
-      if (repRegex.test(textWithoutNumber)) {
-        return {
-          currency: currencyCode,
-          amount: amountPart,
-          type: "word",
-          representation: representation,
-        };
+  const resultArray = Array.from(possibleCurrencies);
+  let selectedCurrency = resultArray[0];
+
+  if (symbolToken && resultArray.length > 1) {
+    // FIXED: Prefer USD for $ symbol when available, otherwise use first match
+    if (symbolToken.value === '$' && possibleCurrencies.has('USD')) {
+      selectedCurrency = 'USD';
+    } else {
+      // For other cases, use the first currency from the symbol's currency list that matches
+      for (const c of symbolToken.currencies) {
+        if (possibleCurrencies.has(c)) {
+          selectedCurrency = c;
+          break;
+        }
       }
     }
   }
 
-  // If we get here and textWithoutNumber is empty, it was just a number
-  if (!textWithoutNumber) {
-    return {
-      currency: "USD", // Default to USD if only number is selected
-      amount: amountPart,
-      type: "unknown",
-    };
+  return {
+    currency: selectedCurrency,
+    amount: amountPart,
+    type: "valid",
+    possibleCurrencies: resultArray,
+  };
+}
+
+function tokenize(text) {
+  if (!text) return [];
+
+  // Convert to uppercase for case-insensitive matching
+  const upperText = text.toUpperCase();
+  const tokens = [];
+  let remaining = upperText;
+
+  while (remaining.length > 0) {
+    // Try to match tokens at the beginning
+    let matchFound = false;
+    let longestMatch = null;
+    let longestMatchType = null;
+    let longestMatchData = null;
+
+    // 1. Check Reps
+    for (const [code, reps] of Object.entries(CURRENCY_REPRESENTATIONS)) {
+      for (const rep of reps) {
+        if (remaining.startsWith(rep.toUpperCase())) {
+          // Check if it's a longer match
+          if (!longestMatch || rep.length > longestMatch.length) {
+            longestMatch = rep;
+            longestMatchType = "rep";
+            longestMatchData = { currency: code };
+          }
+        }
+      }
+    }
+
+
+
+    // 2. Check Symbols
+    for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
+      if (remaining.startsWith(symbol.toUpperCase())) {
+        if (!longestMatch || symbol.length > longestMatch.length) {
+          longestMatch = symbol;
+          longestMatchType = "symbol";
+          longestMatchData = { currencies: currencies };
+        }
+      }
+    }
+
+    // 3. Check CC (Currency Codes)
+    // CC is always 3 letters.
+    if (remaining.length >= 3) {
+      const potentialCC = remaining.substring(0, 3).toUpperCase();
+      if (currencyToCountry[potentialCC]) {
+        // Check if it's a valid word boundary? User didn't specify, but "USD" in "US Dollar" is tricky.
+        // "US Dollar" is a REP. "USD" is a CC.
+        // If we have "US Dollar", the REP check should catch it (length 9).
+        // "USD" (length 3).
+        // So longest match wins. "US Dollar" wins over "USD" (if "USD" was a prefix, which it isn't).
+        // But what if "US" is a prefix?
+        // "US$" is a REP. "U" is not.
+
+        if (!longestMatch || 3 > longestMatch.length) {
+          longestMatch = remaining.substring(0, 3); // Use original case for consumption, but type is CC
+          longestMatchType = "cc";
+          longestMatchData = { currency: potentialCC };
+        }
+      }
+    }
+
+    if (longestMatch) {
+      tokens.push({
+        type: longestMatchType,
+        value: longestMatch,
+        ...longestMatchData,
+      });
+      remaining = remaining.substring(longestMatch.length).trim(); // Consume and trim whitespace
+      matchFound = true;
+    } else {
+      // No match found at start of string.
+      // If it's whitespace, we should have trimmed it.
+      // If it's garbage, then the pattern is invalid.
+      return null;
+    }
   }
 
-  // No valid currency found
-  return { currency: "", amount: "", type: "invalid" };
+  return tokens;
 }
 
 function parseThousandSeparatorCase(text) {
@@ -858,6 +1211,17 @@ function parseNumberWithFormatDetection(text) {
 
   // Keep the original text for special cases like "1.000 $" or "1,000$"
   const originalText = numberMatch[0];
+
+  // Check if the number starts or ends with a separator (comma or dot)
+  if (/^[,\.]|[,\.]$/.test(originalText)) {
+    return null;
+  }
+
+  // Check if there are two separators next to each other
+  if (/[,\.]{2,}/.test(originalText)) {
+    return null;
+  }
+
   const cleanText = originalText.replace(/\s+/g, ""); // Remove all whitespace first
 
   // Special case for thousand separators like "1.000 $" or "1,000$"
@@ -866,34 +1230,97 @@ function parseNumberWithFormatDetection(text) {
     return thousandResult;
   }
 
-  // Step 2: Handle different formats
-  // Case 1: Space as thousand, dot as decimal → "1 000.50" → 1000.50
-  if (/^\d{1,3}( \d{3})*(\.\d+)?$/.test(numberMatch[0])) {
-    return parseFloat(cleanText.replace(/ /g, ""));
+  // Count the number of commas and dots
+  const commaCount = (cleanText.match(/,/g) || []).length;
+  const dotCount = (cleanText.match(/\./g) || []).length;
+
+  // If there are both commas and dots, determine which is the decimal separator
+  // The decimal separator should appear only once and should be at the end
+  if (commaCount > 0 && dotCount > 0) {
+    // Find the last occurrence of each separator
+    const lastCommaIndex = cleanText.lastIndexOf(",");
+    const lastDotIndex = cleanText.lastIndexOf(".");
+
+    // The one that appears last is the decimal separator
+    const decimalSep = lastCommaIndex > lastDotIndex ? "," : ".";
+    const thousandSep = decimalSep === "," ? "." : ",";
+
+    // Check if decimal separator appears only once
+    if ((decimalSep === "," && commaCount !== 1) || (decimalSep === "." && dotCount !== 1)) {
+      return null;
+    }
+
+    // Check if thousand separators are placed correctly (every 3 digits)
+    const parts = cleanText.split(decimalSep);
+    const integerPart = parts[0];
+    const decimalPart = parts[1];
+
+    // Check if thousand separators are correctly placed in the integer part
+    if (thousandSep === ",") {
+      if (!/^\d{1,3}(,\d{3})*$/.test(integerPart)) {
+        return null;
+      }
+    } else {
+      if (!/^\d{1,3}(\.\d{3})*$/.test(integerPart)) {
+        return null;
+      }
+    }
+
+    // Parse the number
+    return parseFloat(integerPart.replace(new RegExp(thousandSep, "g"), "") + "." + decimalPart);
   }
 
-  // Case 2: Space as thousand, comma as decimal → "1 000,50" → 1000.50
-  if (/^\d{1,3}( \d{3})*(,\d+)?$/.test(numberMatch[0])) {
-    return parseFloat(cleanText.replace(/ /g, "").replace(",", "."));
+  // If only commas or only dots
+  if (commaCount > 0) {
+    // If there's only one comma, it could be a decimal separator
+    if (commaCount === 1) {
+      // Check if it's at the end (decimal) or in the middle (thousand)
+      const parts = cleanText.split(",");
+      if (parts.length === 2 && parts[1].length <= 2) {
+        // Likely a decimal separator
+        return parseFloat(cleanText.replace(",", "."));
+      } else {
+        // Likely thousand separators
+        if (!/^\d{1,3}(,\d{3})*$/.test(cleanText)) {
+          return null;
+        }
+        return parseFloat(cleanText.replace(/,/g, ""));
+      }
+    } else {
+      // Multiple commas, must be thousand separators
+      if (!/^\d{1,3}(,\d{3})*$/.test(cleanText)) {
+        return null;
+      }
+      return parseFloat(cleanText.replace(/,/g, ""));
+    }
   }
 
-  // Case 3: Comma as thousand, dot as decimal → "1,000.50" → 1000.50
-  if (/^\d{1,3}(,\d{3})*(\.\d+)?$/.test(cleanText)) {
-    return parseFloat(cleanText.replace(/,/g, ""));
+  if (dotCount > 0) {
+    // If there's only one dot, it could be a decimal separator
+    if (dotCount === 1) {
+      // Check if it's at the end (decimal) or in the middle (thousand)
+      const parts = cleanText.split(".");
+      if (parts.length === 2 && parts[1].length <= 2) {
+        // Likely a decimal separator
+        return parseFloat(cleanText);
+      } else {
+        // Likely thousand separators
+        if (!/^\d{1,3}(\.\d{3})*$/.test(cleanText)) {
+          return null;
+        }
+        return parseFloat(cleanText.replace(/\./g, ""));
+      }
+    } else {
+      // Multiple dots, must be thousand separators
+      if (!/^\d{1,3}(\.\d{3})*$/.test(cleanText)) {
+        return null;
+      }
+      return parseFloat(cleanText.replace(/\./g, ""));
+    }
   }
 
-  // Case 4: Dot as thousand, comma as decimal → "1.000,50" → 1000.50
-  if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(cleanText)) {
-    return parseFloat(cleanText.replace(/\./g, "").replace(",", "."));
-  }
-
-  // Case 5: No thousand separator, just decimal → "1000.50" or "1000,50"
-  if (/^\d+([.,]\d+)?$/.test(cleanText)) {
-    return parseFloat(cleanText.replace(",", "."));
-  }
-
-  // Default: Try to parse as-is (removing all non-numeric chars except [.,])
-  return parseFloat(cleanText.replace(",", "."));
+  // No separators, just a plain number
+  return parseFloat(cleanText);
 }
 
 function convertCurrency(amount, fromCurrency, toCurrency, rates) {
@@ -1414,17 +1841,17 @@ function updateExistingPriceElements() {
  * Helper function to check if page should be converted
  */
 function shouldConvertPage(url) {
-  const settings = window.currencyConverterSettings || { filterMode: 'blacklist', whitelist: [], blacklist: [] };
+  const settings = window.currencyConverterSettings || { filterMode: "blacklist", whitelist: [], blacklist: [] };
   const { filterMode, whitelist, blacklist } = settings;
-  
-  if (filterMode === 'whitelist') {
-      return whitelist && whitelist.some(site => url.includes(site));
+
+  if (filterMode === "whitelist") {
+    return whitelist && whitelist.some((site) => url.includes(site));
   } else {
-      // Blacklist mode (default)
-      if (blacklist && blacklist.some(site => url.includes(site))) {
-          return false;
-      }
-      return true;
+    // Blacklist mode (default)
+    if (blacklist && blacklist.some((site) => url.includes(site))) {
+      return false;
+    }
+    return true;
   }
 }
 
@@ -1451,7 +1878,7 @@ class PriceDetector {
 
     // Check if we should convert this page
     if (!shouldConvertPage(window.location.href)) {
-        return;
+      return;
     }
 
     this.isProcessing = true;
@@ -1538,20 +1965,20 @@ class PriceDetector {
    * Fast preliminary currency check
    */
   isLikelyCurrency(text) {
-    // Quick regex check for common currency patterns
+    // We can use the global detectCurrency to check validity
+    // But for performance, we might want a quick check first.
+    // However, the new detectCurrency is strict, so we should rely on it.
+    // Or we can keep a very loose check here to filter out obvious non-currencies.
+
     // Quick regex check for common currency patterns - more inclusive now
-    // Checks for:
-    // 1. Any currency symbol from our list
-    // 2. Any 3-letter code (potential currency code)
-    // 3. Common currency words
     const symbolPattern = /[$€£¥₹₽₩₺₴₸֏؋৳៛₠₡₢₣₤₥₦₧₨₩₪₫₭₮₯₰₱₲₳₴₵₶₷₸₹₺₻₼₽₾₿]/;
-    // Match 3-letter codes (e.g. USD, AUD) - check for word boundary OR adjacent to number
-    // We want to match "100USD" (digit before) or "EUR100" (digit after) or " USD " (boundaries)
-    const codePattern = /\b[A-Z]{3}\b|\d[A-Z]{3}\b|\b[A-Z]{3}\d/;
-    // Match common currency words, including plurals (e.g. Dollar, Dollars)
-    const commonWordsPattern = /\b(Dollar|Euro|Pound|Yen|Yuan|Rupee|Won|Franc|Dinar|Riyal|Dirham|Peso|Real|Ruble|Lira|Rand|Krona|Krone|Ringgit|Baht|Dong|Zloty|Forint|Shekel|Sol|Colon|Leu|Lev|Hryvnia|Kuna|Quetzal|Lempira|Boliviano|Guarani|Shilling|Cedi|Naira|Kwacha|Pula|Ariary|CFA)s?\b/i;
-    
-    return symbolPattern.test(text) || codePattern.test(text) || commonWordsPattern.test(text);
+    const codePattern = /\b[A-Z]{3}\b/;
+    // We can also check for digits
+    const hasDigit = /\d/.test(text);
+
+    if (!hasDigit) return false; // Must have a number
+
+    return symbolPattern.test(text) || codePattern.test(text);
   }
 
   /**
@@ -1563,8 +1990,8 @@ class PriceDetector {
       return this.currencyCache.get(cacheKey);
     }
 
-    // Your existing detection logic here
-    const result = isCurrencyValue(text) ? detectCurrency(text) : { currency: null, amount: null };
+    // Use the global detectCurrency function which has the new logic
+    const result = detectCurrency(text);
 
     this.currencyCache.set(cacheKey, result);
     return result;
@@ -1786,16 +2213,16 @@ function initializePriceDetection() {
 
     // Initialize settings
     window.currencyConverterSettings = {
-        filterMode: result.filterMode || 'blacklist',
-        whitelist: result.whitelistedWebsites || [],
-        blacklist: result.blacklistedWebsites || []
+      filterMode: result.filterMode || "blacklist",
+      whitelist: result.whitelistedWebsites || [],
+      blacklist: result.blacklistedWebsites || [],
     };
 
     if (result.pageConvert) {
       // Check if we should convert this page before setting up observers
       if (!shouldConvertPage(window.location.href)) {
-          console.log("Page conversion blocked by filter settings");
-          return;
+        console.log("Page conversion blocked by filter settings");
+        return;
       }
 
       // Initial detection
@@ -2036,8 +2463,6 @@ function initialize() {
       }
     };
 
-
-
     document.addEventListener("selectionchange", handleSelection);
     document.addEventListener("mouseup", handleMouseUp);
 
@@ -2138,11 +2563,11 @@ function initialize() {
 
       // 9. Handle filter settings changes
       if (changes.filterMode || changes.whitelistedWebsites || changes.blacklistedWebsites) {
-          chrome.storage.local.get(["pageConvert"], (result) => {
-              if (result.pageConvert) {
-                  initializePriceDetection();
-              }
-          });
+        chrome.storage.local.get(["pageConvert"], (result) => {
+          if (result.pageConvert) {
+            initializePriceDetection();
+          }
+        });
       }
 
       // Refresh display if needed and we're in currencies view
