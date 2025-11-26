@@ -2083,6 +2083,224 @@ function shouldConvertPage(url) {
   }
 }
 
+// class PriceDetector {
+//   constructor() {
+//     this.processedElements = new Set();
+//     this.currencyCache = new Map();
+//     this.isProcessing = false;
+//     this.pendingDetection = false;
+//     this.MAX_ELEMENTS = 1000;
+//     this.detectionTimeout = null;
+    
+//     // Initialize regexes
+//     this.generateRegexes();
+//   }
+
+//   /**
+//    * Generate regexes from currency data
+//    */
+//   generateRegexes() {
+//     const currencyTerms = new Set();
+//     const symbolTerms = new Set();
+    
+//     // Process CURRENCY_REPRESENTATIONS (all are currency terms)
+//     Object.values(CURRENCY_REPRESENTATIONS).forEach(reps => {
+//       reps.forEach(rep => currencyTerms.add(rep));
+//     });
+
+//     // Process CURRENCY_SYMBOLS
+//     Object.keys(CURRENCY_SYMBOLS).forEach(key => {
+//       // If it contains letters and is at least 2 chars long, treat as currency word
+//       if (/[a-zA-Z]/.test(key) && key.length >= 2) {
+//         currencyTerms.add(key);
+//       } else {
+//         // Otherwise treat as symbol
+//         symbolTerms.add(key);
+//       }
+//     });
+
+//     // Helper to escape and join terms
+//     const createRegex = (terms) => {
+//       const escaped = Array.from(terms)
+//         .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+//         .sort((a, b) => b.length - a.length);
+//       return new RegExp(escaped.join('|'));
+//     };
+
+//     // Word boundary for currency terms
+//     const escapedCurrencyTerms = Array.from(currencyTerms)
+//         .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+//         .sort((a, b) => b.length - a.length);
+    
+//     // Use lookarounds instead of \b to handle non-ASCII characters correctly (e.g. zł)
+//     this.currencyRegex = new RegExp(`(?<!\\w)(${escapedCurrencyTerms.join('|')})(?!\\w)`, 'i');
+//     this.symbolRegex = createRegex(symbolTerms);
+//   }
+
+//   /**
+//    * Main function to detect and mark prices with performance optimizations
+//    */
+//   async detectAndMarkPrices() {
+
+//     this.isProcessing = true;
+//     const startTime = performance.now();
+
+//     try {
+//       // Use a more efficient tree walker with better filtering
+//       const walker = this.createOptimizedTreeWalker();
+//       const priceElements = [];
+//       let node;
+//       let elementCount = 0;
+
+//       while ((node = walker.nextNode()) && elementCount < this.MAX_ELEMENTS) {
+//         const text = node.textContent.trim();
+//         if (!text || this.processedElements.has(node)) continue;
+
+//         const { currency, amount } = this.detectCurrency(text);
+//         if (currency && amount) {
+//           priceElements.push({ node, text, currency, amount });
+//           elementCount++;
+//         }
+//       }
+
+//       // Process in batches to avoid blocking
+//       await this.processInBatches(priceElements, 25);
+
+//       const duration = performance.now() - startTime;
+//       if (duration > 100) {
+//         console.warn(`Price detection took ${duration.toFixed(1)}ms - ${priceElements.length} elements`);
+//       }
+//     } finally {
+//       this.isProcessing = false;
+
+//       // Handle any pending detection requests
+//       if (this.pendingDetection) {
+//         this.pendingDetection = false;
+//         setTimeout(() => this.detectAndMarkPrices(), 50);
+//       }
+//     }
+//   }
+
+//   /**
+//    * Create optimized tree walker with better filtering
+//    */
+//   createOptimizedTreeWalker() {
+//     return document.createTreeWalker(
+//       document.body,
+//       NodeFilter.SHOW_TEXT,
+//       {
+//         acceptNode: (node) => {
+//           // Skip if already processed
+//           if (this.processedElements.has(node)) {
+//             return NodeFilter.FILTER_REJECT;
+//           }
+
+//           // Skip hidden elements and certain tags
+//           const parent = node.parentElement;
+//           if (
+//             !parent ||
+//             parent.offsetParent === null ||
+//             parent.closest('script, style, noscript, template, [id*="detected-price"]') ||
+//             parent.id == "currency-converter-popup-text" ||
+//             parent.querySelector("#currency-converter-popup-text")
+//           ) {
+//             return NodeFilter.FILTER_REJECT;
+//           }
+
+//           // Quick text content check
+//           const text = node.textContent.trim();
+//           if (!text || text.length > 50) {
+//             // Skip very long text nodes
+//             return NodeFilter.FILTER_REJECT;
+//           }
+
+//           // Preliminary currency check
+//           return this.isLikelyCurrency(text) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+//         },
+//       },
+//       false
+//     );
+//   }
+
+//   /**
+//    * Fast preliminary currency check
+//    */
+//   isLikelyCurrency(text) {
+//     // We can use the global detectCurrency to check validity
+//     // But for performance, we might want a quick check first.
+    
+//     // Check for digits first (must have a number)
+//     if (!/\d/.test(text)) return false;
+
+//     // Check for symbols
+//     if (this.symbolRegex.test(text)) return true;
+    
+//     // Check for currency words/codes
+//     return this.currencyRegex.test(text);
+//   }
+
+//   /**
+//    * Cached currency detection
+//    */
+//   detectCurrency(text) {
+//     const cacheKey = text.trim();
+//     if (this.currencyCache.has(cacheKey)) {
+//       return this.currencyCache.get(cacheKey);
+//     }
+
+//     // Use the global detectCurrency function which has the new logic
+//     const result = detectCurrency(text);
+
+//     this.currencyCache.set(cacheKey, result);
+//     return result;
+//   }
+
+//   /**
+//    * Process elements in batches with yielding
+//    */
+//   async processInBatches(elements, batchSize = 25) {
+//     for (let i = 0; i < elements.length; i += batchSize) {
+//       const batch = elements.slice(i, i + batchSize);
+
+//       // Process current batch
+//       batch.forEach((price, batchIndex) => {
+//         const globalIndex = i + batchIndex;
+//         markPriceElement(price.node, price.text, price.currency, price.amount, globalIndex);
+//         this.processedElements.add(price.node);
+//       });
+
+//       // Yield to main thread between batches
+//       if (i + batchSize < elements.length) {
+//         await new Promise((resolve) => setTimeout(resolve, 0));
+//       }
+//     }
+//   }
+
+//   /**
+//    * Debounced detection for multiple rapid calls
+//    */
+//   debouncedDetect() {
+//     if (this.detectionTimeout) {
+//       clearTimeout(this.detectionTimeout);
+//     }
+//     this.detectionTimeout = setTimeout(() => {
+//       this.detectAndMarkPrices();
+//     }, 150);
+//   }
+
+//   /**
+//    * Clear cache and reset state
+//    */
+//   reset() {
+//     this.currencyCache.clear();
+//     this.processedElements.clear();
+//     this.isProcessing = false;
+//     this.pendingDetection = false;
+//   }
+// }
+
+// Initialize the detector
+
 class PriceDetector {
   constructor() {
     this.processedElements = new Set();
@@ -2141,6 +2359,10 @@ class PriceDetector {
    * Main function to detect and mark prices with performance optimizations
    */
   async detectAndMarkPrices() {
+    if (this.isProcessing) {
+      this.pendingDetection = true;
+      return;
+    }
 
     this.isProcessing = true;
     const startTime = performance.now();
@@ -2156,9 +2378,15 @@ class PriceDetector {
         const text = node.textContent.trim();
         if (!text || this.processedElements.has(node)) continue;
 
-        const { currency, amount } = this.detectCurrency(text);
-        if (currency && amount) {
-          priceElements.push({ node, text, currency, amount });
+        const detected = this.detectCurrency(text);
+        if (detected.currency && detected.amount) {
+          priceElements.push({ 
+            node, 
+            text, 
+            currency: detected.currency, 
+            amount: detected.amount,
+            possibleCurrencies: detected.possibleCurrencies || []
+          });
           elementCount++;
         }
       }
@@ -2170,6 +2398,8 @@ class PriceDetector {
       if (duration > 100) {
         console.warn(`Price detection took ${duration.toFixed(1)}ms - ${priceElements.length} elements`);
       }
+    } catch (error) {
+      console.error('Error in detectAndMarkPrices:', error);
     } finally {
       this.isProcessing = false;
 
@@ -2226,9 +2456,6 @@ class PriceDetector {
    * Fast preliminary currency check
    */
   isLikelyCurrency(text) {
-    // We can use the global detectCurrency to check validity
-    // But for performance, we might want a quick check first.
-    
     // Check for digits first (must have a number)
     if (!/\d/.test(text)) return false;
 
@@ -2251,8 +2478,16 @@ class PriceDetector {
     // Use the global detectCurrency function which has the new logic
     const result = detectCurrency(text);
 
-    this.currencyCache.set(cacheKey, result);
-    return result;
+    // Ensure we always have a valid object structure
+    const safeResult = result || { 
+      currency: "", 
+      amount: "", 
+      type: "invalid", 
+      possibleCurrencies: [] 
+    };
+    
+    this.currencyCache.set(cacheKey, safeResult);
+    return safeResult;
   }
 
   /**
@@ -2265,7 +2500,14 @@ class PriceDetector {
       // Process current batch
       batch.forEach((price, batchIndex) => {
         const globalIndex = i + batchIndex;
-        markPriceElement(price.node, price.text, price.currency, price.amount, globalIndex);
+        markPriceElement(
+          price.node, 
+          price.text, 
+          price.currency, 
+          price.amount, 
+          globalIndex, 
+          price.possibleCurrencies
+        );
         this.processedElements.add(price.node);
       });
 
@@ -2296,6 +2538,20 @@ class PriceDetector {
     this.processedElements.clear();
     this.isProcessing = false;
     this.pendingDetection = false;
+    if (this.detectionTimeout) {
+      clearTimeout(this.detectionTimeout);
+      this.detectionTimeout = null;
+    }
+  }
+
+  /**
+   * Force immediate detection (use sparingly)
+   */
+  detectImmediate() {
+    if (this.detectionTimeout) {
+      clearTimeout(this.detectionTimeout);
+    }
+    return this.detectAndMarkPrices();
   }
 }
 
@@ -2309,10 +2565,11 @@ function detectAndMarkPrices() {
 
 // For immediate detection (use sparingly)
 function detectAndMarkPricesImmediate() {
-  return priceDetector.detectAndMarkPrices();
+  return priceDetector.detectImmediate();
 }
 
-function markPriceElement(textNode, originalText, currency, amount, index) {
+
+function markPriceElement(textNode, originalText, currency, amount, index, possibleCurrencies = []) {
   const parent = textNode.parentNode;
 
   // Skip if already processed
@@ -2334,7 +2591,7 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
     (result) => {
       if (!result.currencyOrder || result.currencyOrder.length === 0 || !result.currencyData) {
         // If no currencies are configured, just mark the price without conversion
-        createPriceWrapper(textNode, originalText, parent, currency);
+        createPriceWrapper(textNode, originalText, parent, currency, possibleCurrencies);
         return;
       }
 
@@ -2351,7 +2608,7 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
       // If it is, just highlight it without converting
       if (currency === targetCurrency) {
         // Create and apply the wrapper with original text (no conversion)
-        createPriceWrapper(textNode, originalText, parent, currency);
+        createPriceWrapper(textNode, originalText, parent, currency, possibleCurrencies);
         return;
       }
 
@@ -2363,23 +2620,39 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
       const newText = `${formattedValue} ${targetCurrency}`;
 
       // Create and apply the wrapper
-      createPriceWrapper(textNode, newText, parent, currency);
+      createPriceWrapper(textNode, newText, parent, currency, possibleCurrencies);
     }
   );
 }
 
 // Helper function to create the price wrapper
-function createPriceWrapper(textNode, text, parent, originalCurrency) {
+function createPriceWrapper(textNode, text, parent, originalCurrency, possibleCurrencies = []) {
+  // Determine if we have multiple currencies ONCE at the beginning
+  const hasMultipleCurrencies = possibleCurrencies && possibleCurrencies.length > 1;
+  
   // Create a wrapper span
   const wrapper = document.createElement("span");
   wrapper.id = `detected-price`;
-  wrapper.className = "detected-price";
+
+  // Use the SAME condition for everything
+  if (hasMultipleCurrencies) {
+    wrapper.classList.add("multi-currency-detected");
+  }
 
   // Store the original text for restoration when in-page convert is turned off
   wrapper.dataset.originalText = textNode.textContent;
+  
+  // Store possible currencies for debugging
+  if (hasMultipleCurrencies) {
+    wrapper.dataset.possibleCurrencies = possibleCurrencies.join(',');
+  }
 
   // Add title attribute to show original price on hover with currency info
-  wrapper.title = `💲Original price: ${textNode.textContent} (${originalCurrency})`;
+  let titleText = `💲Original price: ${textNode.textContent} (${originalCurrency})`;
+  if (hasMultipleCurrencies) {
+    titleText = `\n⚠️ Ambiguous currency: ${textNode.textContent} (${originalCurrency})`;
+  }
+  wrapper.title = titleText;
   wrapper.style.cursor = `help`;
 
   // Copy all attributes from parent if it's a simple element
@@ -2404,6 +2677,16 @@ function createPriceWrapper(textNode, text, parent, originalCurrency) {
         if (filteredStyle) {
           wrapper.setAttribute("style", filteredStyle);
         }
+        return; // skip rest
+      }
+
+      // SPECIAL HANDLING FOR CLASS ATTRIBUTE - MERGE INSTEAD OF REPLACE
+      if (name === "class") {
+        // Add parent classes to existing classes instead of replacing
+        const parentClasses = attr.value.split(' ').filter(c => c.trim());
+        parentClasses.forEach(className => {
+          wrapper.classList.add(className);
+        });
         return; // skip rest
       }
 
