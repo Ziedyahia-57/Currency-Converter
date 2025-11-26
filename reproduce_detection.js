@@ -637,6 +637,11 @@ Object.entries(currencyToCountry).forEach(([currency, country]) => {
   countryToCurrency[country].push(currency);
 });
 
+// Helper function to check if a symbol is ambiguous (represents multiple currencies)
+function isAmbiguousSymbol(symbol) {
+  return CURRENCY_SYMBOLS[symbol] && CURRENCY_SYMBOLS[symbol].length > 1;
+}
+
 function parseThousandSeparatorCase(text) {
   const match = text.match(/^\d+[,.]\s*\d{3}/);
   if (match) {
@@ -807,21 +812,26 @@ function tokenize(text) {
       }
     }
 
-    // 3. Check CC (Currency Codes)
-    // CC is always 3 letters.
+    // 3. Check Country Codes (2-letter) and Currency Codes (3-letter)
+    // First check for 2-letter country codes
+    if (remaining.length >= 2) {
+      const potentialCountry = remaining.substring(0, 2).toLowerCase();
+      if (countryToCurrency[potentialCountry]) {
+        // This is a 2-letter country code
+        if (!longestMatch || 2 > longestMatch.length) {
+          longestMatch = remaining.substring(0, 2);
+          longestMatchType = "country";
+          longestMatchData = { countryCode: potentialCountry, currencies: countryToCurrency[potentialCountry] };
+        }
+      }
+    }
+
+    // Then check for 3-letter currency codes
     if (remaining.length >= 3) {
       const potentialCC = remaining.substring(0, 3).toUpperCase();
       if (currencyToCountry[potentialCC]) {
-        // Check if it's a valid word boundary? User didn't specify, but "USD" in "US Dollar" is tricky.
-        // "US Dollar" is a REP. "USD" is a CC.
-        // If we have "US Dollar", the REP check should catch it (length 9).
-        // "USD" (length 3).
-        // So longest match wins. "US Dollar" wins over "USD" (if "USD" was a prefix, which it isn't).
-        // But what if "US" is a prefix?
-        // "US$" is a REP. "U" is not.
-
         if (!longestMatch || 3 > longestMatch.length) {
-          longestMatch = remaining.substring(0, 3); // Use original case for consumption, but type is CC
+          longestMatch = remaining.substring(0, 3);
           longestMatchType = "cc";
           longestMatchData = { currency: potentialCC };
         }
@@ -1055,6 +1065,13 @@ function detectCurrency(text) {
     "rep NUM symbol",
     "symbol NUM cc",
     "cc NUM symbol",
+    // Country code patterns (only valid with symbols)
+    "symbol NUM country",
+    "NUM symbol country",
+    "symbol country NUM",
+    "country symbol NUM",
+    "country NUM symbol",
+    "NUM country symbol",
   ];
 
   if (!validPatterns.includes(patternSignature)) {
@@ -1064,10 +1081,18 @@ function detectCurrency(text) {
   const allTokens = [...leftTokens, ...rightTokens];
   let possibleCurrencies = null;
 
-  // Check for symbol-code conflicts first
+  // Check for country code validation
+  const countryToken = allTokens.find((t) => t.type === "country");
   const symbolToken = allTokens.find((t) => t.type === "symbol");
   const codeToken = allTokens.find((t) => t.type === "cc" || t.type === "rep");
 
+  // Country codes can ONLY be used with symbols (not standalone)
+  if (countryToken && !symbolToken) {
+    // Country code without symbol is invalid
+    return { currency: "", amount: "", type: "invalid" };
+  }
+
+  // Check for symbol-code conflicts
   if (symbolToken && codeToken) {
     // Check for specific symbol-code conflicts
     const symbol = symbolToken.value;
@@ -1095,6 +1120,9 @@ function detectCurrency(text) {
       tokenCurrencies = [token.currency];
     } else if (token.type === "cc") {
       tokenCurrencies = [token.currency];
+    } else if (token.type === "country") {
+      // Country code maps to one or more currencies
+      tokenCurrencies = token.currencies;
     }
 
     if (possibleCurrencies === null) {

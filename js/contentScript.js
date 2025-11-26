@@ -631,6 +631,20 @@ const currencyToCountry = {
   ZWL: "zw",
 };
 
+// Create reverse mapping for country code to currency
+const countryToCurrency = {};
+Object.entries(currencyToCountry).forEach(([currency, country]) => {
+  if (!countryToCurrency[country]) {
+    countryToCurrency[country] = [];
+  }
+  countryToCurrency[country].push(currency);
+});
+
+// Helper function to check if a symbol is ambiguous (represents multiple currencies)
+function isAmbiguousSymbol(symbol) {
+  return CURRENCY_SYMBOLS[symbol] && CURRENCY_SYMBOLS[symbol].length > 1;
+}
+
 // ===== STATE MANAGEMENT =====
 let currentMode = "selection";
 let lastSelectionValue = "";
@@ -702,8 +716,114 @@ function formatNumber(num, currency) {
 }
 
 function parseNumber(text) {
-  // Use parseNumberWithFormatDetection directly for consistent parsing
-  return parseNumberWithFormatDetection(text);
+  if (!text) return null;
+  const numberMatch = text.match(/[\d ,.]+/);
+  if (!numberMatch) return null;
+  const originalText = numberMatch[0];
+
+  // Check if the number starts or ends with a separator (comma or dot)
+  if (/^[,\.]|[,\.]$/.test(originalText)) {
+    return null;
+  }
+
+  // Check if there are two separators next to each other
+  if (/[,\.]{2,}/.test(originalText)) {
+    return null;
+  }
+
+  const cleanText = originalText.replace(/\s+/g, "");
+
+  // Count the number of commas and dots
+  const commaCount = (cleanText.match(/,/g) || []).length;
+  const dotCount = (cleanText.match(/\./g) || []).length;
+
+  // If there are both commas and dots, determine which is the decimal separator
+  // The decimal separator should appear only once and should be at the end
+  if (commaCount > 0 && dotCount > 0) {
+    // Find the last occurrence of each separator
+    const lastCommaIndex = cleanText.lastIndexOf(",");
+    const lastDotIndex = cleanText.lastIndexOf(".");
+
+    // The one that appears last is the decimal separator
+    const decimalSep = lastCommaIndex > lastDotIndex ? "," : ".";
+    const thousandSep = decimalSep === "," ? "." : ",";
+
+    // Check if decimal separator appears only once
+    if ((decimalSep === "," && commaCount !== 1) || (decimalSep === "." && dotCount !== 1)) {
+      return null;
+    }
+
+    // Check if thousand separators are placed correctly (every 3 digits)
+    const parts = cleanText.split(decimalSep);
+    const integerPart = parts[0];
+    const decimalPart = parts[1];
+
+    // Check if thousand separators are correctly placed in the integer part
+    if (thousandSep === ",") {
+      if (!/^\d{1,3}(,\d{3})*$/.test(integerPart)) {
+        return null;
+      }
+    } else {
+      if (!/^\d{1,3}(\.\d{3})*$/.test(integerPart)) {
+        return null;
+      }
+    }
+
+    // Parse the number
+    return parseFloat(integerPart.replace(new RegExp(thousandSep, "g"), "") + "." + decimalPart);
+  }
+
+  // If only commas or only dots
+  if (commaCount > 0) {
+    // If there's only one comma, it could be a decimal separator
+    if (commaCount === 1) {
+      // Check if it's at the end (decimal) or in the middle (thousand)
+      const parts = cleanText.split(",");
+      if (parts.length === 2 && parts[1].length <= 2) {
+        // Likely a decimal separator
+        return parseFloat(cleanText.replace(",", "."));
+      } else {
+        // Likely thousand separators
+        if (!/^\d{1,3}(,\d{3})*$/.test(cleanText)) {
+          return null;
+        }
+        return parseFloat(cleanText.replace(/,/g, ""));
+      }
+    } else {
+      // Multiple commas, must be thousand separators
+      if (!/^\d{1,3}(,\d{3})*$/.test(cleanText)) {
+        return null;
+      }
+      return parseFloat(cleanText.replace(/,/g, ""));
+    }
+  }
+
+  if (dotCount > 0) {
+    // If there's only one dot, it could be a decimal separator
+    if (dotCount === 1) {
+      // Check if it's at the end (decimal) or in the middle (thousand)
+      const parts = cleanText.split(".");
+      if (parts.length === 2 && parts[1].length <= 2) {
+        // Likely a decimal separator
+        return parseFloat(cleanText);
+      } else {
+        // Likely thousand separators
+        if (!/^\d{1,3}(\.\d{3})*$/.test(cleanText)) {
+          return null;
+        }
+        return parseFloat(cleanText.replace(/\./g, ""));
+      }
+    } else {
+      // Multiple dots, must be thousand separators
+      if (!/^\d{1,3}(\.\d{3})*$/.test(cleanText)) {
+        return null;
+      }
+      return parseFloat(cleanText.replace(/\./g, ""));
+    }
+  }
+
+  // No separators, just a plain number
+  return parseFloat(cleanText);
 }
 
 function getFlagElement(currencyCode) {
@@ -1006,6 +1126,13 @@ function detectCurrency(text) {
     "rep NUM symbol",
     "symbol NUM cc",
     "cc NUM symbol",
+    // Country code patterns (only valid with symbols)
+    "symbol NUM country",
+    "NUM symbol country",
+    "symbol country NUM",
+    "country symbol NUM",
+    "country NUM symbol",
+    "NUM country symbol",
   ];
 
   if (!validPatterns.includes(patternSignature)) {
@@ -1015,10 +1142,18 @@ function detectCurrency(text) {
   const allTokens = [...leftTokens, ...rightTokens];
   let possibleCurrencies = null;
 
-  // Check for symbol-code conflicts first
+  // Check for country code validation
+  const countryToken = allTokens.find((t) => t.type === "country");
   const symbolToken = allTokens.find((t) => t.type === "symbol");
   const codeToken = allTokens.find((t) => t.type === "cc" || t.type === "rep");
 
+  // Country codes can ONLY be used with symbols (not standalone)
+  if (countryToken && !symbolToken) {
+    // Country code without symbol is invalid
+    return { currency: "", amount: "", type: "invalid" };
+  }
+
+  // Check for symbol-code conflicts
   if (symbolToken && codeToken) {
     // Check for specific symbol-code conflicts
     const symbol = symbolToken.value;
@@ -1046,6 +1181,9 @@ function detectCurrency(text) {
       tokenCurrencies = [token.currency];
     } else if (token.type === "cc") {
       tokenCurrencies = [token.currency];
+    } else if (token.type === "country") {
+      // Country code maps to one or more currencies
+      tokenCurrencies = token.currencies;
     }
 
     if (possibleCurrencies === null) {
@@ -1120,8 +1258,6 @@ function tokenize(text) {
       }
     }
 
-
-
     // 2. Check Symbols
     for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
       if (remaining.startsWith(symbol.toUpperCase())) {
@@ -1133,21 +1269,26 @@ function tokenize(text) {
       }
     }
 
-    // 3. Check CC (Currency Codes)
-    // CC is always 3 letters.
+    // 3. Check Country Codes (2-letter) and Currency Codes (3-letter)
+    // First check for 2-letter country codes
+    if (remaining.length >= 2) {
+      const potentialCountry = remaining.substring(0, 2).toLowerCase();
+      if (countryToCurrency[potentialCountry]) {
+        // This is a 2-letter country code
+        if (!longestMatch || 2 > longestMatch.length) {
+          longestMatch = remaining.substring(0, 2);
+          longestMatchType = "country";
+          longestMatchData = { countryCode: potentialCountry, currencies: countryToCurrency[potentialCountry] };
+        }
+      }
+    }
+
+    // Then check for 3-letter currency codes
     if (remaining.length >= 3) {
       const potentialCC = remaining.substring(0, 3).toUpperCase();
       if (currencyToCountry[potentialCC]) {
-        // Check if it's a valid word boundary? User didn't specify, but "USD" in "US Dollar" is tricky.
-        // "US Dollar" is a REP. "USD" is a CC.
-        // If we have "US Dollar", the REP check should catch it (length 9).
-        // "USD" (length 3).
-        // So longest match wins. "US Dollar" wins over "USD" (if "USD" was a prefix, which it isn't).
-        // But what if "US" is a prefix?
-        // "US$" is a REP. "U" is not.
-
         if (!longestMatch || 3 > longestMatch.length) {
-          longestMatch = remaining.substring(0, 3); // Use original case for consumption, but type is CC
+          longestMatch = remaining.substring(0, 3);
           longestMatchType = "cc";
           longestMatchData = { currency: potentialCC };
         }
@@ -1169,34 +1310,23 @@ function tokenize(text) {
       return null;
     }
   }
-
   return tokens;
 }
 
 function parseThousandSeparatorCase(text) {
-  // Special handling for cases like "1.000 $" or "1,000$"
-  // where a comma or dot is used as a thousand separator
   const match = text.match(/^\d+[,.]\s*\d{3}/);
   if (match) {
     const matchedText = match[0];
     const separator = matchedText.includes(",") ? "," : ".";
-
-    // Check if there's also a decimal part after the thousand separator
-    // This handles cases like "usd1.000,5" or "$1,000.5"
     const fullMatch = text.match(/^\d+[,.]\s*\d{3}[,.]\s*\d+/);
     if (fullMatch) {
       const fullText = fullMatch[0];
-      // If we have both separators, determine which is which
       if (separator === ",") {
-        // Format: 1,000.5 (comma as thousand, dot as decimal)
         return parseFloat(fullText.replace(/,/g, ""));
       } else {
-        // Format: 1.000,5 (dot as thousand, comma as decimal)
         return parseFloat(fullText.replace(/\./g, "").replace(",", "."));
       }
     }
-
-    // No decimal part, just thousand separator
     return parseFloat(matchedText.replace(new RegExp("\\" + separator, "g"), ""));
   }
   return null;
