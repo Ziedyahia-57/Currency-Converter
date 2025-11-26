@@ -1182,7 +1182,6 @@ function detectCurrency(text) {
     } else if (token.type === "cc") {
       tokenCurrencies = [token.currency];
     } else if (token.type === "country") {
-      // Country code maps to one or more currencies
       tokenCurrencies = token.currencies;
     }
 
@@ -1985,31 +1984,64 @@ function shouldConvertPage(url) {
   }
 }
 
-/**
- * Optimized price detection and marking with performance improvements
- */
 class PriceDetector {
   constructor() {
+    this.processedElements = new Set();
     this.currencyCache = new Map();
     this.isProcessing = false;
     this.pendingDetection = false;
-    this.processedElements = new Set();
-    this.MAX_ELEMENTS = 500;
+    this.MAX_ELEMENTS = 1000;
+    this.detectionTimeout = null;
+    
+    // Initialize regexes
+    this.generateRegexes();
+  }
+
+  /**
+   * Generate regexes from currency data
+   */
+  generateRegexes() {
+    const currencyTerms = new Set();
+    const symbolTerms = new Set();
+    
+    // Process CURRENCY_REPRESENTATIONS (all are currency terms)
+    Object.values(CURRENCY_REPRESENTATIONS).forEach(reps => {
+      reps.forEach(rep => currencyTerms.add(rep));
+    });
+
+    // Process CURRENCY_SYMBOLS
+    Object.keys(CURRENCY_SYMBOLS).forEach(key => {
+      // If it contains letters and is at least 2 chars long, treat as currency word
+      if (/[a-zA-Z]/.test(key) && key.length >= 2) {
+        currencyTerms.add(key);
+      } else {
+        // Otherwise treat as symbol
+        symbolTerms.add(key);
+      }
+    });
+
+    // Helper to escape and join terms
+    const createRegex = (terms) => {
+      const escaped = Array.from(terms)
+        .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .sort((a, b) => b.length - a.length);
+      return new RegExp(escaped.join('|'));
+    };
+
+    // Word boundary for currency terms
+    const escapedCurrencyTerms = Array.from(currencyTerms)
+        .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .sort((a, b) => b.length - a.length);
+    
+    // Use lookarounds instead of \b to handle non-ASCII characters correctly (e.g. zł)
+    this.currencyRegex = new RegExp(`(?<!\\w)(${escapedCurrencyTerms.join('|')})(?!\\w)`, 'i');
+    this.symbolRegex = createRegex(symbolTerms);
   }
 
   /**
    * Main function to detect and mark prices with performance optimizations
    */
   async detectAndMarkPrices() {
-    if (this.isProcessing) {
-      this.pendingDetection = true;
-      return;
-    }
-
-    // Check if we should convert this page
-    if (!shouldConvertPage(window.location.href)) {
-      return;
-    }
 
     this.isProcessing = true;
     const startTime = performance.now();
@@ -2097,18 +2129,15 @@ class PriceDetector {
   isLikelyCurrency(text) {
     // We can use the global detectCurrency to check validity
     // But for performance, we might want a quick check first.
-    // However, the new detectCurrency is strict, so we should rely on it.
-    // Or we can keep a very loose check here to filter out obvious non-currencies.
+    
+    // Check for digits first (must have a number)
+    if (!/\d/.test(text)) return false;
 
-    // Quick regex check for common currency patterns - more inclusive now
-    const symbolPattern = /[$€£¥₹₽₩₺₴₸֏؋৳៛₠₡₢₣₤₥₦₧₨₩₪₫₭₮₯₰₱₲₳₴₵₶₷₸₹₺₻₼₽₾₿]/;
-    const codePattern = /\b[A-Z]{3}\b/;
-    // We can also check for digits
-    const hasDigit = /\d/.test(text);
-
-    if (!hasDigit) return false; // Must have a number
-
-    return symbolPattern.test(text) || codePattern.test(text);
+    // Check for symbols
+    if (this.symbolRegex.test(text)) return true;
+    
+    // Check for currency words/codes
+    return this.currencyRegex.test(text);
   }
 
   /**
