@@ -715,7 +715,7 @@ function formatNumber(num, currency) {
   return formatted;
 }
 
-function parseNumber(text) {
+function parseNumber(text, skipCurrencyDetection = false) {
   if (!text) return null;
   const numberMatch = text.match(/[\d ,.]+/);
   if (!numberMatch) return null;
@@ -731,118 +731,198 @@ function parseNumber(text) {
     return null;
   }
 
+  // Check for spaces between separators and digits (invalid)
+  if (/[,\.]\s+|\s+[,\.]/.test(originalText)) {
+    return null;
+  }
+
   const cleanText = originalText.replace(/\s+/g, "");
 
   // Count the number of commas and dots
   const commaCount = (cleanText.match(/,/g) || []).length;
   const dotCount = (cleanText.match(/\./g) || []).length;
 
-  // European format: dots as thousand separators, comma as decimal (1.234.567,89)
-  if (dotCount > 1 && commaCount === 1) {
-    // Verify it's a valid European format: digits, then dot-thousands, then comma with decimals
-    if (/^\d{1,3}(\.\d{3})*,\d+$/.test(cleanText)) {
-      return parseFloat(cleanText.replace(/\./g, "").replace(",", "."));
+  // Helper function to validate thousand separator format
+  function isValidThousandSeparatorFormat(text, separator) {
+    const parts = text.split(separator);
+    
+    // First part can be 1-3 digits
+    if (!/^\d{1,3}$/.test(parts[0])) {
+      return false;
     }
-    return null;
+    
+    // All subsequent parts must be exactly 3 digits
+    for (let i = 1; i < parts.length; i++) {
+      if (!/^\d{3}$/.test(parts[i])) {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
-  // American format: commas as thousand separators, dot as decimal (1,234,567.89)
-  if (commaCount > 1 && dotCount === 1) {
-    // Verify it's a valid American format: digits, then comma-thousands, then dot with decimals
-    if (/^\d{1,3}(,\d{3})*\.\d+$/.test(cleanText)) {
-      return parseFloat(cleanText.replace(/,/g, ""));
+  // Define currencies that use 3 decimal places with ALL their representations
+  const threeDecimalCurrencies = {
+    TND: ["TND", "د.ت", "د.ت.", "DT", "Tunisian Dinar", "Tunisian Dinars", "Dinar", "Dinars", "دينار", "دينارات"],
+    KWD: ["KWD", "د.ك", "د.ك.", "KD", "Kuwaiti Dinar", "Kuwaiti Dinars", "دينار", "دينارات"],
+    BHD: ["BHD", "د.ب", "د.ب.", "BD", "Bahraini Dinar", "Bahraini Dinars", "دينار", "دينارات"],
+    OMR: ["OMR", "ر.ع", "ر.ع.", "Omani Rial", "Omani Rials", "Rial", "Riyal", "Riyals", "ريال", "ريالات"],
+    JOD: ["JOD", "د.ا", "د.ا.", "JD", "Jordanian Dinar", "Jordanian Dinars", "دينار", "دينارات"],
+    IQD: ["IQD", "د.ع", "د.ع.", "IQD", "Iraqi Dinar", "Iraqi Dinars", "دينار", "دينارات"],
+    LYD: ["LYD", "LD", "Libyan Dinar", "Libyan Dinars", "دينار", "دينارات"]
+  };
+
+  // Helper function to check if detected currency is a 3-decimal currency
+  function isThreeDecimalCurrency(currencyCode) {
+    if (!currencyCode) return false;
+    
+    // Check if the currency code itself is in our list
+    if (threeDecimalCurrencies[currencyCode]) {
+      return true;
     }
-    return null;
+    
+    // Check all representations to see if any match the detected currency
+    for (const [code, representations] of Object.entries(threeDecimalCurrencies)) {
+      if (representations.includes(currencyCode)) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 
-  // If there are both commas and dots, determine which is the decimal separator
-  // The decimal separator should appear only once and should be at the end
-  if (commaCount > 0 && dotCount > 0) {
-    // Find the last occurrence of each separator
+  // Only detect currency if we need it for 3-decimal logic AND we're not already in a currency detection
+  let detectedCurrency = null;
+  if (!skipCurrencyDetection) {
+    // We only need currency detection for the specific case of 3 digits after a single separator
+    const needsCurrencyDetection = 
+      (commaCount === 1 && cleanText.split(",")[1]?.length === 3) ||
+      (dotCount === 1 && cleanText.split(".")[1]?.length === 3);
+    
+    if (needsCurrencyDetection) {
+      detectedCurrency = detectCurrency(text);
+    }
+  }
+
+  // Handle European format: dot as thousand separator, comma as decimal (1.234.567,89)
+  if (dotCount >= 1 && commaCount === 1) {
     const lastCommaIndex = cleanText.lastIndexOf(",");
     const lastDotIndex = cleanText.lastIndexOf(".");
-
-    // The one that appears last is the decimal separator
-    const decimalSep = lastCommaIndex > lastDotIndex ? "," : ".";
-    const thousandSep = decimalSep === "," ? "." : ",";
-
-    // Check if decimal separator appears only once
-    if ((decimalSep === "," && commaCount !== 1) || (decimalSep === "." && dotCount !== 1)) {
-      return null;
-    }
-
-    // Check if thousand separators are placed correctly (every 3 digits)
-    const parts = cleanText.split(decimalSep);
-    const integerPart = parts[0];
-    const decimalPart = parts[1];
-
-    // Check if thousand separators are correctly placed in the integer part
-    if (thousandSep === ",") {
-      if (!/^\d{1,3}(,\d{3})*$/.test(integerPart)) {
-        return null;
-      }
-    } else {
-      if (!/^\d{1,3}(\.\d{3})*$/.test(integerPart)) {
-        return null;
+    
+    // Comma should be the last separator for European format
+    if (lastCommaIndex > lastDotIndex) {
+      const integerWithSeparators = cleanText.substring(0, lastCommaIndex);
+      const decimalPart = cleanText.substring(lastCommaIndex + 1);
+      
+      // Check if the integer part has proper thousand separators
+      if (isValidThousandSeparatorFormat(integerWithSeparators, '.')) {
+        const integerPart = integerWithSeparators.replace(/\./g, "");
+        return parseFloat(integerPart + "." + decimalPart);
       }
     }
-
-    // Parse the number
-    return parseFloat(integerPart.replace(new RegExp(thousandSep, "g"), "") + "." + decimalPart);
   }
 
-  // If only commas
-  if (commaCount > 0) {
-    // If there's only one comma, it could be a decimal separator
+  // Handle American format: comma as thousand separator, dot as decimal (1,234,567.89)
+  if (commaCount >= 1 && dotCount === 1) {
+    const lastCommaIndex = cleanText.lastIndexOf(",");
+    const lastDotIndex = cleanText.lastIndexOf(".");
+    
+    // Dot should be the last separator for American format
+    if (lastDotIndex > lastCommaIndex) {
+      const integerWithSeparators = cleanText.substring(0, lastDotIndex);
+      const decimalPart = cleanText.substring(lastDotIndex + 1);
+      
+      // Check if the integer part has proper thousand separators
+      if (isValidThousandSeparatorFormat(integerWithSeparators, ',')) {
+        const integerPart = integerWithSeparators.replace(/,/g, "");
+        return parseFloat(integerPart + "." + decimalPart);
+      }
+    }
+  }
+
+  // Handle cases with only commas (no dots) - could be thousand separators or decimal
+  if (commaCount > 0 && dotCount === 0) {
+    // If there's only one comma, we need to determine if it's a decimal or thousand separator
     if (commaCount === 1) {
-      // Check if it's at the end (decimal) or in the middle (thousand)
       const parts = cleanText.split(",");
-      if (parts.length === 2 && parts[1].length <= 2) {
-        // Likely a decimal separator (European format without thousands)
-        return parseFloat(cleanText.replace(",", "."));
-      } else {
-        // Likely thousand separators (American format without decimals)
-        if (!/^\d{1,3}(,\d{3})*$/.test(cleanText)) {
-          return null;
+      
+      // Check if we have 3 digits after the comma
+      if (parts.length === 2 && parts[1].length === 3) {
+        // Check if the detected currency is one that uses 3 decimal places
+        if (detectedCurrency && isThreeDecimalCurrency(detectedCurrency.currency)) {
+          // This is a decimal separator for currencies with 3 decimal places
+          return parseFloat(parts[0] + "." + parts[1]);
+        } else {
+          // This is likely a thousand separator (e.g., 1,234)
+          // Validate it's a proper thousand separator format
+          if (isValidThousandSeparatorFormat(cleanText, ',')) {
+            return parseFloat(cleanText.replace(/,/g, ""));
+          }
         }
+      }
+      // Heuristic: if the part after comma is 2 digits, it's likely a decimal (e.g., 1,23)
+      else if (parts.length === 2 && parts[1].length === 2) {
+        return parseFloat(parts[0] + "." + parts[1]); // Decimal separator
+      }
+      // Otherwise, check if it's a valid thousand separator format
+      else if (isValidThousandSeparatorFormat(cleanText, ',')) {
         return parseFloat(cleanText.replace(/,/g, ""));
       }
     } else {
-      // Multiple commas, must be thousand separators (American format without decimals)
-      if (!/^\d{1,3}(,\d{3})*$/.test(cleanText)) {
-        return null;
+      // Multiple commas - must be thousand separators
+      if (isValidThousandSeparatorFormat(cleanText, ',')) {
+        return parseFloat(cleanText.replace(/,/g, ""));
       }
-      return parseFloat(cleanText.replace(/,/g, ""));
     }
   }
 
-  // If only dots
-  if (dotCount > 0) {
-    // If there's only one dot, it could be a decimal separator
+  // Handle cases with only dots (no commas) - could be thousand separators or decimal
+  if (dotCount > 0 && commaCount === 0) {
+    // If there's only one dot, check if it's likely decimal or thousand
     if (dotCount === 1) {
-      // Check if it's at the end (decimal) or in the middle (thousand)
       const parts = cleanText.split(".");
-      if (parts.length === 2 && parts[1].length <= 2) {
-        // Likely a decimal separator (American format without thousands)
-        return parseFloat(cleanText);
-      } else {
-        // Likely thousand separators (European format without decimals)
-        if (!/^\d{1,3}(\.\d{3})*$/.test(cleanText)) {
-          return null;
+      
+      // Check if we have 3 digits after the dot
+      if (parts.length === 2 && parts[1].length === 3) {
+        // Check if the detected currency is one that uses 3 decimal places
+        if (detectedCurrency && isThreeDecimalCurrency(detectedCurrency.currency)) {
+          // This is a decimal separator for currencies with 3 decimal places
+          return parseFloat(cleanText); // Dot is already decimal separator
+        } else {
+          // This is likely a thousand separator (e.g., 1.234)
+          // Validate it's a proper thousand separator format
+          if (isValidThousandSeparatorFormat(cleanText, '.')) {
+            return parseFloat(cleanText.replace(/\./g, ""));
+          }
         }
+      }
+      // If part after dot has 2 digits, likely decimal (American)
+      else if (parts.length === 2 && parts[1].length === 2) {
+        return parseFloat(cleanText);
+      }
+      // Otherwise, check if it's a valid thousand separator format
+      else if (isValidThousandSeparatorFormat(cleanText, '.')) {
         return parseFloat(cleanText.replace(/\./g, ""));
       }
     } else {
-      // Multiple dots, must be thousand separators (European format without decimals)
-      if (!/^\d{1,3}(\.\d{3})*$/.test(cleanText)) {
-        return null;
+      // Multiple dots - must be thousand separators (European)
+      if (isValidThousandSeparatorFormat(cleanText, '.')) {
+        return parseFloat(cleanText.replace(/\./g, ""));
       }
-      return parseFloat(cleanText.replace(/\./g, ""));
     }
   }
 
+  // If there are both commas and dots but don't match the European/American patterns above
+  if (commaCount > 0 && dotCount > 0) {
+    return null; // Ambiguous format (like 1.234.56 or 1,234,56)
+  }
+
   // No separators, just a plain number
-  return parseFloat(cleanText);
+  if (commaCount === 0 && dotCount === 0) {
+    return parseFloat(cleanText);
+  }
+
+  return null; // If we get here, the format is invalid
 }
 
 function getFlagElement(currencyCode) {
@@ -1083,168 +1163,168 @@ function getFlagElement(currencyCode) {
 //   };
 // }
 function detectCurrency(text) {
-  const trimmedText = text.trim();
-  if (!trimmedText) return { currency: "", amount: "", type: "invalid" };
+  try {
+    const trimmedText = text.trim();
+    if (!trimmedText) return { currency: "", amount: "", type: "invalid" };
 
-  const numberMatches = trimmedText.match(/\d[\d,. ]*/g);
+    const numberMatches = trimmedText.match(/\d[\d,. ]*/g);
 
-  if (!numberMatches || numberMatches.length === 0) {
-    return { currency: "", amount: "", type: "invalid" };
-  }
-
-  // If multiple number-like sequences are found, we need to be careful.
-  // The user requirement says "NUM" is a single entity in the pattern.
-  // If we have "100 200", it's likely invalid or two prices.
-  // For now, let's assume we focus on the longest valid number or the first one?
-  // The previous logic rejected if > 1 match. Let's stick to that for strictness,
-  // BUT "1,000.00" matches as one. "1 000" matches as one.
-  // "100 USD 200" would match as two.
-  if (numberMatches.length > 1) {
-    return { currency: "", amount: "", type: "invalid" };
-  }
-
-  const amountPart = numberMatches[0].trim();
-  const parsedNumber = parseNumber(amountPart);
-
-  if (parsedNumber === null || isNaN(parsedNumber)) {
-    return { currency: "", amount: "", type: "invalid" };
-  }
-
-  // 2. Split String
-  const numberIndex = trimmedText.indexOf(amountPart);
-  if (numberIndex === -1) return { currency: "", amount: "", type: "invalid" }; // Should not happen
-
-  const leftPart = trimmedText.substring(0, numberIndex).trim();
-  const rightPart = trimmedText.substring(numberIndex + amountPart.length).trim();
-
-  // 3. Tokenize Parts
-  const leftTokens = tokenize(leftPart);
-  const rightTokens = tokenize(rightPart);
-
-  if (leftTokens === null || rightTokens === null) {
-    // Tokenization failed (contains invalid characters)
-    return { currency: "", amount: "", type: "invalid" };
-  }
-
-  const patternSignature = [...leftTokens.map((t) => t.type), "NUM", ...rightTokens.map((t) => t.type)].join(" ");
-
-  const validPatterns = [
-    "symbol NUM",
-    "NUM symbol",
-    "rep NUM",
-    "NUM rep",
-    "NUM symbol rep",
-    "NUM rep symbol",
-    "NUM symbol cc",
-    "NUM cc symbol",
-    "symbol rep NUM",
-    "rep symbol NUM",
-    "symbol cc NUM",
-    "cc symbol NUM",
-    "symbol NUM rep",
-    "rep NUM symbol",
-    "symbol NUM cc",
-    "cc NUM symbol",
-    // Country code patterns (only valid with symbols)
-    "symbol NUM country",
-    "NUM symbol country",
-    "symbol country NUM",
-    "country symbol NUM",
-    "country NUM symbol",
-    "NUM country symbol",
-  ];
-
-  if (!validPatterns.includes(patternSignature)) {
-    return { currency: "", amount: "", type: "invalid" };
-  }
-
-  const allTokens = [...leftTokens, ...rightTokens];
-  let possibleCurrencies = null;
-
-  // Check for country code validation
-  const countryToken = allTokens.find((t) => t.type === "country");
-  const symbolToken = allTokens.find((t) => t.type === "symbol");
-  const codeToken = allTokens.find((t) => t.type === "cc" || t.type === "rep");
-
-  // Country codes can ONLY be used with symbols (not standalone)
-  if (countryToken && !symbolToken) {
-    // Country code without symbol is invalid
-    return { currency: "", amount: "", type: "invalid" };
-  }
-
-  // Check for symbol-code conflicts
-  if (symbolToken && codeToken) {
-    // Check for specific symbol-code conflicts
-    const symbol = symbolToken.value;
-    const code = codeToken.currency;
-
-    // Check if symbol and code are mismatched
-    // Only flag as invalid for the most specific symbol-code pairs
-    // $ can be used with many currencies, so only reject if code is not in the list
-    if (symbol === '$' && !['USD', 'CAD', 'AUD', 'NZD', 'SGD', 'HKD', 'MXN', 'BRL', 'CLP', 'COP', 'ZWL', 'TTD', 'BSD', 'BZD', 'BBD', 'XCD', 'SBD', 'LRD', 'SRD', 'GYD', 'KYD', 'FJD', 'JMD', 'NAD'].includes(code)) {
-      return { currency: "", amount: "", type: "invalid" }; // Mismatched symbol and code
-    }
-
-    // For € and £, they are more specific
-    if ((symbol === '€' && code !== 'EUR') ||
-        (symbol === '£' && !['GBP', 'EGP', 'LBP', 'SYP', 'FKP', 'GIP', 'SDG', 'SSP'].includes(code))) {
-      return { currency: "", amount: "", type: "invalid" }; // Mismatched symbol and code
-    }
-  }
-
-  for (const token of allTokens) {
-    let tokenCurrencies = [];
-    if (token.type === "symbol") {
-      tokenCurrencies = token.currencies;
-    } else if (token.type === "rep") {
-      tokenCurrencies = [token.currency];
-    } else if (token.type === "cc") {
-      tokenCurrencies = [token.currency];
-    } else if (token.type === "country") {
-      tokenCurrencies = token.currencies;
-    }
-
-    if (possibleCurrencies === null) {
-      possibleCurrencies = new Set(tokenCurrencies);
-    } else {
-      const newSet = new Set();
-      for (const c of tokenCurrencies) {
-        if (possibleCurrencies.has(c)) {
-          newSet.add(c);
-        }
-      }
-      possibleCurrencies = newSet;
-    }
-
-    if (possibleCurrencies.size === 0) {
+    if (!numberMatches || numberMatches.length === 0) {
       return { currency: "", amount: "", type: "invalid" };
     }
-  }
 
-  const resultArray = Array.from(possibleCurrencies);
-  let selectedCurrency = resultArray[0];
+    if (numberMatches.length > 1) {
+      return { currency: "", amount: "", type: "invalid" };
+    }
 
-  if (symbolToken && resultArray.length > 1) {
-    // FIXED: Prefer USD for $ symbol when available, otherwise use first match
-    if (symbolToken.value === '$' && possibleCurrencies.has('USD')) {
-      selectedCurrency = 'USD';
-    } else {
-      // For other cases, use the first currency from the symbol's currency list that matches
-      for (const c of symbolToken.currencies) {
-        if (possibleCurrencies.has(c)) {
-          selectedCurrency = c;
-          break;
+    const amountPart = numberMatches[0].trim();
+    
+    // Pass true to skipCurrencyDetection to prevent infinite recursion
+    const parsedNumber = parseNumber(amountPart, true);
+
+    if (parsedNumber === null || isNaN(parsedNumber)) {
+      return { currency: "", amount: "", type: "invalid" };
+    }
+
+    // 2. Split String
+    const numberIndex = trimmedText.indexOf(amountPart);
+    if (numberIndex === -1) return { currency: "", amount: "", type: "invalid" }; // Should not happen
+
+    const leftPart = trimmedText.substring(0, numberIndex).trim();
+    const rightPart = trimmedText.substring(numberIndex + amountPart.length).trim();
+
+    // 3. Tokenize Parts
+    const leftTokens = tokenize(leftPart);
+    const rightTokens = tokenize(rightPart);
+
+    if (leftTokens === null || rightTokens === null) {
+      // Tokenization failed (contains invalid characters)
+      return { currency: "", amount: "", type: "invalid" };
+    }
+
+    const patternSignature = [...leftTokens.map((t) => t.type), "NUM", ...rightTokens.map((t) => t.type)].join(" ");
+
+    const validPatterns = [
+      "symbol NUM",
+      "NUM symbol",
+      "rep NUM",
+      "NUM rep",
+      "NUM symbol rep",
+      "NUM rep symbol",
+      "NUM symbol cc",
+      "NUM cc symbol",
+      "symbol rep NUM",
+      "rep symbol NUM",
+      "symbol cc NUM",
+      "cc symbol NUM",
+      "symbol NUM rep",
+      "rep NUM symbol",
+      "symbol NUM cc",
+      "cc NUM symbol",
+      // Country code patterns (only valid with symbols)
+      "symbol NUM country",
+      "NUM symbol country",
+      "symbol country NUM",
+      "country symbol NUM",
+      "country NUM symbol",
+      "NUM country symbol",
+    ];
+
+    if (!validPatterns.includes(patternSignature)) {
+      return { currency: "", amount: "", type: "invalid" };
+    }
+
+    const allTokens = [...leftTokens, ...rightTokens];
+    let possibleCurrencies = null;
+
+    // Check for country code validation
+    const countryToken = allTokens.find((t) => t.type === "country");
+    const symbolToken = allTokens.find((t) => t.type === "symbol");
+    const codeToken = allTokens.find((t) => t.type === "cc" || t.type === "rep");
+
+    // Country codes can ONLY be used with symbols (not standalone)
+    if (countryToken && !symbolToken) {
+      // Country code without symbol is invalid
+      return { currency: "", amount: "", type: "invalid" };
+    }
+
+    // Check for symbol-code conflicts
+    if (symbolToken && codeToken) {
+      // Check for specific symbol-code conflicts
+      const symbol = symbolToken.value;
+      const code = codeToken.currency;
+
+      // Check if symbol and code are mismatched
+      // Only flag as invalid for the most specific symbol-code pairs
+      // $ can be used with many currencies, so only reject if code is not in the list
+      if (symbol === '$' && !['USD', 'CAD', 'AUD', 'NZD', 'SGD', 'HKD', 'MXN', 'BRL', 'CLP', 'COP', 'ZWL', 'TTD', 'BSD', 'BZD', 'BBD', 'XCD', 'SBD', 'LRD', 'SRD', 'GYD', 'KYD', 'FJD', 'JMD', 'NAD'].includes(code)) {
+        return { currency: "", amount: "", type: "invalid" }; // Mismatched symbol and code
+      }
+
+      // For € and £, they are more specific
+      if ((symbol === '€' && code !== 'EUR') ||
+          (symbol === '£' && !['GBP', 'EGP', 'LBP', 'SYP', 'FKP', 'GIP', 'SDG', 'SSP'].includes(code))) {
+        return { currency: "", amount: "", type: "invalid" }; // Mismatched symbol and code
+      }
+    }
+
+    for (const token of allTokens) {
+      let tokenCurrencies = [];
+      if (token.type === "symbol") {
+        tokenCurrencies = token.currencies;
+      } else if (token.type === "rep") {
+        tokenCurrencies = [token.currency];
+      } else if (token.type === "cc") {
+        tokenCurrencies = [token.currency];
+      } else if (token.type === "country") {
+        tokenCurrencies = token.currencies;
+      }
+
+      if (possibleCurrencies === null) {
+        possibleCurrencies = new Set(tokenCurrencies);
+      } else {
+        const newSet = new Set();
+        for (const c of tokenCurrencies) {
+          if (possibleCurrencies.has(c)) {
+            newSet.add(c);
+          }
+        }
+        possibleCurrencies = newSet;
+      }
+
+      if (possibleCurrencies.size === 0) {
+        return { currency: "", amount: "", type: "invalid" };
+      }
+    }
+
+    const resultArray = Array.from(possibleCurrencies);
+    let selectedCurrency = resultArray[0];
+
+    if (symbolToken && resultArray.length > 1) {
+      // FIXED: Prefer USD for $ symbol when available, otherwise use first match
+      if (symbolToken.value === '$' && possibleCurrencies.has('USD')) {
+        selectedCurrency = 'USD';
+      } else {
+        // For other cases, use the first currency from the symbol's currency list that matches
+        for (const c of symbolToken.currencies) {
+          if (possibleCurrencies.has(c)) {
+            selectedCurrency = c;
+            break;
+          }
         }
       }
     }
-  }
 
-  return {
-    currency: selectedCurrency,
-    amount: amountPart,
-    type: "valid",
-    possibleCurrencies: resultArray,
-  };
+    return {
+      currency: selectedCurrency,
+      amount: amountPart,
+      type: "valid",
+      possibleCurrencies: resultArray,
+    };
+  } catch (error) {
+    console.error("Error in detectCurrency:", error);
+    return { currency: "", amount: "", type: "invalid" };
+  }
 }
 
 function tokenize(text) {
@@ -2254,7 +2334,7 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
     (result) => {
       if (!result.currencyOrder || result.currencyOrder.length === 0 || !result.currencyData) {
         // If no currencies are configured, just mark the price without conversion
-        createPriceWrapper(textNode, originalText, parent);
+        createPriceWrapper(textNode, originalText, parent, currency);
         return;
       }
 
@@ -2271,7 +2351,7 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
       // If it is, just highlight it without converting
       if (currency === targetCurrency) {
         // Create and apply the wrapper with original text (no conversion)
-        createPriceWrapper(textNode, originalText, parent);
+        createPriceWrapper(textNode, originalText, parent, currency);
         return;
       }
 
@@ -2283,13 +2363,13 @@ function markPriceElement(textNode, originalText, currency, amount, index) {
       const newText = `${formattedValue} ${targetCurrency}`;
 
       // Create and apply the wrapper
-      createPriceWrapper(textNode, newText, parent);
+      createPriceWrapper(textNode, newText, parent, currency);
     }
   );
 }
 
 // Helper function to create the price wrapper
-function createPriceWrapper(textNode, text, parent) {
+function createPriceWrapper(textNode, text, parent, originalCurrency) {
   // Create a wrapper span
   const wrapper = document.createElement("span");
   wrapper.id = `detected-price`;
@@ -2298,8 +2378,8 @@ function createPriceWrapper(textNode, text, parent) {
   // Store the original text for restoration when in-page convert is turned off
   wrapper.dataset.originalText = textNode.textContent;
 
-  // Add title attribute to show original price on hover
-  wrapper.title = `💲Original price: ${textNode.textContent}`;
+  // Add title attribute to show original price on hover with currency info
+  wrapper.title = `💲Original price: ${textNode.textContent} (${originalCurrency})`;
   wrapper.style.cursor = `help`;
 
   // Copy all attributes from parent if it's a simple element
