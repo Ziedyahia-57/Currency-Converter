@@ -269,3 +269,9 @@ ease;
   -ms-user-select: none;
   user-select: none;
 }
+
+#detected-price .multi-currency-detected {
+    background: hsl(50deg 100% 43% / 37%) !important;
+    color: hsl(50 100% 38% / 1) !important;
+    text-shadow: hsl(42 100% 50% / 1) 0px 0px 1px !important;
+}

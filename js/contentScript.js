@@ -737,6 +737,24 @@ function parseNumber(text) {
   const commaCount = (cleanText.match(/,/g) || []).length;
   const dotCount = (cleanText.match(/\./g) || []).length;
 
+  // European format: dots as thousand separators, comma as decimal (1.234.567,89)
+  if (dotCount > 1 && commaCount === 1) {
+    // Verify it's a valid European format: digits, then dot-thousands, then comma with decimals
+    if (/^\d{1,3}(\.\d{3})*,\d+$/.test(cleanText)) {
+      return parseFloat(cleanText.replace(/\./g, "").replace(",", "."));
+    }
+    return null;
+  }
+
+  // American format: commas as thousand separators, dot as decimal (1,234,567.89)
+  if (commaCount > 1 && dotCount === 1) {
+    // Verify it's a valid American format: digits, then comma-thousands, then dot with decimals
+    if (/^\d{1,3}(,\d{3})*\.\d+$/.test(cleanText)) {
+      return parseFloat(cleanText.replace(/,/g, ""));
+    }
+    return null;
+  }
+
   // If there are both commas and dots, determine which is the decimal separator
   // The decimal separator should appear only once and should be at the end
   if (commaCount > 0 && dotCount > 0) {
@@ -773,24 +791,24 @@ function parseNumber(text) {
     return parseFloat(integerPart.replace(new RegExp(thousandSep, "g"), "") + "." + decimalPart);
   }
 
-  // If only commas or only dots
+  // If only commas
   if (commaCount > 0) {
     // If there's only one comma, it could be a decimal separator
     if (commaCount === 1) {
       // Check if it's at the end (decimal) or in the middle (thousand)
       const parts = cleanText.split(",");
       if (parts.length === 2 && parts[1].length <= 2) {
-        // Likely a decimal separator
+        // Likely a decimal separator (European format without thousands)
         return parseFloat(cleanText.replace(",", "."));
       } else {
-        // Likely thousand separators
+        // Likely thousand separators (American format without decimals)
         if (!/^\d{1,3}(,\d{3})*$/.test(cleanText)) {
           return null;
         }
         return parseFloat(cleanText.replace(/,/g, ""));
       }
     } else {
-      // Multiple commas, must be thousand separators
+      // Multiple commas, must be thousand separators (American format without decimals)
       if (!/^\d{1,3}(,\d{3})*$/.test(cleanText)) {
         return null;
       }
@@ -798,23 +816,24 @@ function parseNumber(text) {
     }
   }
 
+  // If only dots
   if (dotCount > 0) {
     // If there's only one dot, it could be a decimal separator
     if (dotCount === 1) {
       // Check if it's at the end (decimal) or in the middle (thousand)
       const parts = cleanText.split(".");
       if (parts.length === 2 && parts[1].length <= 2) {
-        // Likely a decimal separator
+        // Likely a decimal separator (American format without thousands)
         return parseFloat(cleanText);
       } else {
-        // Likely thousand separators
+        // Likely thousand separators (European format without decimals)
         if (!/^\d{1,3}(\.\d{3})*$/.test(cleanText)) {
           return null;
         }
         return parseFloat(cleanText.replace(/\./g, ""));
       }
     } else {
-      // Multiple dots, must be thousand separators
+      // Multiple dots, must be thousand separators (European format without decimals)
       if (!/^\d{1,3}(\.\d{3})*$/.test(cleanText)) {
         return null;
       }
