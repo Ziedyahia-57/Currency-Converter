@@ -219,10 +219,10 @@
 /* Fix for deepseek padding */
 
 #detected-price {
-  border: solid 2px #00acc100 !important;
+  /* border: solid 2px #00acc100 !important; */
   border-radius: 4px !important;
   background: #00dbc15e !important;
-  border-color: #00acc100 !important;
+  border: 1px solid var(--primary-color) !important;
   color: var(--primary-color) !important;
   text-shadow: hsl(213 100% 50% / 1) 0px 0px 1px !important;
   white-space: nowrap !important;
@@ -271,7 +271,10 @@ ease;
 }
 
 #detected-price.multi-currency-detected {
-    background: hsl(50deg 100% 43% / 37%) !important;
-    color: hsl(50 100% 38% / 1) !important;
-    text-shadow: hsl(42 100% 50% / 1) 0px 0px 1px !important;
-}
+    background: hsla(46, 100%, 43%, 0.37) !important;
+    color: hsl(39, 100%, 41%) !important;
+    text-shadow: orange 0px 0px 1px !important;
+    border: 1px solid orange !important;
+    /* color: hsl(39, 100%, 46%) !important;
+    background: rgba(255, 165, 0, 0.37) !important; */
+  }

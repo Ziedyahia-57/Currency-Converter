@@ -2650,7 +2650,7 @@ function createPriceWrapper(textNode, text, parent, originalCurrency, possibleCu
   // Add title attribute to show original price on hover with currency info
   let titleText = `💲Original price: ${textNode.textContent} (${originalCurrency})`;
   if (hasMultipleCurrencies) {
-    titleText = `\n⚠️ Ambiguous currency: ${textNode.textContent} (${originalCurrency})`;
+    titleText = `\n⚠️ Multi-currency Symbol: ${textNode.textContent} (~${originalCurrency})`;
   }
   wrapper.title = titleText;
   wrapper.style.cursor = `help`;
