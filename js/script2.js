@@ -915,6 +915,38 @@ window.addEventListener("online", async () => {
     console.error("Failed to fetch exchange rates:", error);
     loadData(); // Try to load cached data
   }
+
+  // Retry fetching missing favicons for whitelist
+  let whitelistUpdated = false;
+  for (let i = 0; i < whitelist.length; i++) {
+    if (!whitelist[i].favicon) {
+      const favicon = await getFaviconAsBase64(whitelist[i].url);
+      if (favicon) {
+        whitelist[i].favicon = favicon;
+        whitelistUpdated = true;
+      }
+    }
+  }
+  if (whitelistUpdated) {
+    saveWhitelist();
+    renderWhitelist();
+  }
+
+  // Retry fetching missing favicons for blacklist
+  let blacklistUpdated = false;
+  for (let i = 0; i < blacklist.length; i++) {
+    if (!blacklist[i].favicon) {
+      const favicon = await getFaviconAsBase64(blacklist[i].url);
+      if (favicon) {
+        blacklist[i].favicon = favicon;
+        blacklistUpdated = true;
+      }
+    }
+  }
+  if (blacklistUpdated) {
+    saveBlacklist();
+    renderBlacklist();
+  }
 });
 
 //🟠------------------------------------------------------------*/
@@ -979,6 +1011,116 @@ hideWhitelistTab.addEventListener("click", () => {
 //⚪                     WHITELIST LOGIC                        */
 //⚪------------------------------------------------------------*/
 
+function getDomain(url) {
+  try {
+    // Handle URLs without protocol
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "http://" + url;
+    }
+    return new URL(url).hostname;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function getFaviconAsBase64(url) {
+  const domain = getDomain(url);
+  if (!domain) return null;
+
+  // Don't attempt to fetch favicons when offline
+  if (!navigator.onLine) {
+    console.log('Offline: skipping favicon fetch for:', domain);
+    return null;
+  }
+
+  console.log('Fetching favicon for:', domain);
+
+  // Strategy 1: Google Favicon Service (Most reliable)
+  try {
+    const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    const base64 = await fetchImageAsBase64(googleFaviconUrl);
+    if (base64) {
+      console.log('Success with Google service for:', domain);
+      return base64;
+    }
+  } catch (e) {
+    console.warn('Google favicon service failed for:', domain, e);
+  }
+
+  // Strategy 2: Direct favicon.ico (HTTPS)
+  try {
+    const icoUrl = `https://${domain}/favicon.ico`;
+    const base64 = await fetchImageAsBase64(icoUrl);
+    if (base64) {
+      console.log('Success with direct favicon.ico for:', domain);
+      return base64;
+    }
+  } catch (e) {
+    console.warn('HTTPS favicon.ico failed for:', domain, e);
+  }
+
+  // Strategy 3: Direct favicon.ico (HTTP)
+  try {
+    const icoUrl = `http://${domain}/favicon.ico`;
+    const base64 = await fetchImageAsBase64(icoUrl);
+    if (base64) {
+      console.log('Success with HTTP favicon.ico for:', domain);
+      return base64;
+    }
+  } catch (e) {
+    console.warn('HTTP favicon.ico failed for:', domain, e);
+  }
+
+  // Strategy 4: DuckDuckGo Favicon Service
+  try {
+    const ddgFaviconUrl = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+    const base64 = await fetchImageAsBase64(ddgFaviconUrl);
+    if (base64) {
+      console.log('Success with DuckDuckGo for:', domain);
+      return base64;
+    }
+  } catch (e) {
+    console.warn('DuckDuckGo favicon service failed for:', domain, e);
+  }
+
+  console.log('All favicon strategies failed for:', domain);
+  return null;
+}
+
+// Helper function to fetch image and convert to base64
+async function fetchImageAsBase64(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    
+    const blob = await response.blob();
+    
+    // Verify it's actually an image
+    if (!blob.type.startsWith('image/')) {
+      console.warn('Response is not an image:', url, blob.type);
+      return null;
+    }
+
+    // Check if file size is reasonable (not a large file or error page)
+    if (blob.size > 100000) { // 100KB limit
+      console.warn('Favicon too large:', url, blob.size);
+      return null;
+    }
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.warn('Fetch failed for:', url, error);
+    return null;
+  }
+}
+
+
+
 function isValidUrl(string) {
   const res = string.match(/^((http|https):\/\/)?([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/);
   return (res !== null);
@@ -1020,7 +1162,7 @@ async function saveWhitelist() {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {
-        console.log("Whitelist saved:", whitelist);
+        // console.log("Whitelist saved:", whitelist);
         resolve();
       }
     });
@@ -1030,14 +1172,47 @@ async function saveWhitelist() {
 async function loadWhitelist() {
   try {
     const result = await chrome.storage.local.get(WHITELIST_KEY);
-    const savedWhitelist = result[WHITELIST_KEY];
+    let savedWhitelist = result[WHITELIST_KEY];
 
-    if (savedWhitelist && Array.isArray(savedWhitelist)) {
-      whitelist = savedWhitelist;
+    if (!savedWhitelist) {
+       // Fallback to localStorage
+       const localSaved = localStorage.getItem(WHITELIST_KEY);
+       savedWhitelist = localSaved ? JSON.parse(localSaved) : [];
+    }
+
+    if (Array.isArray(savedWhitelist)) {
+      // Migration: Convert strings to objects if needed
+      whitelist = await Promise.all(savedWhitelist.map(async (item) => {
+        if (typeof item === 'string') {
+           const favicon = await getFaviconAsBase64(item);
+           return { url: item, favicon: favicon };
+        }
+        return item;
+      }));
+      
+      // Save if migration happened
+      if (savedWhitelist.some(item => typeof item === 'string')) {
+        saveWhitelist();
+      }
+
+      // Fetch missing favicons if online
+      if (navigator.onLine) {
+        let updated = false;
+        for (let i = 0; i < whitelist.length; i++) {
+          if (!whitelist[i].favicon) {
+            const favicon = await getFaviconAsBase64(whitelist[i].url);
+            if (favicon) {
+              whitelist[i].favicon = favicon;
+              updated = true;
+            }
+          }
+        }
+        if (updated) {
+          await saveWhitelist();
+        }
+      }
     } else {
-      // Fallback to localStorage or empty
-      const localSaved = localStorage.getItem(WHITELIST_KEY);
-      whitelist = localSaved ? JSON.parse(localSaved) : [];
+      whitelist = [];
     }
     renderWhitelist();
   } catch (error) {
@@ -1055,11 +1230,14 @@ function renderWhitelist() {
   // Get the add-whitelist-link container to insert before it
   const addLinkContainer = whitelistContent.querySelector(".add-whitelist-link");
 
-  whitelist.forEach((url) => {
+  whitelist.forEach((item) => {
+    const url = item.url;
+    const favicon = item.favicon || './icons/website.png'; // Fallback to default icon
     const displayUrl = url.length > 30 ? url.substring(0, 30) + "..." : url;
     const linkDiv = document.createElement("div");
     linkDiv.classList.add("link");
     linkDiv.innerHTML = `
+      <img src="${favicon}" class="favicon" onerror="this.src='./icons/website.png'">
       <p class="added-link" title="${url}">${displayUrl}</p>
       <button class="remove-link-btn" title="Remove Link" data-url="${url}">✕</button>
     `;
@@ -1088,8 +1266,10 @@ async function addLink(url) {
     return;
   }
 
-  if (!whitelist.includes(url)) {
-    whitelist.push(url);
+  if (!whitelist.some(item => item.url === url)) {
+    // Fetch favicon only if online, otherwise add with null favicon
+    const favicon = navigator.onLine ? await getFaviconAsBase64(url) : null;
+    whitelist.push({ url: url, favicon: favicon });
     await saveWhitelist();
     renderWhitelist();
   }
@@ -1098,7 +1278,7 @@ async function addLink(url) {
 }
 
 async function removeLink(url) {
-  whitelist = whitelist.filter((item) => item !== url);
+  whitelist = whitelist.filter((item) => item.url !== url);
   await saveWhitelist();
   renderWhitelist();
 }
@@ -1160,7 +1340,7 @@ async function saveBlacklist() {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {
-        console.log("Blacklist saved:", blacklist);
+        // console.log("Blacklist saved:", blacklist);
         resolve();
       }
     });
@@ -1170,14 +1350,47 @@ async function saveBlacklist() {
 async function loadBlacklist() {
   try {
     const result = await chrome.storage.local.get(BLACKLIST_KEY);
-    const savedBlacklist = result[BLACKLIST_KEY];
+    let savedBlacklist = result[BLACKLIST_KEY];
 
-    if (savedBlacklist && Array.isArray(savedBlacklist)) {
-      blacklist = savedBlacklist;
-    } else {
-      // Fallback to localStorage or empty
+    if (!savedBlacklist) {
+      // Fallback to localStorage
       const localSaved = localStorage.getItem(BLACKLIST_KEY);
-      blacklist = localSaved ? JSON.parse(localSaved) : [];
+      savedBlacklist = localSaved ? JSON.parse(localSaved) : [];
+    }
+
+    if (Array.isArray(savedBlacklist)) {
+       // Migration: Convert strings to objects if needed
+      blacklist = await Promise.all(savedBlacklist.map(async (item) => {
+        if (typeof item === 'string') {
+           const favicon = await getFaviconAsBase64(item);
+           return { url: item, favicon: favicon };
+        }
+        return item;
+      }));
+
+      // Save if migration happened
+      if (savedBlacklist.some(item => typeof item === 'string')) {
+        saveBlacklist();
+      }
+
+      // Fetch missing favicons if online
+      if (navigator.onLine) {
+        let updated = false;
+        for (let i = 0; i < blacklist.length; i++) {
+          if (!blacklist[i].favicon) {
+            const favicon = await getFaviconAsBase64(blacklist[i].url);
+            if (favicon) {
+              blacklist[i].favicon = favicon;
+              updated = true;
+            }
+          }
+        }
+        if (updated) {
+          await saveBlacklist();
+        }
+      }
+    } else {
+      blacklist = [];
     }
     renderBlacklist();
   } catch (error) {
@@ -1195,11 +1408,14 @@ function renderBlacklist() {
   // Get the add-whitelist-link container to insert before it
   const addLinkContainer = blacklistContent.querySelector(".add-whitelist-link");
 
-  blacklist.forEach((url) => {
+  blacklist.forEach((item) => {
+    const url = item.url;
+    const favicon = item.favicon || './icons/website.png'; // Fallback to default icon
     const displayUrl = url.length > 30 ? url.substring(0, 30) + "..." : url;
     const linkDiv = document.createElement("div");
     linkDiv.classList.add("link");
     linkDiv.innerHTML = `
+      <img src="${favicon}" class="favicon" onerror="this.src='./icons/website.png'">
       <p class="added-link" title="${url}">${displayUrl}</p>
       <button class="remove-link-btn" title="Remove Link" data-url="${url}">✕</button>
     `;
@@ -1228,8 +1444,10 @@ async function addBlacklistLink(url) {
     return;
   }
 
-  if (!blacklist.includes(url)) {
-    blacklist.push(url);
+  if (!blacklist.some(item => item.url === url)) {
+    // Fetch favicon only if online, otherwise add with null favicon
+    const favicon = navigator.onLine ? await getFaviconAsBase64(url) : null;
+    blacklist.push({ url: url, favicon: favicon });
     await saveBlacklist();
     renderBlacklist();
   }
@@ -1238,7 +1456,7 @@ async function addBlacklistLink(url) {
 }
 
 async function removeBlacklistLink(url) {
-  blacklist = blacklist.filter((item) => item !== url);
+  blacklist = blacklist.filter((item) => item.url !== url);
   await saveBlacklist();
   renderBlacklist();
 }

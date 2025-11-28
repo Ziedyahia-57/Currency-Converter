@@ -2755,8 +2755,12 @@ function initializePriceDetection() {
     // Initialize settings
     window.currencyConverterSettings = {
       filterMode: result.filterMode || "blacklist",
-      whitelist: result.whitelistedWebsites || [],
-      blacklist: result.blacklistedWebsites || [],
+      whitelist: (result.whitelistedWebsites || []).map(item => 
+        typeof item === 'string' ? item : item.url
+      ),
+      blacklist: (result.blacklistedWebsites || []).map(item => 
+        typeof item === 'string' ? item : item.url
+      ),
     };
 
     if (result.pageConvert) {

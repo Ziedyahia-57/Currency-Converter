@@ -16,3 +16,12 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         });
     }
 });
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "getFavicon") {
+    chrome.favicon.getFavicon(request.url, (faviconUrl) => {
+      sendResponse({ faviconUrl: faviconUrl });
+    });
+    return true; // Keep message channel open for async response
+  }
+});
