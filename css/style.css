@@ -864,7 +864,7 @@ body {
   overflow-y: overlay;
   scrollbar-color: #6e6e6e73 transparent;
   scrollbar-width: thin;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   display: block;
   width: -webkit-fill-available;
 }

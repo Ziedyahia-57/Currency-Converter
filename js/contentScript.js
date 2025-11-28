@@ -416,8 +416,6 @@ const CURRENCY_SYMBOLS = {
   som: ["KGS", "UZS"],
   L: ["LSL", "SZL", "MDL", "HNL"],
   E: ["SZL"],
-  M: ["LSL"],
-  K: ["PGK", "MMK"],
   Rs: ["NPR", "MUR", "INR"],
   "Rs.": ["NPR", "MUR", "INR"],
   B$: ["BSD", "BND"],

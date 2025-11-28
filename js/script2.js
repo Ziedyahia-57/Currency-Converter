@@ -1278,9 +1278,15 @@ async function addLink(url) {
 }
 
 async function removeLink(url) {
+  // Remove from the data array
   whitelist = whitelist.filter((item) => item.url !== url);
   await saveWhitelist();
-  renderWhitelist();
+  
+  // Remove the specific DOM element without re-rendering everything
+  const linkToRemove = whitelistContent.querySelector(`.remove-link-btn[data-url="${url}"]`)?.closest('.link');
+  if (linkToRemove) {
+    linkToRemove.remove();
+  }
 }
 
 // Event Listeners for Whitelist
@@ -1456,12 +1462,17 @@ async function addBlacklistLink(url) {
 }
 
 async function removeBlacklistLink(url) {
+  // Remove from the data array
   blacklist = blacklist.filter((item) => item.url !== url);
   await saveBlacklist();
-  renderBlacklist();
+  
+  // Remove the specific DOM element without re-rendering everything
+  const linkToRemove = blacklistContent.querySelector(`.remove-link-btn[data-url="${url}"]`)?.closest('.link');
+  if (linkToRemove) {
+    linkToRemove.remove();
+  }
 }
 
-// Event Listeners for Blacklist
 // Event Listeners for Blacklist
 addBlacklistLinkBtn.addEventListener("click", () => {
   addBlacklistLink(addBlacklistLinkInput.value);
