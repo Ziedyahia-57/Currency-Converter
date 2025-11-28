@@ -219,17 +219,25 @@
 /* Fix for deepseek padding */
 
 #detected-price {
-  /* border: solid 2px #00acc100 !important; */
   border-radius: 4px !important;
-  background: #00dbc15e !important;
+  /* background: #00dbc15e !important;
   border: 1px solid var(--primary-color) !important;
   color: var(--primary-color) !important;
   text-shadow: hsl(213 100% 50% / 1) 0px 0px 1px !important;
+  */
   white-space: nowrap !important;
   display: inline !important;
   width: fit-content !important;
   height: fit-content !important;
   margin: 0 !important;
+      padding: 2px 4px !important;
+
+          color: #29865e !important;
+    background: linear-gradient(48deg, rgb(37 163 105), rgb(37 194 168)) !important;
+    border: none !important;
+    text-shadow: none !important;
+    color: white !important;
+    align-self: center !important;
 }
 
 .currency-converter-ex-price {
@@ -271,10 +279,15 @@ ease;
 }
 
 #detected-price.multi-currency-detected {
-    background: hsla(46, 100%, 43%, 0.37) !important;
+    /* background: hsla(46, 100%, 43%, 0.37) !important;
     color: hsl(39, 100%, 41%) !important;
     text-shadow: orange 0px 0px 1px !important;
-    border: 1px solid orange !important;
+    border: 1px solid orange !important; */
+
     /* color: hsl(39, 100%, 46%) !important;
     background: rgba(255, 165, 0, 0.37) !important; */
+
+    background: linear-gradient(315deg, hsl(47 93% 45% / 1), hsl(39 95% 46% / 1)) !important;
+    color: white !important;
+    border: none !important;
   }
