@@ -9,75 +9,59 @@ const currencyList = document.getElementById("currency-list");
 const hideCurrencyTab = document.getElementById("hide-currency-tab");
 const hideDonationTab = document.getElementById("hide-donation-tab");
 const hideSettingsTab = document.getElementById("hide-settings-tab");
+const hideWhitelistTab = document.getElementById("hide-whitelist-tab");
+const hideBlacklistTab = document.getElementById("hide-blacklist-tab");
 const donationTab = document.getElementById("donation-tab");
 const settingsTab = document.getElementById("settings-tab");
+const whitelistTab = document.getElementById("whitelist-tab");
+const blacklistTab = document.getElementById("blacklist-tab");
 const supportDevBtn = document.getElementById("support-dev-btn");
 const settingsBtn = document.getElementById("settings-btn");
+const editWhitelistBtn = document.getElementById("edit-whitelist-btn");
+const editBlacklistBtn = document.getElementById("edit-blacklist-btn");
+const whitelistStatus = document.getElementById("whitelist-status");
+const blacklistStatus = document.getElementById("blacklist-status");
 const donationButton = document.getElementById("support-dev-btn");
 const formatSelector = document.getElementById("format");
+const filterModeSelector = document.getElementById("filter");
 const fiatDecimalSelector = document.getElementById("fiat-round");
 const cryptoDecimalSelector = document.getElementById("crypto-round");
 const themeSelector = document.getElementById("theme");
+const dateSelector = document.getElementById("date");
+const timeSelector = document.getElementById("time");
+const convertTargetSelector = document.getElementById("target");
+const pageConvertSelector = document.getElementById("page-convert");
+const pageConvertSlider = document.getElementById("slider-page-convert");
 const restoreBtn = document.getElementById("restore");
 const customTheme = document.getElementById("custom-theme");
 const customCryptoDecimals = document.getElementById("custom-crypto-decimal");
 const customFiatDecimals = document.getElementById("custom-fiat-decimal");
 const customFormat = document.getElementById("custom-format");
-
-let errorLogged = false; // Global flag to track error logging
-
+const customFilterMode = document.getElementById("custom-filter-mode");
+const customDate = document.getElementById("custom-date");
+const customTime = document.getElementById("custom-time");
+const customPageConvert = document.getElementById("custom-page-convert");
+const customConvertTarget = document.getElementById("custom-convert-target");
 const lastUpdateElement = document.querySelector(".last-update");
+const darkModeBtn = document.getElementById("dark-mode-btn");
+const root = document.documentElement;
+
 const CURRENCY_DATA_KEY = "currencyData";
 const LAST_UPDATED_KEY = "lastUpdated";
 
 let currencies = [];
 let exchangeRates = {};
+let lastUserInput = null; // Track the last input the user typed in
 
-async function checkCustomSettings() {
-  const formatSettings = await chrome.storage.local.get("numberFormat");
-  const fiatDecimalsSettings = await chrome.storage.local.get("fiatDecimals");
-  const cryptoDecimalsSettings = await chrome.storage.local.get(
-    "cryptoDecimals"
-  );
-  const themeSettings = await chrome.storage.local.get("theme");
-
-  if (formatSettings.numberFormat !== "comma-dot") {
-    console.log("formatSettings: ", formatSettings.numberFormat);
-    customFormat.classList.remove("hidden");
-  }
-  console.log("fiatDecimalsSettings: ", fiatDecimalsSettings.fiatDecimals);
-  if (fiatDecimalsSettings.fiatDecimals != 2) {
-    console.log("fiatDecimalsSettings: ", fiatDecimalsSettings.fiatDecimals);
-    customFiatDecimals.classList.remove("hidden");
-  }
-  console.log(
-    "cryptoDecimalsSettings: ",
-    cryptoDecimalsSettings.cryptoDecimals
-  );
-  if (cryptoDecimalsSettings.cryptoDecimals != 8) {
-    console.log(
-      "cryptoDecimalsSettings: ",
-      cryptoDecimalsSettings.cryptoDecimals
-    );
-    customCryptoDecimals.classList.remove("hidden");
-  }
-  if (themeSettings.theme !== "auto") {
-    console.log("themeSettings: ", themeSettings.theme);
-    customTheme.classList.remove("hidden");
-  }
-}
-
-async function loadSavedFormat() {
-  const result = await chrome.storage.local.get("numberFormat");
-  const savedFormat = result.numberFormat;
-  if (savedFormat) {
-    formatSelector.value = savedFormat; // This sets the selected option
-  }
-  console.log(savedFormat);
-  return savedFormat;
-}
-
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                      USER SETTINGS                                                   +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪------------------------------------------------------------*/
+//⚪                        NUMBER FORMAT                       */
+//⚪------------------------------------------------------------*/
 async function saveNumberFormat() {
+  //🟣 Save user's format preference
+
   return new Promise((resolve, reject) => {
     localStorage.setItem("numberFormat", formatSelector.value);
     chrome.storage.local.set({ numberFormat: formatSelector.value }, () => {
@@ -90,8 +74,39 @@ async function saveNumberFormat() {
     });
   });
 }
+async function loadNumberFormat() {
+  //🟣 Load user's format preference
 
-async function loadSavedFiatDecimal() {
+  const result = await chrome.storage.local.get("numberFormat");
+  const savedFormat = result.numberFormat;
+  if (savedFormat) {
+    formatSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                        FIAT DECIMALS                       */
+//⚪------------------------------------------------------------*/
+async function saveFiatDecimal() {
+  //🟣 Save user's fiat decimal preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("fiatDecimals", fiatDecimalSelector.value);
+    chrome.storage.local.set({ fiatDecimals: fiatDecimalSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("FIAT Decimal Format saved:", fiatDecimalSelector.value);
+        resolve();
+      }
+    });
+  });
+}
+async function loadFiatDecimal() {
+  //🟣 Load user's fiat decimal preference
+
   const result = await chrome.storage.local.get("fiatDecimals");
   const savedFormat = result.fiatDecimals;
   if (savedFormat) {
@@ -101,24 +116,27 @@ async function loadSavedFiatDecimal() {
   return savedFormat;
 }
 
-async function saveFiatDecimal() {
+//⚪------------------------------------------------------------*/
+//⚪                      CRYPTO DECIMALS                       */
+//⚪------------------------------------------------------------*/
+async function saveCryptoDecimal() {
+  //🟣 Save user's crypto decimal preference
+
   return new Promise((resolve, reject) => {
-    localStorage.setItem("fiatDecimals", fiatDecimalSelector.value);
-    chrome.storage.local.set(
-      { fiatDecimals: fiatDecimalSelector.value },
-      () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          console.log("FIAT Decimal Format saved:", fiatDecimalSelector.value);
-          resolve();
-        }
+    localStorage.setItem("cryptoDecimals", cryptoDecimalSelector.value);
+    chrome.storage.local.set({ cryptoDecimals: cryptoDecimalSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("Crypto Decimal Format saved:", cryptoDecimalSelector.value);
+        resolve();
       }
-    );
+    });
   });
 }
+async function loadCryptoDecimal() {
+  //🟣 Load user's crypto decimal preference
 
-async function loadSavedCryptoDecimal() {
   const result = await chrome.storage.local.get("cryptoDecimals");
   const savedFormat = result.cryptoDecimals;
   if (savedFormat) {
@@ -128,58 +146,12 @@ async function loadSavedCryptoDecimal() {
   return savedFormat;
 }
 
-async function saveCryptoDecimal() {
-  return new Promise((resolve, reject) => {
-    localStorage.setItem("cryptoDecimals", cryptoDecimalSelector.value);
-    chrome.storage.local.set(
-      { cryptoDecimals: cryptoDecimalSelector.value },
-      () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          console.log(
-            "Crypto Decimal Format saved:",
-            cryptoDecimalSelector.value
-          );
-          resolve();
-        }
-      }
-    );
-  });
-}
-
-async function loadThemePreference() {
-  try {
-    const result = await chrome.storage.local.get("theme");
-    const savedTheme = result.theme;
-
-    if (savedTheme) {
-      themeSelector.value = savedTheme; // Set the selected option
-      if (savedTheme === "auto") {
-        const prefersDark = window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        ).matches;
-        let preferredTheme = prefersDark ? "dark" : "light";
-        console.log("Preferred theme based on system setting:", preferredTheme);
-        localStorage.setItem("darkMode", preferredTheme);
-        chrome.storage.local.set({ ["darkMode"]: preferredTheme });
-        darkModeBtn.classList.add("auto");
-      }
-
-      console.log("Loaded theme preference:", savedTheme);
-      return savedTheme;
-    } else {
-      darkModeBtn.classList.remove("auto");
-      console.log("No saved theme found.");
-      return null;
-    }
-  } catch (error) {
-    console.error("Failed to load theme preference:", error);
-    return null;
-  }
-}
-
+//⚪------------------------------------------------------------*/
+//⚪                      THEME PREFERENCE                      */
+//⚪------------------------------------------------------------*/
 async function saveThemePreference() {
+  //🟣 Save user's theme preference
+
   const selectedTheme = themeSelector.value;
   return new Promise((resolve, reject) => {
     localStorage.setItem("theme", selectedTheme);
@@ -194,12 +166,715 @@ async function saveThemePreference() {
   });
 }
 
+async function loadThemePreference() {
+  //🟣 Load user's theme preference
+
+  try {
+    const result = await chrome.storage.local.get("theme");
+    const savedTheme = result.theme;
+
+    if (savedTheme) {
+      themeSelector.value = savedTheme; // Set the selected option
+      if (savedTheme === "auto") {
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        let preferredTheme = prefersDark ? "dark" : "light";
+        console.log("Preferred theme based on system setting:", preferredTheme);
+        localStorage.setItem("darkMode", preferredTheme);
+        chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+        darkModeBtn.classList.add("auto");
+        darkModeBtn.title = "Dark Mode - Auto";
+
+        // Set up listener for system theme changes
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
+      }
+      console.log("Loaded theme preference:", savedTheme);
+      return savedTheme;
+    } else {
+      // No saved theme found - use system preference as default
+      console.log("No saved theme found. Using system preference.");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      let preferredTheme = prefersDark ? "dark" : "light";
+
+      // Set the theme selector to auto and apply system preference
+      themeSelector.value = "auto";
+      darkModeBtn.classList.add("auto");
+      darkModeBtn.title = "Dark Mode - Auto";
+
+      // Apply the theme
+      root.classList.toggle("dark-mode", preferredTheme === "dark");
+      darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+      // Save the preferences
+      localStorage.setItem("theme", "auto");
+      localStorage.setItem("darkMode", preferredTheme);
+      chrome.storage.local.set({
+        theme: "auto",
+        darkMode: preferredTheme,
+      });
+
+      return "auto";
+    }
+  } catch (error) {
+    console.error("Failed to load theme preference:", error);
+
+    // Fallback to system preference on error
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    let preferredTheme = prefersDark ? "dark" : "light";
+
+    // Set the theme selector to auto and apply system preference
+    themeSelector.value = "auto";
+    darkModeBtn.classList.add("auto");
+    darkModeBtn.title = "Dark Mode - Auto";
+
+    // Apply the theme
+    root.classList.toggle("dark-mode", preferredTheme === "dark");
+    darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+    // Save the preferences
+    localStorage.setItem("theme", "auto");
+    localStorage.setItem("darkMode", preferredTheme);
+    chrome.storage.local.set({
+      theme: "auto",
+      darkMode: preferredTheme,
+    });
+
+    // Set up listener for system theme changes
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
+
+    // Set up listener for system theme changes
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
+
+    return "auto";
+  }
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                        FILTER MODE                         */
+//⚪------------------------------------------------------------*/
+async function saveFilterMode() {
+  //🟣 Save user's filter mode preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("filterMode", filterModeSelector.value);
+    chrome.storage.local.set({ filterMode: filterModeSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("filter mode saved:", filterModeSelector.value);
+        resolve();
+      }
+    });
+  });
+}
+async function loadFilterMode() {
+  //🟣 Load user's filter mode preference
+
+  const result = await chrome.storage.local.get("filterMode");
+  const savedFormat = result.filterMode;
+  if (savedFormat) {
+    filterModeSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                        DATE FORMAT                         */
+//⚪------------------------------------------------------------*/
+async function saveDateFormat() {
+  //🟣 Save user's date preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("date", dateSelector.value);
+    chrome.storage.local.set({ date: dateSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("date Format saved:", dateSelector.value);
+        resolve();
+      }
+    });
+  });
+}
+async function loadDateFormat() {
+  //🟣 Load user's date preference
+
+  const result = await chrome.storage.local.get("date");
+  const savedFormat = result.date;
+  if (savedFormat) {
+    dateSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                        TIME FORMAT                         */
+//⚪------------------------------------------------------------*/
+async function saveTimeFormat() {
+  //🟣 Save user's time preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("time", timeSelector.value);
+    chrome.storage.local.set({ time: timeSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("time Format saved:", timeSelector.value);
+        resolve();
+      }
+    });
+  });
+}
+async function loadTimeFormat() {
+  //🟣 Load user's time preference
+
+  const result = await chrome.storage.local.get("time");
+  const savedFormat = result.time;
+  if (savedFormat) {
+    timeSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                        PAGE CONVERT                        */
+//⚪------------------------------------------------------------*/
+async function savePageConvert() {
+  //🟣 Save user's page convert preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("pageConvert", pageConvertSelector.checked);
+    chrome.storage.local.set({ pageConvert: pageConvertSelector.checked }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("pageConvert saved:", pageConvertSelector.checked);
+        resolve();
+      }
+    });
+  });
+}
+async function loadPageConvert() {
+  //🟣 Load user's page convert preference
+
+  const result = await chrome.storage.local.get("pageConvert");
+  const savedFormat = result.pageConvert;
+  if (savedFormat) {
+    pageConvertSelector.checked = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                       CONVERT TARGET                       */
+//⚪------------------------------------------------------------*/
+async function saveConvertTarget() {
+  //🟣 Save user's convert target preference
+
+  return new Promise((resolve, reject) => {
+    localStorage.setItem("convertTarget", convertTargetSelector.value);
+    chrome.storage.local.set({ convertTarget: convertTargetSelector.value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log("convertTarget saved:", convertTargetSelector.value);
+        resolve();
+      }
+    });
+  });
+}
+async function loadConvertTarget() {
+  //🟣 Load user's convert target preference
+
+  const result = await chrome.storage.local.get("convertTarget");
+  const savedFormat = result.convertTarget;
+  if (savedFormat) {
+    convertTargetSelector.value = savedFormat; // This sets the selected option
+  }
+  console.log(savedFormat);
+  return savedFormat;
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                        RESTORE BUTTON                      */
+//⚪------------------------------------------------------------*/
+restoreBtn.addEventListener("click", async () => {
+  //🟣 Restore settings to default
+
+  // Reset all settings to defaults
+  themeSelector.value = "auto";
+  formatSelector.value = "comma-dot";
+  fiatDecimalSelector.value = "2";
+  cryptoDecimalSelector.value = "8";
+  filterModeSelector.value = "blacklist";
+  dateSelector.value = "dd/mm/yyyy";
+  timeSelector.value = "ampm";
+  convertTargetSelector.value = "all";
+  pageConvertSelector.checked = false;
+
+  // Save all settings
+  localStorage.setItem("theme", themeSelector.value);
+  chrome.storage.local.set({ ["theme"]: themeSelector.value });
+
+  localStorage.setItem("numberFormat", formatSelector.value);
+  chrome.storage.local.set({ ["numberFormat"]: formatSelector.value });
+
+  localStorage.setItem("fiatDecimals", fiatDecimalSelector.value);
+  chrome.storage.local.set({ ["fiatDecimals"]: fiatDecimalSelector.value });
+
+  localStorage.setItem("cryptoDecimals", cryptoDecimalSelector.value);
+  chrome.storage.local.set({ ["cryptoDecimals"]: cryptoDecimalSelector.value });
+
+  localStorage.setItem("date", dateSelector.value);
+  chrome.storage.local.set({ ["date"]: dateSelector.value });
+
+  localStorage.setItem("time", timeSelector.value);
+  chrome.storage.local.set({ ["time"]: timeSelector.value });
+
+  localStorage.setItem("convertTarget", convertTargetSelector.value);
+  chrome.storage.local.set({ ["convertTarget"]: convertTargetSelector.value });
+
+  localStorage.setItem("filterMode", filterModeSelector.value);
+  chrome.storage.local.set({ ["filterMode"]: filterModeSelector.value });
+
+  localStorage.setItem("pageConvert", pageConvertSelector.checked);
+  chrome.storage.local.set({ ["pageConvert"]: pageConvertSelector.checked });
+
+  // Reset all currency inputs to 0 with proper decimal places
+  const inputs = document.querySelectorAll(".currency-input input");
+  const separators = await getNumberFormatSeparators();
+
+  for (const input of inputs) {
+    const currency = input.dataset.currency;
+    const decimalPlaces = await getDecimalPlaces(currency);
+    const zeroValue = `0${separators.decimal}${"0".repeat(decimalPlaces)}`;
+
+    input.value = await formatNumberWithCommas(zeroValue, input);
+    input.dataset.previousValue = zeroValue;
+  }
+
+  // Update last updated time
+  updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
+
+  // Manually update UI for immediate effect
+  customTheme.classList.add("custom-hidden");
+  customFormat.classList.add("custom-hidden");
+  customFilterMode.classList.add("custom-hidden");
+  blacklistStatus.classList.add("selected");
+  whitelistStatus.classList.remove("selected");
+  customFiatDecimals.classList.add("custom-hidden");
+  customCryptoDecimals.classList.add("custom-hidden");
+  customDate.classList.add("custom-hidden");
+  customTime.classList.add("custom-hidden");
+  customPageConvert.classList.add("custom-hidden");
+  customConvertTarget.classList.add("custom-hidden");
+
+  // Manually apply the theme change
+  darkModeBtn.classList.add("auto");
+  darkModeBtn.title = "Dark Mode - Auto";
+
+  // Check system preference and apply immediately
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const preferredTheme = prefersDark ? "dark" : "light";
+
+  root.classList.toggle("dark-mode", preferredTheme === "dark");
+  darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+  // Save the actual theme being used
+  localStorage.setItem("darkMode", preferredTheme);
+  chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+
+  numToTextElement.textContent = "ABC..."; // Clear if input is invalid
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                 CUSTOM SETTINGS INDICATOR                  */
+//⚪------------------------------------------------------------*/
+async function checkCustomSettings() {
+  //🟣 Show "*" indicator for custom settings
+  const formatSettings = await chrome.storage.local.get("numberFormat");
+  const filterSettings = await chrome.storage.local.get("filterMode");
+  const fiatDecimalsSettings = await chrome.storage.local.get("fiatDecimals");
+  const cryptoDecimalsSettings = await chrome.storage.local.get("cryptoDecimals");
+  const themeSettings = await chrome.storage.local.get("theme");
+  const dateSettings = await chrome.storage.local.get("date");
+  const timeSettings = await chrome.storage.local.get("time");
+  const convertTargetSettings = await chrome.storage.local.get("convertTarget");
+  const pageConvertSettings = await chrome.storage.local.get("pageConvert");
+
+  if (formatSettings.numberFormat && formatSettings.numberFormat !== "comma-dot") {
+    console.log("formatSettings: ", formatSettings.numberFormat);
+    customFormat.classList.remove("custom-hidden");
+  }
+
+  if (filterSettings.filterMode && filterSettings.filterMode !== "blacklist") {
+    console.log("filterSettings: ", filterSettings.filterMode);
+    customFilterMode.classList.remove("custom-hidden");
+    blacklistStatus.classList.remove("selected");
+    whitelistStatus.classList.add("selected");
+  }else{
+    blacklistStatus.classList.add("selected");
+    whitelistStatus.classList.remove("selected");
+  }
+
+  if (fiatDecimalsSettings.fiatDecimals && fiatDecimalsSettings.fiatDecimals != 2) {
+    console.log("fiatDecimalsSettings: ", fiatDecimalsSettings.fiatDecimals);
+    customFiatDecimals.classList.remove("custom-hidden");
+  }
+  console.log("cryptoDecimalsSettings: ", cryptoDecimalsSettings.cryptoDecimals);
+
+  if (cryptoDecimalsSettings.cryptoDecimals && cryptoDecimalsSettings.cryptoDecimals != 8) {
+    console.log("cryptoDecimalsSettings: ", cryptoDecimalsSettings.cryptoDecimals);
+    customCryptoDecimals.classList.remove("custom-hidden");
+  }
+
+  if (themeSettings.theme && themeSettings.theme !== "auto") {
+    console.log("themeSettings: ", themeSettings.theme);
+    customTheme.classList.remove("custom-hidden");
+  }
+
+  if (dateSettings.date && dateSettings.date !== "dd/mm/yyyy") {
+    console.log("dateSettings: ", dateSettings.date);
+    customDate.classList.remove("custom-hidden");
+  }
+
+  if (timeSettings.time && timeSettings.time !== "ampm") {
+    console.log("timeSettings: ", timeSettings.time);
+    customTime.classList.remove("custom-hidden");
+  }
+
+  if (convertTargetSettings.convertTarget && convertTargetSettings.convertTarget !== "all") {
+    console.log("convertTarget: ", convertTargetSettings.convertTarget);
+    customConvertTarget.classList.remove("custom-hidden");
+  }
+
+  if (pageConvertSettings.pageConvert && pageConvertSettings.pageConvert !== false) {
+    console.log("pageConvert: ", pageConvertSettings.pageConvert);
+    customPageConvert.classList.remove("custom-hidden");
+  }
+}
+
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                    CONVERT ON SELECT                                                 +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+const checkbox = document.getElementById("convert-on-select");
+const CHECKBOX_STATE_KEY = "checkboxState";
+//⚪------------------------------------------------------------*/
+//⚪                          CHECKBOX                          */
+//⚪------------------------------------------------------------*/
+function saveCheckboxState() {
+  //🟣 Save checkbox state to local storage when it changes
+  checkbox.addEventListener("change", () => {
+    localStorage.setItem(CHECKBOX_STATE_KEY, checkbox.checked); // Save boolean as string
+    chrome.storage.local.set({ [CHECKBOX_STATE_KEY]: checkbox.checked });
+    console.log("Checkbox state saved to localStorage:", checkbox.checked);
+  });
+}
+function loadCheckboxState() {
+  //🟣 Load checkbox state, apply default if there's no save
+
+  try {
+    const savedState = localStorage.getItem(CHECKBOX_STATE_KEY);
+    checkbox.checked = savedState === "true"; // Convert string to boolean
+    if (savedState === null) {
+      // Set default state if no preference is saved
+      checkbox.checked = false;
+      localStorage.setItem(CHECKBOX_STATE_KEY, "false");
+    }
+  } catch (error) {
+    console.error("Error loading checkbox state:", error);
+    // Fallback to unchecked if there's an error
+    checkbox.checked = false;
+  }
+}
+
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                 DONATION TAB CONTENT                                                 +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//🟠------------------------------------------------------------*/
+//🟠                        DONATION CLASS                      */
+//🟠------------------------------------------------------------*/
+class DonationTracker {
+  constructor() {
+    this.hasShownInitial = false;
+    this.reset();
+  }
+
+  getContent() {
+    // Show initial message ONLY on first click (count === 1)
+    const trackerData = {
+      clickCount: this.clickCount,
+    };
+    // Special case: First visit
+    if (this.clickCount === 1) {
+      return {
+        ...donationContent.initialMessage,
+        tracker: trackerData, // Pass count to template
+      };
+    }
+
+    // After 5+ clicks, mix interactions (2 messages, then 1 interaction)
+    if (this.clickCount >= 5) {
+      const cyclePosition = (this.clickCount - 3) % 3;
+
+      if (cyclePosition === 2) {
+        // Every 3rd click shows an interaction
+        if (this.usedInteractions.length === donationContent.interactions.length) {
+          this.usedInteractions = []; // Reset if all interactions used
+        }
+
+        const availableInteractions = donationContent.interactions.filter(
+          (int) => !this.usedInteractions.includes(int.greeting)
+        );
+
+        const interaction =
+          availableInteractions.length > 0
+            ? availableInteractions[Math.floor(Math.random() * availableInteractions.length)]
+            : donationContent.interactions[0]; // Fallback
+
+        this.usedInteractions.push(interaction.greeting);
+        return {
+          ...interaction,
+          tracker: trackerData, // Always include count
+        };
+      }
+    }
+
+    // Default case: Show regular message
+    if (this.usedMessages.length === donationContent.messages.length) {
+      this.usedMessages = []; // Reset if all messages used
+    }
+
+    const availableMessages = donationContent.messages.filter((msg) => !this.usedMessages.includes(msg.greeting));
+
+    const message =
+      availableMessages.length > 0
+        ? availableMessages[Math.floor(Math.random() * availableMessages.length)]
+        : donationContent.messages[0]; // Fallback
+
+    this.usedMessages.push(message.greeting);
+    return {
+      ...message,
+      // clickCount: this.clickCount
+      tracker: trackerData, // Always include count
+    };
+  }
+
+  incrementClickCount() {
+    this.clickCount++;
+    console.log(this.clickCount); // Count this as the first interaction
+  }
+
+  reset() {
+    this.messageIndex = 0;
+    this.interactionIndex = 0;
+    this.clickCount = 0;
+    this.usedMessages = [];
+    this.usedInteractions = [];
+  }
+}
+
+//🟠------------------------------------------------------------*/
+//🟠                      DONATION HANDLER                      */
+//🟠------------------------------------------------------------*/
+const donationTracker = new DonationTracker();
+
+function updateDonationContent() {
+  const rawContent = donationTracker.getContent();
+
+  // Process dynamic content
+  const processField = (field) => {
+    if (typeof field === "function") {
+      return field(rawContent.tracker); // Execute function with tracker data
+    }
+    return field; // Return as-is if not a function
+  };
+
+  const content = {
+    emoji: rawContent.emoji,
+    greeting: processField(rawContent.greeting),
+    message: processField(rawContent.message),
+    footer: processField(rawContent.footer),
+  };
+
+  const isInteraction = donationContent.interactions.some(
+    (int) =>
+      int.greeting === rawContent.greeting ||
+      (typeof rawContent.greeting === "function" && int.greeting === rawContent.greeting.toString())
+  );
+
+  const titleContent = isInteraction
+    ? `<span class="secret">(Secret Message)</span><br>${content.greeting}`
+    : content.greeting;
+
+  return `
+        <div class="donation-icon">${content.emoji}</div>
+        <p class="desc-title">${titleContent}</p>
+        <p class="desc-text">${content.message}</p>
+        <div class="donation-choice">
+            <a href="patreon" target="_blank"><button class="button-64" role="button"><span class="text">Monthly</span></button></a>
+            <a href="stripe" target="_blank"><button class="button-64" role="button"><span class="text">One-time</span></button></a>
+        </div>
+        <p class="desc-text">${content.footer}</p>
+    `;
+}
+function handleDonationButtonClick() {
+  //🟣 Function to handle the donation button click
+  donationTracker.incrementClickCount();
+  const donationContentElement = document.querySelector(".donation-content");
+  if (donationContentElement) {
+    donationContentElement.innerHTML = updateDonationContent();
+  }
+}
+
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                 DARK MODE FUNCTIONALITY                                              +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪------------------------------------------------------------*/
+//⚪                          DARK MODE                         */
+//⚪------------------------------------------------------------*/
+function saveDarkMode() {
+  //🟣 Save user's dark mode preference to local storage
+
+  if (root.classList.contains("dark-mode")) {
+    localStorage.setItem("darkMode", "dark");
+    chrome.storage.local.set({ ["darkMode"]: "dark" });
+  } else {
+    localStorage.setItem("darkMode", "light");
+    chrome.storage.local.set({ ["darkMode"]: "light" });
+  }
+}
+async function loadDarkMode() {
+  //🟣 Load user's dark mode preference from local storage
+
+  try {
+    const savedMode = localStorage.getItem("darkMode");
+    if (savedMode === "dark") {
+      root.classList.add("dark-mode");
+      darkModeBtn.classList.add("active");
+    } else {
+      // Default to light mode if no preference is saved
+      root.classList.remove("dark-mode");
+      darkModeBtn.classList.remove("active");
+      localStorage.setItem("darkMode", "light");
+    }
+  } catch (error) {
+    console.error("Error loading dark mode:", error);
+    // Fallback to light mode if there's an error
+    root.classList.remove("dark-mode");
+    darkModeBtn.classList.remove("active");
+  }
+  // Update title based on current state (after all class changes)
+  if (darkModeBtn.classList.contains("auto")) {
+    darkModeBtn.title = "Dark Mode - Auto";
+  } else if (darkModeBtn.classList.contains("active")) {
+    darkModeBtn.title = "Dark Mode - ON";
+  } else {
+    darkModeBtn.title = "Dark Mode - OFF";
+  }
+}
+darkModeBtn.addEventListener("click", () => {
+  //🟣 Toggle dark mode
+
+  root.classList.toggle("dark-mode");
+  darkModeBtn.classList.toggle("active");
+  darkModeBtn.classList.remove("auto");
+  saveDarkMode();
+
+  // Update theme selector to manual
+  themeSelector.value = "manual";
+  customTheme.classList.remove("custom-hidden");
+  chrome.storage.local.set({ ["theme"]: themeSelector.value });
+  // Update title based on current state (after all class changes)
+  if (darkModeBtn.classList.contains("auto")) {
+    darkModeBtn.title = "Dark Mode - Auto";
+  } else if (darkModeBtn.classList.contains("active")) {
+    darkModeBtn.title = "Dark Mode - ON";
+  } else {
+    darkModeBtn.title = "Dark Mode - OFF";
+  }
+});
+
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                    LAST UPDATE DATE                                                  +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//🟠------------------------------------------------------------*/
+//🟠                         DATE FETCH                         */
+//🟠------------------------------------------------------------*/
+function formatDateTime(dateString) {
+  if (!dateString) return { dateText: "--/--/----", timeText: "--:--" };
+
+  try {
+    const date = new Date(dateString);
+    const dateFormat = localStorage.getItem("date") || "dd/mm/yyyy";
+    const timeFormat = localStorage.getItem("time") || "ampm";
+
+    // Format date
+    let dateText;
+    switch (dateFormat) {
+      case "mm/dd/yyyy":
+        dateText = `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(
+          2,
+          "0"
+        )}/${date.getFullYear()}`;
+        break;
+      case "yyyy/mm/dd":
+        dateText = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+          date.getDate()
+        ).padStart(2, "0")}`;
+        break;
+      default: // "dd/mm/yyyy"
+        dateText = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}/${date.getFullYear()}`;
+    }
+
+    // Format time
+    let timeText;
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    if (timeFormat === "24h") {
+      timeText = `${String(hours).padStart(2, "0")}:${minutes}`;
+    } else {
+      // "ampm"
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12; // Convert 0 to 12 (12 AM)
+      timeText = `${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+    }
+
+    return { dateText, timeText };
+  } catch (error) {
+    console.error("Error formatting date/time:", error);
+    return { dateText: "Error", timeText: "!" };
+  }
+}
+
+function updateLastUpdateElement(isOnline, lastUpdated) {
+  if (!lastUpdated) {
+    lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+  }
+
+  const { dateText, timeText } = formatDateTime(lastUpdated);
+
+  lastUpdateElement.innerHTML = `
+    <span class="${isOnline ? "green" : "red"}">● ${isOnline ? "Online" : "Offline"}</span>
+    - Last Updated: <span class="date">${dateText}</span> at <span class="date">${timeText}</span>
+  `;
+}
+
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                     OFFLINE LAUNCH                                                   +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪------------------------------------------------------------*/
+//⚪                       OFFLINE MESSAGE                      */
+//⚪------------------------------------------------------------*/
 function showOfflineMessage() {
-  const currencyContainer = document.getElementById("currency-container");
-  if (
-    currencyContainer &&
-    !currencyContainer.querySelector(".first-launch-offline")
-  ) {
+  if (currencyContainer && !currencyContainer.querySelector(".first-launch-offline")) {
     currencyContainer.innerHTML = `
       <div class="first-launch-offline">
         <p class="emoji">¯\\_(ツ)_/¯</p>
@@ -209,12 +884,8 @@ function showOfflineMessage() {
     `;
   }
 }
-
 function removeOfflineMessage() {
-  const currencyContainer = document.getElementById("currency-container");
-  const offlineMessage = currencyContainer?.querySelector(
-    ".first-launch-offline"
-  );
+  const offlineMessage = currencyContainer?.querySelector(".first-launch-offline");
   if (offlineMessage) {
     offlineMessage.remove();
 
@@ -225,119 +896,727 @@ function removeOfflineMessage() {
   }
 }
 
-//🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//🔵++++++++++++++++++++++++++++ ASYNC FUNCTIONS ++++++++++++++++++++++++++++
-//🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//⚪✅ fetch exchange rates function (start)
-async function fetchExchangeRates() {
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                 ONLINE/OFFLINE EVENTS                                                +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//🟠------------------------------------------------------------*/
+//🟠                           ONLINE                           */
+//🟠------------------------------------------------------------*/
+window.addEventListener("online", async () => {
+  console.log("App is online. Fetching latest exchange rates...");
   try {
-    const url =
-      "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" +
-      Date.now();
-    const response = await fetch(url);
-
-    if (!response || !response.ok) {
-      throw new Error(`API error! Status: ${response?.status}`);
+    exchangeRates = await fetchExchangeRates("USD");
+    if (exchangeRates) {
+      saveExchangeRates(exchangeRates);
+      updateLastUpdateElement(true);
+      updateCurrencyValues(); // Update displayed values with fresh rates
     }
-
-    const data = await response.json();
-    if (!data?.rates) {
-      throw new Error("Invalid API structure.");
-    }
-
-    // Save and return the rates
-    saveExchangeRates(data.rates);
-    removeOfflineMessage(); // Remove offline message on successful fetch
-    return data.rates;
   } catch (error) {
-    console.warn("Fetch failed, trying cache:", error.message);
+    console.error("Failed to fetch exchange rates:", error);
+    loadData(); // Try to load cached data
+  }
 
-    // Try to load from cache
-    try {
-      const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
-      if (cached) {
-        console.log("Using cached rates");
-        removeOfflineMessage(); // Remove offline message if cache is valid
-        return cached;
+  // Retry fetching missing favicons for whitelist
+  let whitelistUpdated = false;
+  for (let i = 0; i < whitelist.length; i++) {
+    if (!whitelist[i].favicon) {
+      const favicon = await getFaviconAsBase64(whitelist[i].url);
+      if (favicon) {
+        whitelist[i].favicon = favicon;
+        whitelistUpdated = true;
       }
-      throw new Error("No cached data available");
-    } catch (cacheError) {
-      console.error("Cache load failed:", cacheError.message);
-      // Only show offline message if we have no cached data
-      if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
-        showOfflineMessage();
-      }
-      throw new Error("Failed to fetch and no valid cache available");
     }
   }
-}
-// * @param {string} base - The base currency (e.g., "USD").
-// * @returns {Promise<Object.<string, number>>} - A promise that resolves to an object
-// * @throws {Error} - Throws an error if the API request fails or if the response is not valid.
-//⚪ fetch exchange rates function (end)
+  if (whitelistUpdated) {
+    saveWhitelist();
+    renderWhitelist();
+  }
 
-//⚪initialize app function (start)
-//🟠 [initializeExchangeRates, loadCurrencyOrder, addCurrency, checkCurrencyCount, updateAddButtonVisibility, initializeDonationContent]
-async function initializeApp() {
+  // Retry fetching missing favicons for blacklist
+  let blacklistUpdated = false;
+  for (let i = 0; i < blacklist.length; i++) {
+    if (!blacklist[i].favicon) {
+      const favicon = await getFaviconAsBase64(blacklist[i].url);
+      if (favicon) {
+        blacklist[i].favicon = favicon;
+        blacklistUpdated = true;
+      }
+    }
+  }
+  if (blacklistUpdated) {
+    saveBlacklist();
+    renderBlacklist();
+  }
+});
+
+//🟠------------------------------------------------------------*/
+//🟠                           OFFLINE                          */
+//🟠------------------------------------------------------------*/
+window.addEventListener("offline", () => {
+  console.log("App is offline. Loading saved exchange rates...");
+  loadData();
+  // Only show offline message if we have no cached data
+  if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
+    showOfflineMessage();
+  }
+});
+
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                     OPEN/CLOSE TABS                                                  +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪------------------------------------------------------------*/
+//⚪                        SETTINGS TAB                        */
+//⚪------------------------------------------------------------*/
+function openSettingsTab() {
+  settingsTab.classList.add("show");
+  settingsTab.classList.remove("hidden");
+}
+settingsBtn.addEventListener("click", () => {
+  openSettingsTab();
+});
+function closeSettingsTab() {
+  settingsTab.classList.remove("show");
+  settingsTab.classList.add("hidden");
+}
+hideSettingsTab.addEventListener("click", () => {
+  closeSettingsTab();
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                       WHITELIST TAB                        */
+//⚪------------------------------------------------------------*/
+const addLinkBtn = document.getElementById("add-whitelist-link-btn");
+const addLinkInput = document.getElementById("add-whitelist-link");
+const whitelistContent = document.getElementById("whitelist-content");
+const WHITELIST_KEY = "whitelistedWebsites";
+let whitelist = [];
+
+function openWhitelistTab() {
+  whitelistTab.classList.add("show");
+  whitelistTab.classList.remove("hidden");
+  loadWhitelist(); // Load fresh data when opening tab
+}
+editWhitelistBtn.addEventListener("click", () => {
+  openWhitelistTab();
+});
+function closeWhitelistTab() {
+  whitelistTab.classList.remove("show");
+  whitelistTab.classList.add("hidden");
+}
+hideWhitelistTab.addEventListener("click", () => {
+  closeWhitelistTab();
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                     WHITELIST LOGIC                        */
+//⚪------------------------------------------------------------*/
+
+function getDomain(url) {
   try {
-    console.log("Initializing app...");
+    // Handle URLs without protocol
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "http://" + url;
+    }
+    return new URL(url).hostname;
+  } catch (e) {
+    return null;
+  }
+}
 
-    // Try to load rates (will throw if both network and cache fail)
-    exchangeRates = await fetchExchangeRates();
+async function getFaviconAsBase64(url) {
+  const domain = getDomain(url);
+  if (!domain) return null;
 
-    // Initialize currency list
-    try {
-      const loadedSuccessfully = loadCurrencyOrder();
-      if (!loadedSuccessfully) {
-        addCurrency("USD", false);
-        addCurrency("EUR", true);
-      }
-    } catch (currencyError) {
-      console.error("Currency init failed:", currencyError);
-      // If we have rates but no saved currencies, initialize defaults
-      if (exchangeRates) {
-        addCurrency("USD", false);
-        addCurrency("EUR", true);
-      }
+  // Don't attempt to fetch favicons when offline
+  if (!navigator.onLine) {
+    console.log('Offline: skipping favicon fetch for:', domain);
+    return null;
+  }
+
+  console.log('Fetching favicon for:', domain);
+
+  // Strategy 1: Google Favicon Service (Most reliable)
+  try {
+    const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    const base64 = await fetchImageAsBase64(googleFaviconUrl);
+    if (base64) {
+      console.log('Success with Google service for:', domain);
+      return base64;
+    }
+  } catch (e) {
+    console.warn('Google favicon service failed for:', domain, e);
+  }
+
+  // Strategy 2: Direct favicon.ico (HTTPS)
+  try {
+    const icoUrl = `https://${domain}/favicon.ico`;
+    const base64 = await fetchImageAsBase64(icoUrl);
+    if (base64) {
+      console.log('Success with direct favicon.ico for:', domain);
+      return base64;
+    }
+  } catch (e) {
+    console.warn('HTTPS favicon.ico failed for:', domain, e);
+  }
+
+  // Strategy 3: Direct favicon.ico (HTTP)
+  try {
+    const icoUrl = `http://${domain}/favicon.ico`;
+    const base64 = await fetchImageAsBase64(icoUrl);
+    if (base64) {
+      console.log('Success with HTTP favicon.ico for:', domain);
+      return base64;
+    }
+  } catch (e) {
+    console.warn('HTTP favicon.ico failed for:', domain, e);
+  }
+
+  // Strategy 4: DuckDuckGo Favicon Service
+  try {
+    const ddgFaviconUrl = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+    const base64 = await fetchImageAsBase64(ddgFaviconUrl);
+    if (base64) {
+      console.log('Success with DuckDuckGo for:', domain);
+      return base64;
+    }
+  } catch (e) {
+    console.warn('DuckDuckGo favicon service failed for:', domain, e);
+  }
+
+  console.log('All favicon strategies failed for:', domain);
+  return null;
+}
+
+// Helper function to fetch image and convert to base64
+async function fetchImageAsBase64(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    
+    const blob = await response.blob();
+    
+    // Verify it's actually an image
+    if (!blob.type.startsWith('image/')) {
+      console.warn('Response is not an image:', url, blob.type);
+      return null;
     }
 
-    // Update UI
-    updateLastUpdateElement(navigator.onLine);
-    updateAddButtonVisibility();
-    checkCurrencyCount();
-  } catch (mainError) {
-    console.error("App initialization failed:", mainError);
-    // Only show offline message if we have no cached data
-    if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
-      showOfflineMessage();
+    // Check if file size is reasonable (not a large file or error page)
+    if (blob.size > 100000) { // 100KB limit
+      console.warn('Favicon too large:', url, blob.size);
+      return null;
+    }
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.warn('Fetch failed for:', url, error);
+    return null;
+  }
+}
+
+
+
+function isValidUrl(string) {
+  const res = string.match(/^((http|https):\/\/)?([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/);
+  return (res !== null);
+}
+
+function validateInput(inputElement, buttonElement) {
+  const url = inputElement.value.trim();
+  
+  if (!url) {
+    // Empty input
+    inputElement.style.outline = "";
+    buttonElement.disabled = true;
+    buttonElement.style.cursor = "not-allowed";
+    buttonElement.classList.add("disabled-btn");
+    return false;
+  }
+
+  if (isValidUrl(url)) {
+    // Valid URL
+    inputElement.style.outline = "1px solid var(--primary-color)";
+    buttonElement.disabled = false;
+    buttonElement.style.cursor = "pointer";
+    buttonElement.classList.remove("disabled-btn");
+    return true;
+  } else {
+    // Invalid URL
+    inputElement.style.outline = "1px solid #f8312f";
+    buttonElement.disabled = true;
+    buttonElement.style.cursor = "not-allowed";
+    buttonElement.classList.add("disabled-btn");
+    return false;
+  }
+}
+
+async function saveWhitelist() {
+  return new Promise((resolve, reject) => {
+    localStorage.setItem(WHITELIST_KEY, JSON.stringify(whitelist));
+    chrome.storage.local.set({ [WHITELIST_KEY]: whitelist }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        // console.log("Whitelist saved:", whitelist);
+        resolve();
+      }
+    });
+  });
+}
+
+async function loadWhitelist() {
+  try {
+    const result = await chrome.storage.local.get(WHITELIST_KEY);
+    let savedWhitelist = result[WHITELIST_KEY];
+
+    if (!savedWhitelist) {
+       // Fallback to localStorage
+       const localSaved = localStorage.getItem(WHITELIST_KEY);
+       savedWhitelist = localSaved ? JSON.parse(localSaved) : [];
+    }
+
+    if (Array.isArray(savedWhitelist)) {
+      // Migration: Convert strings to objects if needed
+      whitelist = await Promise.all(savedWhitelist.map(async (item) => {
+        if (typeof item === 'string') {
+           const favicon = await getFaviconAsBase64(item);
+           return { url: item, favicon: favicon };
+        }
+        return item;
+      }));
+      
+      // Save if migration happened
+      if (savedWhitelist.some(item => typeof item === 'string')) {
+        saveWhitelist();
+      }
+
+      // Fetch missing favicons if online
+      if (navigator.onLine) {
+        let updated = false;
+        for (let i = 0; i < whitelist.length; i++) {
+          if (!whitelist[i].favicon) {
+            const favicon = await getFaviconAsBase64(whitelist[i].url);
+            if (favicon) {
+              whitelist[i].favicon = favicon;
+              updated = true;
+            }
+          }
+        }
+        if (updated) {
+          await saveWhitelist();
+        }
+      }
+    } else {
+      whitelist = [];
+    }
+    renderWhitelist();
+  } catch (error) {
+    console.error("Error loading whitelist:", error);
+    whitelist = [];
+    renderWhitelist();
+  }
+}
+
+function renderWhitelist() {
+  // Remove existing links (but keep the add-whitelist-link div)
+  const existingLinks = whitelistContent.querySelectorAll(".link");
+  existingLinks.forEach((link) => link.remove());
+
+  // Get the add-whitelist-link container to insert before it
+  const addLinkContainer = whitelistContent.querySelector(".add-whitelist-link");
+
+  whitelist.forEach((item) => {
+    const url = item.url;
+    const favicon = item.favicon || './icons/website.png'; // Fallback to default icon
+    const displayUrl = url.length > 30 ? url.substring(0, 30) + "..." : url;
+    const linkDiv = document.createElement("div");
+    linkDiv.classList.add("link");
+    linkDiv.innerHTML = `
+      <img src="${favicon}" class="favicon" onerror="this.src='./icons/website.png'">
+      <p class="added-link" title="${url}">${displayUrl}</p>
+      <button class="remove-link-btn" title="Remove Link" data-url="${url}">✕</button>
+    `;
+    whitelistContent.insertBefore(linkDiv, addLinkContainer);
+  });
+
+  // Re-attach event listeners for remove buttons
+  const removeButtons = whitelistContent.querySelectorAll(".remove-link-btn");
+  removeButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const urlToRemove = e.target.dataset.url;
+      removeLink(urlToRemove);
+    });
+  });
+}
+
+async function addLink(url) {
+  if (!url) return;
+  
+  // Basic validation/cleanup
+  url = url.trim();
+  if (!url) return;
+
+  if (!isValidUrl(url)) {
+    // Should be handled by UI validation, but double check
+    return;
+  }
+
+  if (!whitelist.some(item => item.url === url)) {
+    // Fetch favicon only if online, otherwise add with null favicon
+    const favicon = navigator.onLine ? await getFaviconAsBase64(url) : null;
+    whitelist.push({ url: url, favicon: favicon });
+    await saveWhitelist();
+    renderWhitelist();
+  }
+  addLinkInput.value = ""; // Clear input
+  validateInput(addLinkInput, addLinkBtn); // Re-validate to disable button
+}
+
+async function removeLink(url) {
+  // Remove from the data array
+  whitelist = whitelist.filter((item) => item.url !== url);
+  await saveWhitelist();
+  
+  // Remove the specific DOM element without re-rendering everything
+  const linkToRemove = whitelistContent.querySelector(`.remove-link-btn[data-url="${url}"]`)?.closest('.link');
+  if (linkToRemove) {
+    linkToRemove.remove();
+  }
+}
+
+// Event Listeners for Whitelist
+// Event Listeners for Whitelist
+addLinkBtn.addEventListener("click", () => {
+  addLink(addLinkInput.value);
+});
+
+addLinkInput.addEventListener("input", () => {
+  validateInput(addLinkInput, addLinkBtn);
+});
+
+// Initialize button state
+validateInput(addLinkInput, addLinkBtn);
+
+addLinkInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    if (!addLinkBtn.disabled) {
+      addLink(addLinkInput.value);
+    }
+  }
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                       BLACKLIST TAB                        */
+//⚪------------------------------------------------------------*/
+const addBlacklistLinkBtn = document.getElementById("add-blacklist-link-btn");
+const addBlacklistLinkInput = document.getElementById("add-blacklist-link");
+const blacklistContent = document.getElementById("blacklist-content");
+const BLACKLIST_KEY = "blacklistedWebsites";
+let blacklist = [];
+
+function openBlacklistTab() {
+  blacklistTab.classList.add("show");
+  blacklistTab.classList.remove("hidden");
+  loadBlacklist(); // Load fresh data when opening tab
+}
+editBlacklistBtn.addEventListener("click", () => {
+  openBlacklistTab();
+});
+function closeBlacklistTab() {
+  blacklistTab.classList.remove("show");
+  blacklistTab.classList.add("hidden");
+}
+hideBlacklistTab.addEventListener("click", () => {
+  closeBlacklistTab();
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                     BLACKLIST LOGIC                        */
+//⚪------------------------------------------------------------*/
+
+async function saveBlacklist() {
+  return new Promise((resolve, reject) => {
+    localStorage.setItem(BLACKLIST_KEY, JSON.stringify(blacklist));
+    chrome.storage.local.set({ [BLACKLIST_KEY]: blacklist }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        // console.log("Blacklist saved:", blacklist);
+        resolve();
+      }
+    });
+  });
+}
+
+async function loadBlacklist() {
+  try {
+    const result = await chrome.storage.local.get(BLACKLIST_KEY);
+    let savedBlacklist = result[BLACKLIST_KEY];
+
+    if (!savedBlacklist) {
+      // Fallback to localStorage
+      const localSaved = localStorage.getItem(BLACKLIST_KEY);
+      savedBlacklist = localSaved ? JSON.parse(localSaved) : [];
+    }
+
+    if (Array.isArray(savedBlacklist)) {
+       // Migration: Convert strings to objects if needed
+      blacklist = await Promise.all(savedBlacklist.map(async (item) => {
+        if (typeof item === 'string') {
+           const favicon = await getFaviconAsBase64(item);
+           return { url: item, favicon: favicon };
+        }
+        return item;
+      }));
+
+      // Save if migration happened
+      if (savedBlacklist.some(item => typeof item === 'string')) {
+        saveBlacklist();
+      }
+
+      // Fetch missing favicons if online
+      if (navigator.onLine) {
+        let updated = false;
+        for (let i = 0; i < blacklist.length; i++) {
+          if (!blacklist[i].favicon) {
+            const favicon = await getFaviconAsBase64(blacklist[i].url);
+            if (favicon) {
+              blacklist[i].favicon = favicon;
+              updated = true;
+            }
+          }
+        }
+        if (updated) {
+          await saveBlacklist();
+        }
+      }
+    } else {
+      blacklist = [];
+    }
+    renderBlacklist();
+  } catch (error) {
+    console.error("Error loading blacklist:", error);
+    blacklist = [];
+    renderBlacklist();
+  }
+}
+
+function renderBlacklist() {
+  // Remove existing links (but keep the add-whitelist-link div)
+  const existingLinks = blacklistContent.querySelectorAll(".link");
+  existingLinks.forEach((link) => link.remove());
+
+  // Get the add-whitelist-link container to insert before it
+  const addLinkContainer = blacklistContent.querySelector(".add-whitelist-link");
+
+  blacklist.forEach((item) => {
+    const url = item.url;
+    const favicon = item.favicon || './icons/website.png'; // Fallback to default icon
+    const displayUrl = url.length > 30 ? url.substring(0, 30) + "..." : url;
+    const linkDiv = document.createElement("div");
+    linkDiv.classList.add("link");
+    linkDiv.innerHTML = `
+      <img src="${favicon}" class="favicon" onerror="this.src='./icons/website.png'">
+      <p class="added-link" title="${url}">${displayUrl}</p>
+      <button class="remove-link-btn" title="Remove Link" data-url="${url}">✕</button>
+    `;
+    blacklistContent.insertBefore(linkDiv, addLinkContainer);
+  });
+
+  // Re-attach event listeners for remove buttons
+  const removeButtons = blacklistContent.querySelectorAll(".remove-link-btn");
+  removeButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const urlToRemove = e.target.dataset.url;
+      removeBlacklistLink(urlToRemove);
+    });
+  });
+}
+
+async function addBlacklistLink(url) {
+  if (!url) return;
+  
+  // Basic validation/cleanup
+  url = url.trim();
+  if (!url) return;
+
+  if (!isValidUrl(url)) {
+    // Should be handled by UI validation
+    return;
+  }
+
+  if (!blacklist.some(item => item.url === url)) {
+    // Fetch favicon only if online, otherwise add with null favicon
+    const favicon = navigator.onLine ? await getFaviconAsBase64(url) : null;
+    blacklist.push({ url: url, favicon: favicon });
+    await saveBlacklist();
+    renderBlacklist();
+  }
+  addBlacklistLinkInput.value = ""; // Clear input
+  validateInput(addBlacklistLinkInput, addBlacklistLinkBtn); // Re-validate
+}
+
+async function removeBlacklistLink(url) {
+  // Remove from the data array
+  blacklist = blacklist.filter((item) => item.url !== url);
+  await saveBlacklist();
+  
+  // Remove the specific DOM element without re-rendering everything
+  const linkToRemove = blacklistContent.querySelector(`.remove-link-btn[data-url="${url}"]`)?.closest('.link');
+  if (linkToRemove) {
+    linkToRemove.remove();
+  }
+}
+
+// Event Listeners for Blacklist
+addBlacklistLinkBtn.addEventListener("click", () => {
+  addBlacklistLink(addBlacklistLinkInput.value);
+});
+
+addBlacklistLinkInput.addEventListener("input", () => {
+  validateInput(addBlacklistLinkInput, addBlacklistLinkBtn);
+});
+
+// Initialize button state
+validateInput(addBlacklistLinkInput, addBlacklistLinkBtn);
+
+addBlacklistLinkInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    if (!addBlacklistLinkBtn.disabled) {
+      addBlacklistLink(addBlacklistLinkInput.value);
+    }
+  }
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                        CURRENCY TAB                        */
+//⚪------------------------------------------------------------*/
+function openCurrencyTab() {
+  currencyTab.classList.add("show");
+  currencyTab.classList.remove("hidden");
+}
+function closeCurrencyTab() {
+  currencyTab.classList.remove("show");
+  currencyTab.classList.add("hidden");
+  // Reset selection state
+  currentLetter = "";
+  currentIndex = 0;
+  matchingCurrencies = [];
+  highlightedCurrency = null;
+}
+hideCurrencyTab.addEventListener("click", () => {
+  closeCurrencyTab();
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                         TAX BUTTON                         */
+//⚪------------------------------------------------------------*/
+const taxBtn = document.getElementById("tax-btn");
+const taxInput = document.getElementById("tax-input");
+let isExpanded = false;
+
+taxBtn.addEventListener("click", function (e) {
+  if (!isExpanded) {
+    // Expand the button
+    taxBtn.classList.add("expanded");
+    isExpanded = true;
+    // Focus on input after transition
+    setTimeout(() => {
+      taxInput.focus();
+      taxInput.select();
+    }, 300);
+  }
+});
+
+// Handle input validation and submission
+taxInput.addEventListener("input", async function (e) {
+  let value = parseInt(e.target.value);
+  if (value < 0) {
+    e.target.value = 0;
+  } else if (value > 100) {
+    e.target.value = 100;
+  }
+  // Update conversions
+  const baseInput = await findBaseInput();
+  if (baseInput && baseInput.dataset) {
+    updateCurrencyValues(baseInput.dataset.currency);
+  }
+});
+
+taxInput.addEventListener("blur", function (e) {
+  // Small delay to allow for other interactions
+  setTimeout(() => {
+    const value = taxInput.value;
+    if (!value || value == 0) {
+      collapseTaxButton();
+    }
+  }, 300);
+});
+
+function collapseTaxButton() {
+  const value = taxInput.value;
+  taxBtn.classList.remove("expanded");
+  isExpanded = false;
+
+  // Don't clear if value is > 0
+  if (!value || parseFloat(value) === 0) {
+    taxInput.value = "";
+    taxBtn.classList.remove("active");
+
+    // Safely update conversions
+    const baseInput = findBaseInput();
+    if (baseInput && baseInput.dataset.currency) {
+      updateCurrencyValues(baseInput.dataset.currency);
     }
   }
 }
-//⚪initialize app function (end)
 
-//⚪update exchange rates function (start)
-//🟠 [fetchExchangeRates(fetchExchangeRates), updateCurrencyValues]
-async function updateExchangeRates() {
-  exchangeRates = await fetchExchangeRates("USD");
-  updateCurrencyValues();
+// Select all text when input is focused
+taxInput.addEventListener("focus", function (e) {
+  e.target.select();
+});
+document.addEventListener("click", function (e) {
+  if (isExpanded && !taxBtn.contains(e.target)) {
+    const value = taxInput.value;
+    if (!value || value < 1 || value > 100) {
+      collapseTaxButton();
+    }
+  }
+});
+
+//⚪------------------------------------------------------------*/
+//⚪                        DONATION TAB                        */
+//⚪------------------------------------------------------------*/
+function openDonationTab() {
+  donationTab.classList.add("show");
+  donationTab.classList.remove("hidden");
 }
-//⚪update exchange rates function (end)
+supportDevBtn.addEventListener("click", () => {
+  openDonationTab();
+});
+function closeDonationTab() {
+  donationTab.classList.remove("show");
+  donationTab.classList.add("hidden");
+}
+hideDonationTab.addEventListener("click", () => {
+  closeDonationTab();
+});
 
-//
-//
-//
-//
-
-//🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//🔵++++++++++++++++++++++++++++ FUNCTIONS ++++++++++++++++++++++++++++
-//🔵+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//⚪++++++++++++++++++++++++++++ KEYBOARD / MOUSE CURRENCY SELECTION ++++++++++++++++++++++++++++
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                               KEYBOARD/MOUSE NAVIGATION                                              +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 let currentLetter = "";
 let currentIndex = 0;
 let matchingCurrencies = [];
 let highlightedCurrency = null;
-
-//>>>>>>>>> Keyboard selection (start)
+//🟠------------------------------------------------------------*/
+//🟠                            KEYBOARD                        */
+//🟠------------------------------------------------------------*/
 document.addEventListener("keydown", (event) => {
   if (!donationTab.classList.contains("hidden")) {
     if (event.key === "Escape") {
@@ -345,10 +1624,22 @@ document.addEventListener("keydown", (event) => {
       closeDonationTab();
     }
   }
-  if (!settingsTab.classList.contains("hidden")) {
+  if (!settingsTab.classList.contains("hidden") && whitelistTab.classList.contains("hidden") && blacklistTab.classList.contains("hidden")) {
     if (event.key === "Escape") {
       event.preventDefault();
       closeSettingsTab();
+    }
+  }
+  if (!whitelistTab.classList.contains("hidden")) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeWhitelistTab();
+    }
+  }
+  if (!blacklistTab.classList.contains("hidden")) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeBlacklistTab();
     }
   }
   if (!currencyTab.classList.contains("hidden")) {
@@ -402,47 +1693,48 @@ document.addEventListener("keydown", (event) => {
     }
   }
 });
-//>>>>>>>>> Keyboard selection (end)
 
-//>>>>>>>>> Mouse selection (start)
-currencyList.addEventListener("mouseover", (event) => {
-  if (event.target.classList.contains("currency-option")) {
-    removeHighlight();
-    event.target.classList.add("currency-active");
-    highlightedCurrency = event.target;
+//⚪------------------------------------------------------------*/
+//⚪                            MOUSE                           */
+//⚪------------------------------------------------------------*/
+currencyList.addEventListener("mousemove", (event) => {
+  const option = event.target.closest(".currency-option");
+
+  if (option && currencyList.contains(option)) {
+    if (highlightedCurrency !== option) {
+      removeHighlight();
+      option.classList.add("currency-active");
+      highlightedCurrency = option;
+    }
   }
 });
-//>>>>>>>>> Mouse selection (end)
 
-//>>>>>>>>> Update highlight function (start)
+//⚪------------------------------------------------------------*/
+//⚪                          HIGHLIGHT                         */
+//⚪------------------------------------------------------------*/
 function updateHighlight(newItem) {
   removeHighlight();
   highlightedCurrency = newItem;
   highlightedCurrency.classList.add("currency-active");
   highlightedCurrency.scrollIntoView({
-    behavior: "smooth",
+    behavior: "auto",
     block: "nearest",
   });
 }
-//>>>>>>>>> Update highlight function (end)
-
-//>>>>>>>>> Remove highlight from previous selection function (end)
 function removeHighlight() {
   const previousHighlight = document.querySelector(".currency-active");
   if (previousHighlight) {
     previousHighlight.classList.remove("currency-active");
   }
 }
-//>>>>>>>>> Remove highlight from previous selection function (end)
 
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ DRAG AND DROP ++++++++++++++++++++++++++++
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                      DRAG & DROP                                                     +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 let draggedItem = null;
-
-//>>>>>>>>> Drag start event (start)
+//⚪------------------------------------------------------------*/
+//⚪                            DRAG                            */
+//⚪------------------------------------------------------------*/
 currencyContainer.addEventListener("dragstart", (event) => {
   if (event.target.classList.contains("currency-input")) {
     draggedItem = event.target;
@@ -452,9 +1744,6 @@ currencyContainer.addEventListener("dragstart", (event) => {
     draggedItem.style.opacity = "0.5";
   }
 });
-//>>>>>>>>> Drag start event (end)
-
-//>>>>>>>>> Drag over event (start)
 currencyContainer.addEventListener("dragover", (event) => {
   event.preventDefault(); // Allow dropping
 
@@ -475,9 +1764,6 @@ currencyContainer.addEventListener("dragover", (event) => {
     }
   });
 });
-//>>>>>>>>> Drag over event (end)
-
-//>>>>>>>>> Drag end event (start)
 currencyContainer.addEventListener("dragend", (event) => {
   if (event.target.classList.contains("currency-input")) {
     // Reset styles for the dragged item
@@ -494,9 +1780,10 @@ currencyContainer.addEventListener("dragend", (event) => {
     draggedItem = null; // Reset the dragged item
   }
 });
-//>>>>>>>>> Drag end event (end)
 
-//>>>>>>>>> Drop event (start)
+//⚪------------------------------------------------------------*/
+//⚪                            DROP                            */
+//⚪------------------------------------------------------------*/
 currencyContainer.addEventListener("drop", (event) => {
   event.preventDefault();
 
@@ -526,380 +1813,13 @@ currencyContainer.addEventListener("drop", (event) => {
     // item.style.border = "var(--border-dark) solid 1px";
   });
 });
-//>>>>>>>>> Drop event (end)
 
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ INPUT FORMAT VALIDATION ++++++++++++++++++++++++++++
-// //>>>>>>>>> Input format: no commas on input (start)
-//🔵 document.querySelectorAll(".currency-input input").forEach((input) => {
-//   input.addEventListener("input", (event) => {
-//     const input = event.target;
-//     const rawValue = input.value.replace(/,/g, "");
-
-//     if (!/^\d*\.?\d*$/.test(rawValue)) {
-//       input.value = input.dataset.previousValue || "0";
-//       return;
-//     }
-
-//     input.dataset.previousValue = rawValue;
-//     formatNumberWithCommas(rawValue, input);
-//     updateCurrencyValues(parseFloat(rawValue) || 0, input.dataset.currency);
-//   });
-
-//   // Add blur handler to force decimals
-//   input.addEventListener("blur", () => {
-//     let value = input.value.replace(/,/g, "");
-//     if (value.indexOf(".") === -1) {
-//       value += ".00";
-//     } else {
-//       const parts = value.split(".");
-//       if (parts[1].length < 2) {
-//         parts[1] = parts[1].padEnd(2, "0");
-//         value = parts.join(".");
-//       }
-//     }
-//     input.value = formatNumberWithCommas(value, input);
-//   });
-// });
-
-// Replace your current input event listeners with this:
-document.querySelectorAll(".currency-input input").forEach((input) => {
-  input.addEventListener("input", (event) => {
-    const rawValue = event.target.value.replace(/,/g, "");
-    formatNumberWithCommas(rawValue, event.target);
-    updateCurrencyValues(event.target.dataset.currency); // Pass the changed currency
-  });
-
-  input.addEventListener("blur", () => {
-    let value = input.value.replace(/,/g, "");
-    if (value.indexOf(".") === -1) {
-      value += currency === "BTC" ? ".00000000" : ".00";
-    } else {
-      const parts = value.split(".");
-      if (parts[1].length < 2) {
-        parts[1] = parts[1].padEnd(2, "0");
-      }
-    }
-    input.value = formatNumberWithCommas(value, input);
-  });
-});
-// //>>>>>>>>> Input format: no commas on input (end)
-
-// //>>>>>>>>> Input format: dots & commas (start)
-function formatNumberWithCommas(value, inputElement) {
-  // Return early if inputElement is not valid
-  if (!inputElement || typeof inputElement.selectionStart !== "number") {
-    // Fallback to simple formatting without cursor control
-    value = value.replace(/[^\d.]/g, "");
-    let [integerPart, decimalPart] = value.split(".");
-    integerPart = integerPart.replace(/^0+/, "") || "0";
-    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-    if (decimalPart !== undefined) {
-      decimalPart = decimalPart.substring(0); //🟠Changed "substring(0,2)"
-      return `${integerPart}.${decimalPart}`;
-    }
-    return integerPart;
-  }
-
-  // Store cursor position if we have a valid input element
-  const cursorPos = inputElement.selectionStart;
-  const originalValue = inputElement.value;
-  const isAddingDecimal =
-    originalValue.length < value.length && value.charAt(cursorPos) === ".";
-
-  // Clean the input value
-  let cleanValue = value.replace(/[^\d.]/g, "");
-
-  // Handle decimal part
-  let [integerPart, decimalPart] = cleanValue.split(".");
-  integerPart = integerPart.replace(/^0+/, "") || "0";
-
-  // Add thousand separators
-  integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-  // Format decimal part if exists
-  if (decimalPart !== undefined) {
-    decimalPart = decimalPart.substring(0);
-    cleanValue = `${integerPart}.${decimalPart}`;
-  } else {
-    cleanValue = integerPart;
-  }
-
-  // Calculate new cursor position
-  let newCursorPos = cursorPos;
-
-  // Adjust for added comma
-  if (cleanValue.length > originalValue.length) {
-    const addedChars = cleanValue.length - originalValue.length;
-    newCursorPos += addedChars;
-  }
-  // Special handling for decimal point
-  else if (isAddingDecimal) {
-    newCursorPos += 1;
-  }
-
-  // Update input value
-  inputElement.value = cleanValue;
-
-  // Restore cursor position
-  setTimeout(() => {
-    inputElement.setSelectionRange(newCursorPos, newCursorPos);
-  }, 0);
-
-  return cleanValue;
-}
-
-const numToTextElement = document.getElementById("num-to-text");
-
-//>>>>>>>>> Numbers to words (start)
-if (numToTextElement) {
-  currencyContainer.addEventListener("input", (event) => {
-    if (event.target.tagName === "INPUT") {
-      const inputField = event.target;
-      const rawValue = inputField.value.replace(/,/g, ""); // Remove commas
-      const number = parseFloat(rawValue);
-
-      if (!isNaN(number) && typeof numberToWords !== "undefined") {
-        let words = numberToWords.toWords(number); // Use the library
-        words = words.charAt(0).toUpperCase() + words.slice(1); // Capitalize the first letter
-        numToTextElement.textContent = words.replace(/,/g, ""); // Update the element
-      } else {
-        numToTextElement.textContent = "ABC..."; // Clear if input is invalid
-      }
-    }
-  });
-}
-//>>>>>>>>> Numbers to words (end)
-
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ CURRENCY ORDER FUNCTIONS ++++++++++++++++++++++++++++
-//>>>>>>>>> save currency order function (start)
-function saveCurrencyOrder() {
-  const currencyOrder = Array.from(currencyContainer.children)
-    .filter((item) => item.classList.contains("currency-input"))
-    .map((item) => item.querySelector("input").dataset.currency);
-
-  // Also update the currencies array to keep it in sync
-  currencies = currencyOrder;
-
-  localStorage.setItem("currencyOrder", JSON.stringify(currencyOrder));
-  chrome.storage.local.set({ currencyOrder }, () => {
-    chrome.storage.local.get("currencyOrder", (result) => {
-      console.log("Saved currencyOrder:", result.currencyOrder);
-    });
-  });
-  console.log("Saved currency order:", currencyOrder);
-}
-//>>>>>>>>> save currency order function (end)
-
-//>>>>>>>>> load currency order function (start)
-function loadCurrencyOrder() {
-  try {
-    const savedOrder = JSON.parse(localStorage.getItem("currencyOrder"));
-
-    if (savedOrder && Array.isArray(savedOrder) && savedOrder.length > 0) {
-      console.log("Loading saved currency order:", savedOrder);
-
-      // Clear existing currencies
-      currencyContainer.innerHTML = "";
-      currencies = [];
-
-      // Add each currency in the saved order
-      savedOrder.forEach((currency) => {
-        addCurrency(currency, false); // Don't save during loading (prevents recursion)
-      });
-
-      // Update the currencies array to match
-      currencies = savedOrder;
-
-      return true; // Successfully loaded
-    }
-  } catch (error) {
-    console.error("Error loading currency order:", error);
-  }
-
-  return false; // Nothing loaded
-}
-//>>>>>>>>> load currency order function (end)
-
-//>>>>>>>>> check currency count function (start)
-function checkCurrencyCount() {
-  const currencyInputs = document.querySelectorAll(".currency-input");
-  const removeButtons = document.querySelectorAll(".remove-btn");
-
-  if (currencyInputs.length > 2) {
-    removeButtons.forEach((btn) => (btn.style.display = "flex"));
-  } else {
-    removeButtons.forEach((btn) => (btn.style.display = "none"));
-  }
-}
-//>>>>>>>>> check currency count function (end)
-
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ ADD CURRENCY BUTTON FUNCTIONS ++++++++++++++++++++++++++++
-//>>>>>>>>> update add button visibility function (start)
-function updateAddButtonVisibility() {
-  if (currencies.length === Object.keys(exchangeRates || {}).length) {
-    addCurrencyBtn.style.display = "none"; // Hide the button
-  } else {
-    addCurrencyBtn.style.display = "flex"; // Show the button
-  }
-}
-//>>>>>>>>> update add button visibility function (end)
-
-//>>>>>>>>> add currency function (start)
-function addCurrency(currency, shouldSave = true) {
-  if (currencies.includes(currency)) return;
-
-  currencies.push(currency);
-  const currencyDiv = document.createElement("div");
-  currencyDiv.classList.add("currency-input");
-  currencyDiv.setAttribute("draggable", "true");
-
-  // Get the country code for the currency
-  const countryCode = currencyToCountry[currency] || "??"; // "??" is a fallback for unknown currencies
-
-  currencyDiv.innerHTML = `
-        <div class="currency-info">
-            <div class="flag"><span class="fi fi-${countryCode}"></span></div>
-            <label>${currency}</label>
-        </div>
-        <input type="text" data-currency="${currency}" value="${
-    currency === "BTC" ? "0.00000000" : "0.00"
-  }" data-previous-value="0">
-        <button class="remove-btn" title="Remove"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
-    `;
-
-  currencyContainer.appendChild(currencyDiv);
-
-  const inputField = currencyDiv.querySelector("input");
-
-  // Initialize with proper value
-  // try {
-  //   inputField.value = formatNumberWithCommas("0.00", inputField);
-  // } catch (error) {
-  //   console.error("Error initializing currency input:", error);
-  //   inputField.value = "0.00";
-  // }
-  try {
-    // Set initial value based on currency type
-    const initialValue = currency === "BTC" ? "0.00000000" : "0.00";
-    inputField.value = formatNumberWithCommas(initialValue, inputField);
-  } catch (error) {
-    console.error("Error initializing currency input:", error);
-    // Fallback value should also respect currency type
-    inputField.value = currency === "BTC" ? "0.00000000" : "0.00";
-  }
-
-  //🔵 Set up event listeners
-  // 🔵inputField.addEventListener("input", (event) => {
-  //   const rawValue = event.target.value.replace(/,/g, "");
-  //   formatNumberWithCommas(rawValue, event.target);
-  //   updateCurrencyValues(
-  //     parseFloat(rawValue) || 0,
-  //     event.target.dataset.currency
-  //   );
-  // });
-
-  // inputField.addEventListener("blur", () => {
-  //   let value = inputField.value.replace(/,/g, "");
-  //   if (value.indexOf(".") === -1) {
-  //     value += ".00";
-  //   }
-  //   inputField.value = formatNumberWithCommas(value, inputField);
-  // });
-
-  inputField.addEventListener("input", (event) => {
-    const rawValue = event.target.value.replace(/,/g, "");
-    formatNumberWithCommas(rawValue, event.target);
-    updateCurrencyValues(event.target.dataset.currency);
-  });
-
-  inputField.addEventListener("blur", () => {
-    let value = inputField.value.replace(/,/g, "");
-    if (value.indexOf(".") === -1) {
-      value += currency === "BTC" ? ".00000000" : ".00";
-    }
-    inputField.value = formatNumberWithCommas(value, inputField);
-  });
-
-  checkCurrencyCount();
-  updateAddButtonVisibility();
-
-  // Only save if shouldSave is true (to prevent recursion during loading)
-  if (shouldSave) {
-    saveCurrencyOrder();
-  }
-
-  // Handle input formatting
-  inputField.addEventListener("input", (event) => {
-    let rawValue = event.target.value
-      ? event.target.value.replace(/,/g, "")
-      : "";
-
-    if (!/^\d*\.?\d*$/.test(rawValue)) {
-      event.target.value = event.target.dataset.previousValue || "0";
-      return;
-    }
-
-    event.target.dataset.previousValue = rawValue;
-    event.target.value = formatNumberWithCommas(rawValue);
-    updateCurrencyValues(
-      parseFloat(rawValue) || 0,
-      event.target.dataset.currency
-    );
-  });
-
-  // Select all text on focus
-  inputField.addEventListener("focus", (event) => {
-    event.target.select();
-  });
-
-  // Remove currency
-  currencyDiv.querySelector(".remove-btn").addEventListener("click", () => {
-    currencyDiv.remove();
-    currencies = currencies.filter((c) => c !== currency);
-    checkCurrencyCount();
-    updateAddButtonVisibility();
-    saveCurrencyOrder();
-  });
-
-  // Update the newly added currency immediately
-  let baseInput = document.querySelector(
-    ".currency-input input:not([value='0'])"
-  );
-
-  if (!baseInput) {
-    // If no input has a value yet, pick the first one
-    baseInput = document.querySelector(".currency-input input");
-  }
-
-  if (baseInput) {
-    // Use the actual displayed value of the input field
-    let baseValue = parseFloat(baseInput.value.replace(/,/g, "") || 1); // Default to 1 if empty
-    let baseCurrency = baseInput.dataset.currency;
-    updateCurrencyValues(baseValue, baseCurrency);
-  }
-}
-
-//>>>>>>>>> add currency function (end)
-
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ EXCHANGE RATE / DATE FUNCTIONS ++++++++++++++++++++++++++++
-//>>>>>>>>> save exchange rates + last updated date (start)
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                             EXCHANGE RATE / DATE FUNCTIONS                                           +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪------------------------------------------------------------*/
+//⚪                        LOAD AND SAVE                       */
+//⚪------------------------------------------------------------*/
 function saveExchangeRates(rates) {
   if (rates) {
     const now = new Date().toISOString(); // ISO format avoids parsing issues
@@ -911,10 +1831,6 @@ function saveExchangeRates(rates) {
     });
   }
 }
-//>>>>>>>>> save exchange rates + last updated date (end)
-
-//>>>>>>>>> load exchange rates + last updated date (start)
-// Function to load exchange rates and last updated date from localStorage
 function loadExchangeRates() {
   const savedRates = localStorage.getItem(CURRENCY_DATA_KEY);
   const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
@@ -943,10 +1859,9 @@ function loadExchangeRates() {
 
   return null;
 }
-//>>>>>>>>> load exchange rates + last updated date (end)
 
-//>>>>>>>>> load data function (start)
 function loadData() {
+  //🟠
   console.log("LoadingData is active");
   const savedData = loadExchangeRates();
   if (savedData) {
@@ -956,721 +1871,171 @@ function loadData() {
     updateLastUpdateElement(false);
   }
 }
-//>>>>>>>>> load data function (end)
 
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ LAST UPDATE STATE FUNCTIONS ++++++++++++++++++++++++++++
-//>>>>>>>>> Last update state function (start)
-// Function to update the .last-update element
-function updateLastUpdateElement(isOnline, lastUpdated) {
-  let dateText = `--/--/----`; // Default state
-  let timeText = "--:--"; // Default state
+//⚪------------------------------------------------------------*/
+//⚪                     FETCH EXCHANGE RATES                   */
+//⚪------------------------------------------------------------*/
+async function fetchExchangeRates() {
+  try {
+    const url = "https://ziedyahia-57.github.io/Currency-Converter/data.json?t=" + Date.now();
+    const response = await fetch(url);
 
-  if (!lastUpdated) {
-    lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
-  }
-  if (lastUpdated) {
+    if (!response || !response.ok) {
+      throw new Error(`API error! Status: ${response?.status}`);
+    }
+
+    const data = await response.json();
+    if (!data?.rates) {
+      throw new Error("Invalid API structure.");
+    }
+
+    // Save and return the rates
+    saveExchangeRates(data.rates);
+    removeOfflineMessage(); // Remove offline message on successful fetch
+    return data.rates;
+  } catch (error) {
+    console.warn("Fetch failed, trying cache:", error.message);
+
+    // Try to load from cache
     try {
-      // dateText = new Date(lastUpdated).toLocaleString();
-      const date = new Date(lastUpdated);
-
-      // Day (DD), Month (MM), Year (YYYY)
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
-      const year = date.getFullYear();
-
-      // Hours (12-hour format) + AM/PM
-      let hours = date.getHours();
-      const ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12 || 12; // Convert 0 to 12 (12 AM)
-      const formattedHours = String(hours).padStart(2, "0");
-
-      // Minutes (MM)
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-
-      dateText = `${day}/${month}/${year}`;
-      timeText = `${formattedHours}:${minutes} ${ampm}`;
-    } catch {
-      dateText = "Error"; // Fallback if date parsing fails
-      timeText = "!"; // Fallback if date parsing fails
-    }
-  }
-
-  lastUpdateElement.innerHTML = `
-    <span class="${isOnline ? "green" : "red"}">● ${
-    isOnline ? "Online" : "Offline"
-  }</span>
-    - Last Updated: <span class="date">${dateText}</span> at <span class="date">${timeText}</span>
-  `;
-}
-//>>>>>>>>> Last update state function (end)
-
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ CURRENCY CONVERSION FUNCTIONS ++++++++++++++++++++++++++++
-//>>>>>>>>> convert currency values function (start)
-// 🔵function updateCurrencyValues(baseValue = 0, baseCurrency = "USD") {
-//   if (!exchangeRates) {
-//     console.error("No exchange rates available for conversion.");
-//     return;
-//   }
-
-//   // Don't round the base value here - keep full precision for calculations
-//   const fullPrecisionBaseValue = parseFloat(baseValue);
-
-//   document.querySelectorAll(".currency-input input").forEach((input) => {
-//     const currency = input.dataset.currency;
-//     if (currency !== baseCurrency) {
-//       // Calculate the converted value with full precision
-//       const convertedValue =
-//         fullPrecisionBaseValue *
-//         (exchangeRates[currency] / exchangeRates[baseCurrency]);
-
-//       // Special rounding for BTC (8 decimals) vs others (2 decimals)
-//       const roundedValue =
-//         currency === "BTC"
-//           ? convertedValue.toFixed(8)
-//           : convertedValue.toFixed(2);
-
-//       // Update the input field with the rounded value
-//       input.value = formatNumberWithCommas(roundedValue || 0);
-//     }
-//   });
-// }
-
-function updateCurrencyValues(changedCurrency) {
-  if (!exchangeRates) {
-    console.error("No exchange rates available for conversion.");
-    return;
-  }
-
-  // Get all currency inputs
-  const currencyInputs = Array.from(
-    document.querySelectorAll(".currency-input input")
-  );
-
-  // Find the changed input
-  const changedInput = currencyInputs.find(
-    (input) => input.dataset.currency === changedCurrency
-  );
-  if (!changedInput) return;
-
-  // Get the raw value (without commas) from the changed input
-  const rawValue = changedInput.value.replace(/,/g, "");
-  const numericValue = parseFloat(rawValue) || 0;
-
-  // Update all other currencies based on the changed input
-  currencyInputs.forEach((input) => {
-    if (input.dataset.currency !== changedCurrency) {
-      // Calculate the converted value
-      let convertedValue;
-
-      if (changedCurrency === "USD") {
-        // If USD was changed, directly use its rate
-        convertedValue = numericValue * exchangeRates[input.dataset.currency];
-      } else if (input.dataset.currency === "USD") {
-        // If converting to USD, divide by the rate
-        convertedValue = numericValue / exchangeRates[changedCurrency];
-      } else {
-        // For other currency pairs
-        convertedValue =
-          numericValue *
-          (exchangeRates[input.dataset.currency] /
-            exchangeRates[changedCurrency]);
+      const cached = JSON.parse(localStorage.getItem(CURRENCY_DATA_KEY));
+      if (cached) {
+        console.log("Using cached rates");
+        removeOfflineMessage(); // Remove offline message if cache is valid
+        return cached;
       }
-
-      // Format based on currency type (BTC gets 8 decimals, others get 2)
-      const roundedValue =
-        input.dataset.currency === "BTC"
-          ? convertedValue.toFixed(8)
-          : convertedValue.toFixed(2);
-
-      // Update the input field
-      input.value = formatNumberWithCommas(roundedValue);
-    }
-  });
-}
-//>>>>>>>>> convert currency values function (end)
-
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ OPEN/CLOSE TABS FUNCTIONS ++++++++++++++++++++++++++++
-//>>>>>>>>> open donation tab (start)
-function openDonationTab() {
-  donationTab.classList.add("show");
-  donationTab.classList.remove("hidden");
-}
-//>>>>>>>>> open donation tab (end)
-
-//>>>>>>>>> close donation tab (start)
-function closeDonationTab() {
-  donationTab.classList.remove("show");
-  donationTab.classList.add("hidden");
-}
-//>>>>>>>>> close donation tab (end)
-
-//>>>>>>>>> open currency tab (start)
-function openCurrencyTab() {
-  currencyTab.classList.add("show");
-  currencyTab.classList.remove("hidden");
-}
-//>>>>>>>>> open currency tab (end)
-
-//>>>>>>>>> close currency tab (start)
-function closeCurrencyTab() {
-  currencyTab.classList.remove("show");
-  currencyTab.classList.add("hidden");
-  // Reset selection state
-  currentLetter = "";
-  currentIndex = 0;
-  matchingCurrencies = [];
-  highlightedCurrency = null;
-}
-//>>>>>>>>> close currency tab (end)
-
-//>>>>>>>>> open settings tab (start)
-function openSettingsTab() {
-  settingsTab.classList.add("show");
-  settingsTab.classList.remove("hidden");
-}
-//>>>>>>>>> open settings tab (end)
-
-//>>>>>>>>> close settings tab (start)
-function closeSettingsTab() {
-  settingsTab.classList.remove("show");
-  settingsTab.classList.add("hidden");
-}
-//>>>>>>>>> close settings tab (end)
-
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ CHECKBOX STATE FUNCTIONS ++++++++++++++++++++++++++++
-const checkbox = document.getElementById("convert-on-select");
-const CHECKBOX_STATE_KEY = "checkboxState";
-
-//>>>>>>>>> Load checkbox state (start)
-function loadCheckboxState() {
-  try {
-    const savedState = localStorage.getItem(CHECKBOX_STATE_KEY);
-    checkbox.checked = savedState === "true"; // Convert string to boolean
-    if (savedState === null) {
-      // Set default state if no preference is saved
-      checkbox.checked = false;
-      localStorage.setItem(CHECKBOX_STATE_KEY, "false");
-    }
-  } catch (error) {
-    console.error("Error loading checkbox state:", error);
-    // Fallback to unchecked if there's an error
-    checkbox.checked = false;
-  }
-}
-//>>>>>>>>> Load checkbox state (end)
-
-//>>>>>>>>> Save checkbox state (start)
-// Save checkbox state to localStorage when it changes
-function saveCheckboxState() {
-  checkbox.addEventListener("change", () => {
-    localStorage.setItem(CHECKBOX_STATE_KEY, checkbox.checked); // Save boolean as string
-    chrome.storage.local.set({ [CHECKBOX_STATE_KEY]: checkbox.checked });
-    console.log("Checkbox state saved to localStorage:", checkbox.checked);
-  });
-}
-//>>>>>>>>> Save checkbox state (end)
-
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ DARK MODE STATE FUNCTIONS ++++++++++++++++++++++++++++
-const darkModeBtn = document.getElementById("dark-mode-btn");
-const root = document.documentElement;
-
-// //>>>>>>>>> Load dark mode state (start)
-function loadDarkMode() {
-  try {
-    const savedMode = localStorage.getItem("darkMode");
-    if (savedMode === "dark") {
-      root.classList.add("dark-mode");
-      darkModeBtn.classList.add("active");
-    } else {
-      // Default to light mode if no preference is saved
-      root.classList.remove("dark-mode");
-      darkModeBtn.classList.remove("active");
-      localStorage.setItem("darkMode", "light");
-    }
-  } catch (error) {
-    console.error("Error loading dark mode:", error);
-    // Fallback to light mode if there's an error
-    root.classList.remove("dark-mode");
-    darkModeBtn.classList.remove("active");
-  }
-}
-// //>>>>>>>>> Load dark mode state (end)
-
-// //>>>>>>>>> save dark mode state (start)
-function saveDarkMode() {
-  // Save user preference to localStorage
-  if (root.classList.contains("dark-mode")) {
-    localStorage.setItem("darkMode", "dark");
-    chrome.storage.local.set({ ["darkMode"]: "dark" });
-  } else {
-    localStorage.setItem("darkMode", "light");
-    chrome.storage.local.set({ ["darkMode"]: "light" });
-  }
-}
-// //>>>>>>>>> save dark mode state (end)
-
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ ONLINE / OFFLINE FUNCTIONS ++++++++++++++++++++++++++++
-//>>>>>>>>> Online event (start)
-window.addEventListener("online", async () => {
-  console.log("App is online. Fetching latest exchange rates...");
-  try {
-    exchangeRates = await fetchExchangeRates("USD");
-    if (exchangeRates) {
-      saveExchangeRates(exchangeRates);
-      updateLastUpdateElement(true);
-      updateCurrencyValues(); // Update displayed values with fresh rates
-    }
-  } catch (error) {
-    console.error("Failed to fetch exchange rates:", error);
-    loadData(); // Try to load cached data
-  }
-});
-//>>>>>>>>> Online event (end)
-
-//>>>>>>>>> Offline event (start)
-window.addEventListener("offline", () => {
-  console.log("App is offline. Loading saved exchange rates...");
-  loadData();
-  // Only show offline message if we have no cached data
-  if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
-    showOfflineMessage();
-  }
-});
-//>>>>>>>>> Offline event (end)
-
-//
-//
-//
-//
-//⚪++++++++++++++++++++++++++++ DONATION HANDLER FUNCTIONS ++++++++++++++++++++++++++++
-//>>>>>>>>> donation class (start)
-class DonationTracker {
-  constructor() {
-    this.hasShownInitial = false;
-    this.reset();
-  }
-
-  getContent() {
-    // Show initial message ONLY on first click (count === 1)
-    const trackerData = {
-      clickCount: this.clickCount,
-    };
-    // Special case: First visit
-    if (this.clickCount === 1) {
-      return {
-        ...donationContent.initialMessage,
-        tracker: trackerData, // Pass count to template
-      };
-    }
-
-    // After 5+ clicks, mix interactions (2 messages, then 1 interaction)
-    if (this.clickCount >= 5) {
-      const cyclePosition = (this.clickCount - 3) % 3;
-
-      if (cyclePosition === 2) {
-        // Every 3rd click shows an interaction
-        if (
-          this.usedInteractions.length === donationContent.interactions.length
-        ) {
-          this.usedInteractions = []; // Reset if all interactions used
-        }
-
-        const availableInteractions = donationContent.interactions.filter(
-          (int) => !this.usedInteractions.includes(int.greeting)
-        );
-
-        const interaction =
-          availableInteractions.length > 0
-            ? availableInteractions[
-                Math.floor(Math.random() * availableInteractions.length)
-              ]
-            : donationContent.interactions[0]; // Fallback
-
-        this.usedInteractions.push(interaction.greeting);
-        return {
-          ...interaction,
-          tracker: trackerData, // Always include count
-        };
+      throw new Error("No cached data available");
+    } catch (cacheError) {
+      console.error("Cache load failed:", cacheError.message);
+      // Only show offline message if we have no cached data
+      if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
+        showOfflineMessage();
       }
+      throw new Error("Failed to fetch and no valid cache available");
     }
-
-    // Default case: Show regular message
-    if (this.usedMessages.length === donationContent.messages.length) {
-      this.usedMessages = []; // Reset if all messages used
-    }
-
-    const availableMessages = donationContent.messages.filter(
-      (msg) => !this.usedMessages.includes(msg.greeting)
-    );
-
-    const message =
-      availableMessages.length > 0
-        ? availableMessages[
-            Math.floor(Math.random() * availableMessages.length)
-          ]
-        : donationContent.messages[0]; // Fallback
-
-    this.usedMessages.push(message.greeting);
-    return {
-      ...message,
-      // clickCount: this.clickCount
-      tracker: trackerData, // Always include count
-    };
-  }
-
-  incrementClickCount() {
-    this.clickCount++;
-    console.log(this.clickCount); // Count this as the first interaction
-  }
-
-  reset() {
-    this.messageIndex = 0;
-    this.interactionIndex = 0;
-    this.clickCount = 0;
-    this.usedMessages = [];
-    this.usedInteractions = [];
   }
 }
-//>>>>>>>>> donation class (end)
 
-//>>>>>>>>> donation content handler (start)
-// Initialize the tracker
-const donationTracker = new DonationTracker();
-
-function updateDonationContent() {
-  const rawContent = donationTracker.getContent();
-
-  // Process dynamic content
-  const processField = (field) => {
-    if (typeof field === "function") {
-      return field(rawContent.tracker); // Execute function with tracker data
-    }
-    return field; // Return as-is if not a function
-  };
-
-  const content = {
-    emoji: rawContent.emoji,
-    greeting: processField(rawContent.greeting),
-    message: processField(rawContent.message),
-    footer: processField(rawContent.footer),
-  };
-
-  const isInteraction = donationContent.interactions.some(
-    (int) =>
-      int.greeting === rawContent.greeting ||
-      (typeof rawContent.greeting === "function" &&
-        int.greeting === rawContent.greeting.toString())
-  );
-
-  const titleContent = isInteraction
-    ? `<span class="secret">(Secret Message)</span><br>${content.greeting}`
-    : content.greeting;
-
-  return `
-        <div class="donation-icon">${content.emoji}</div>
-        <p class="desc-title">${titleContent}</p>
-        <p class="desc-text">${content.message}</p>
-        <div class="donation-choice">
-            <a href="patreon" target="_blank"><button class="button-64" role="button"><span class="text">Monthly</span></button></a>
-            <a href="stripe" target="_blank"><button class="button-64" role="button"><span class="text">One-time</span></button></a>
-        </div>
-        <p class="desc-text">${content.footer}</p>
-    `;
-}
-//>>>>>>>>> donation content handler (end)
-
-//>>>>>>>>> donation tab visit counter (start)
-// Function to handle the donation button click
-function handleDonationButtonClick() {
-  donationTracker.incrementClickCount();
-  const donationContentElement = document.querySelector(".donation-content");
-  if (donationContentElement) {
-    donationContentElement.innerHTML = updateDonationContent();
-  }
-}
-//>>>>>>>>> donation tab visit counter (end)
-
-//>>>>>>>>> initialize donation tab (start)
-// Initialize the donation content with the initial message
-function initializeDonationContent() {
-  const donationContentElement = document.querySelector(".donation-content");
-  if (donationContentElement) {
-    donationContentElement.innerHTML = updateDonationContent();
-  }
-}
-//>>>>>>>>> initialize donation tab (end)
-
-//
-//
-//
-//
-//🔵++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//🔵++++++++++++++++++++++++++++ EVENTS ++++++++++++++++++++++++++++
-//🔵++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-settingsBtn.addEventListener("click", () => {
-  openSettingsTab();
-});
-
-supportDevBtn.addEventListener("click", () => {
-  openDonationTab();
-});
-
-hideDonationTab.addEventListener("click", () => {
-  closeDonationTab();
-});
-
-restoreBtn.addEventListener("click", () => {
-  // Reset all settings to defaults
-  themeSelector.value = "auto";
-  formatSelector.value = "comma-dot";
-  fiatDecimalSelector.value = "2";
-  cryptoDecimalSelector.value = "8";
-
-  // Save all settings
-  localStorage.setItem("theme", themeSelector.value);
-  chrome.storage.local.set({ ["theme"]: themeSelector.value });
-
-  localStorage.setItem("numberFormat", formatSelector.value);
-  chrome.storage.local.set({ ["numberFormat"]: formatSelector.value });
-
-  localStorage.setItem("fiatDecimals", fiatDecimalSelector.value);
-  chrome.storage.local.set({ ["fiatDecimals"]: fiatDecimalSelector.value });
-
-  localStorage.setItem("cryptoDecimals", cryptoDecimalSelector.value);
-  chrome.storage.local.set({ ["cryptoDecimals"]: cryptoDecimalSelector.value });
-
-  // Manually update UI for immediate effect
-  customTheme.classList.add("hidden");
-  customFormat.classList.add("hidden");
-  customFiatDecimals.classList.add("hidden");
-  customCryptoDecimals.classList.add("hidden");
-
-  // Manually apply the theme change
-  darkModeBtn.classList.add("auto");
-
-  // Check system preference and apply immediately
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const preferredTheme = prefersDark ? "dark" : "light";
-
-  root.classList.toggle("dark-mode", preferredTheme === "dark");
-  darkModeBtn.classList.toggle("active", preferredTheme === "dark");
-
-  // Save the actual theme being used
-  localStorage.setItem("darkMode", preferredTheme);
-  chrome.storage.local.set({ ["darkMode"]: preferredTheme });
-});
-
-hideSettingsTab.addEventListener("click", () => {
-  closeSettingsTab();
-});
-
-hideCurrencyTab.addEventListener("click", () => {
-  closeCurrencyTab();
-});
-
-document.getElementById("donation-content").innerHTML = updateDonationContent();
-
-currencyTab.addEventListener("click", (event) => {
-  if (!(event.target instanceof HTMLInputElement)) return; // Ignore clicks on non-input elements
-  if (!event.target.value) return; // Ignore empty values
-
-  let rawValue = event.target.value.replace(/,/g, ""); // Remove commas from the input value
-
-  if (!/^\d*\.?\d*$/.test(rawValue)) {
-    event.target.value = event.target.dataset.previousValue || "0";
-    return;
-  } // Regex to allow only digits and one decimal point
-
-  event.target.dataset.previousValue = rawValue;
-  event.target.value = formatNumberWithCommas(rawValue);
-  updateCurrencyValues(
-    parseFloat(rawValue) || 0,
-    event.target.dataset.currency
-  ); // Update currency values based on input
-});
-
-function initializeInputStyles() {
-  // Reset input styles
-  document.querySelectorAll(".currency-input input").forEach((input) => {
-    input.style.color = ""; // Reset to default color
-    input.style.caretColor = ""; // Reset to default caret color
-  });
+//⚪------------------------------------------------------------*/
+//⚪                    UPDATE EXCHANGE RATES                   */
+//⚪------------------------------------------------------------*/
+async function updateExchangeRates() {
+  exchangeRates = await fetchExchangeRates();
+  updateCurrencyValues();
 }
 
-//🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//🟣++++++++++++++++++++++++++++ APPLICATION ++++++++++++++++++++++++++++
-//🟣+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-document.addEventListener("DOMContentLoaded", async () => {
-  checkCustomSettings();
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                                CURRENCY ORDER FUNCTIONS                                              +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//🟠------------------------------------------------------------*/
+//🟠                        LOAD AND SAVE                       */
+//🟠------------------------------------------------------------*/
+function saveCurrencyOrder() {
+  const currencyOrder = Array.from(currencyContainer.children)
+    .filter((item) => item.classList.contains("currency-input"))
+    .map((item) => item.querySelector("input").dataset.currency);
 
-  // Initial check with proper online status
-  const isOnline = navigator.onLine;
-  const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+  // Also update the currencies array to keep it in sync
+  currencies = currencyOrder;
 
-  updateLastUpdateElement(isOnline, lastUpdated);
-
-  // Listen for network changes
-  window.addEventListener("online", () => {
-    updateLastUpdateElement(true, localStorage.getItem(LAST_UPDATED_KEY));
-  });
-
-  window.addEventListener("offline", () => {
-    updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
-  });
-
-  // Load user preference from localStorage and chrome.storage
-  loadDarkMode();
-
-  loadThemePreference();
-  loadSavedFormat();
-  loadSavedFiatDecimal();
-  loadSavedCryptoDecimal();
-
-  // Toggle dark mode
-  darkModeBtn.addEventListener("click", () => {
-    root.classList.toggle("dark-mode");
-    darkModeBtn.classList.toggle("active");
-    saveDarkMode();
-    themeSelector.value = "manual";
-    darkModeBtn.classList.remove("auto");
-    localStorage.setItem("theme", themeSelector.value);
-    chrome.storage.local.set({ ["theme"]: themeSelector.value });
-    // Save user preference to both localStorage and chrome.storage
-  });
-
-  loadCheckboxState();
-  checkCurrencyCount();
-  updateAddButtonVisibility();
-  initializeInputStyles(); // Initialize input styles
-  initializeApp(); // Initialize the app
-
-  // Donation Tab functionality
-  donationButton.addEventListener("click", handleDonationButtonClick);
-
-  saveCheckboxState();
-
-  await updateExchangeRates(); // Load exchange rates first
-  // Initial check
-  updateLastUpdateElement(
-    navigator.onLine,
-    localStorage.getItem(LAST_UPDATED_KEY)
-  );
-
-  formatSelector.addEventListener("change", function () {
-    saveNumberFormat();
-
-    if (formatSelector.value !== "comma-dot") {
-      customFormat.classList.remove("hidden");
-    } else {
-      customFormat.classList.add("hidden");
-    }
-  });
-
-  fiatDecimalSelector.addEventListener("change", function () {
-    saveFiatDecimal();
-
-    if (fiatDecimalSelector.value != 2) {
-      customFiatDecimals.classList.remove("hidden");
-    } else {
-      customFiatDecimals.classList.add("hidden");
-    }
-  });
-
-  cryptoDecimalSelector.addEventListener("change", function () {
-    saveCryptoDecimal();
-
-    if (cryptoDecimalSelector.value != 8) {
-      customCryptoDecimals.classList.remove("hidden");
-    } else {
-      customCryptoDecimals.classList.add("hidden");
-    }
-  });
-
-  themeSelector.addEventListener("change", function () {
-    saveThemePreference();
-
-    // Immediately apply the theme change
-    const selectedTheme = themeSelector.value;
-
-    if (selectedTheme === "auto") {
-      darkModeBtn.classList.add("auto");
-
-      // Detect system preference immediately
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      const preferredTheme = prefersDark ? "dark" : "light";
-
-      // Apply the theme
-      root.classList.toggle("dark-mode", preferredTheme === "dark");
-      darkModeBtn.classList.toggle("active", preferredTheme === "dark");
-
-      // Save the actual theme being used
-      localStorage.setItem("darkMode", preferredTheme);
-      chrome.storage.local.set({ ["darkMode"]: preferredTheme });
-    } else {
-      darkModeBtn.classList.remove("auto");
-
-      // For light/dark modes, apply directly
-      root.classList.toggle("dark-mode", selectedTheme === "dark");
-      darkModeBtn.classList.toggle("active", selectedTheme === "dark");
-
-      // Save the theme
-      localStorage.setItem("darkMode", selectedTheme);
-      chrome.storage.local.set({ ["darkMode"]: selectedTheme });
-    }
-
-    if (themeSelector.value !== "auto") {
-      customTheme.classList.remove("hidden");
-    } else {
-      customTheme.classList.add("hidden");
-    }
-  });
-
-  // Add this near your other event listeners
-  window
-    .matchMedia("(prefers-color-scheme: dark)")
-    .addEventListener("change", (e) => {
-      // Only respond if we're in auto mode
-      if (themeSelector.value === "auto") {
-        const prefersDark = e.matches;
-        const preferredTheme = prefersDark ? "dark" : "light";
-
-        root.classList.toggle("dark-mode", preferredTheme === "dark");
-        darkModeBtn.classList.toggle("active", preferredTheme === "dark");
-
-        // Save the actual theme being used
-        localStorage.setItem("darkMode", preferredTheme);
-        chrome.storage.local.set({ ["darkMode"]: preferredTheme });
-      }
+  localStorage.setItem("currencyOrder", JSON.stringify(currencyOrder));
+  chrome.storage.local.set({ currencyOrder }, () => {
+    chrome.storage.local.get("currencyOrder", (result) => {
+      console.log("Saved currencyOrder:", result.currencyOrder);
     });
-  loadDarkMode();
-});
+  });
+  console.log("Saved currency order:", currencyOrder);
+}
+function loadCurrencyOrder() {
+  try {
+    const savedOrder = JSON.parse(localStorage.getItem("currencyOrder"));
 
+    if (savedOrder && Array.isArray(savedOrder) && savedOrder.length > 0) {
+      console.log("Loading saved currency order:", savedOrder);
+
+      // Clear existing currencies
+      currencyContainer.innerHTML = "";
+      currencies = [];
+
+      // Add each currency in the saved order
+      savedOrder.forEach((currency) => {
+        addCurrency(currency, false); // Don't save during loading (prevents recursion)
+      });
+
+      // Update the currencies array to match
+      currencies = savedOrder;
+
+      return true; // Successfully loaded
+    }
+  } catch (error) {
+    console.error("Error loading currency order:", error);
+  }
+
+  return false; // Nothing loaded
+}
+
+//🟠------------------------------------------------------------*/
+//🟠                       ADD A CURRENCY                       */
+//🟠------------------------------------------------------------*/
+
+function checkCurrencyCount() {
+  //🟣 add the "x" button if more than 2 currencies exist
+  const currencyInputs = document.querySelectorAll(".currency-input");
+  const removeButtons = document.querySelectorAll(".remove-btn");
+
+  if (currencyInputs.length > 2) {
+    removeButtons.forEach((btn) => (btn.style.display = "flex"));
+  } else {
+    removeButtons.forEach((btn) => (btn.style.display = "none"));
+  }
+}
+function updateAddButtonVisibility() {
+  //🟣 Show or hide the "Add Currency" button based on the number of currencies
+  if (currencies.length === Object.keys(exchangeRates || {}).length) {
+    addCurrencyBtn.style.display = "none"; // Hide the button
+  } else {
+    addCurrencyBtn.style.display = "flex"; // Show the button
+  }
+}
+
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                               NUMBERS TO WORDS CONVERSION                                            +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+const numToTextElement = document.getElementById("num-to-text");
+//⚪------------------------------------------------------------*/
+//⚪                         CONVERSION                         */
+//⚪------------------------------------------------------------*/
+// Update the number-to-text conversion event listener
+if (numToTextElement) {
+  currencyContainer.addEventListener("input", async (event) => {
+    if (event.target.tagName === "INPUT") {
+      const inputField = event.target;
+      const separators = await getNumberFormatSeparators();
+
+      // Remove all formatting to get raw number
+      const rawValue = inputField.value
+        .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
+        .replace(separators.decimal, ".");
+
+      const number = parseFloat(rawValue);
+
+      if (!isNaN(number) && typeof numberToWords !== "undefined") {
+        let words = numberToWords.toWords(number);
+        words = words.charAt(0).toUpperCase() + words.slice(1);
+        numToTextElement.textContent = words;
+      } else {
+        numToTextElement.textContent = "ABC...";
+      }
+    }
+  });
+}
+
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪+                                               ???????????????????????????                                            +*/
+//⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//⚪------------------------------------------------------------*/
+//⚪                         ??????????                         */
+//⚪------------------------------------------------------------*/
 addCurrencyBtn.addEventListener("click", async () => {
   currencyList.innerHTML = "";
   openCurrencyTab();
@@ -1689,9 +2054,7 @@ addCurrencyBtn.addEventListener("click", async () => {
   }
 
   // Sort currencies alphabetically
-  const sortedCurrencies = Object.keys(exchangeRates).sort((a, b) =>
-    a.localeCompare(b)
-  );
+  const sortedCurrencies = Object.keys(exchangeRates).sort((a, b) => a.localeCompare(b));
   sortedCurrencies.forEach((currency) => {
     if (!currencies.includes(currency)) {
       const option = document.createElement("div");
@@ -1701,8 +2064,9 @@ addCurrencyBtn.addEventListener("click", async () => {
       const countryCode = currencyToCountry[currency] || "??"; // "??" is a fallback for unknown currencies
 
       // Add the flag and currency code to the option
+      // <span class="fi fi-${countryCode}"></span>
       option.innerHTML = `
-                    <span class="fi fi-${countryCode}"></span>
+                    <img class="country-flag" src="icons/flags/${countryCode}.svg">
                     <span>${currency}</span>
                 `;
 
@@ -1715,3 +2079,1012 @@ addCurrencyBtn.addEventListener("click", async () => {
     }
   });
 });
+
+//⚪------------------------------------------------------------*/
+//⚪                         ??????????                         */
+//⚪------------------------------------------------------------*/
+document.getElementById("donation-content").innerHTML = updateDonationContent();
+
+currencyTab.addEventListener("click", async (event) => {
+  if (!(event.target instanceof HTMLInputElement)) return; // Ignore clicks on non-input elements
+  if (!event.target.value) return; // Ignore empty values
+
+  let rawValue = event.target.value.replace(/,/g, ""); // Remove commas from the input value
+
+  if (!/^\d*\.?\d*$/.test(rawValue)) {
+    event.target.value = event.target.dataset.previousValue || "0";
+    return;
+  } // Regex to allow only digits and one decimal point
+
+  event.target.dataset.previousValue = rawValue;
+  event.target.value = await formatNumberWithCommas(rawValue);
+  updateCurrencyValues(parseFloat(rawValue) || 0, event.target.dataset.currency); // Update currency values based on input
+});
+
+function initializeInputStyles() {
+  // Reset input styles
+  document.querySelectorAll(".currency-input input").forEach((input) => {
+    input.style.color = ""; // Reset to default color
+    input.style.caretColor = ""; // Reset to default caret color
+  });
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                         ??????????                         */
+//⚪------------------------------------------------------------*/
+function adjustContentHeight() {
+  const windowHeight = window.innerHeight;
+  let contentHeight;
+
+  // Use the specific mappings you provided
+  if (windowHeight <= 411) {
+    contentHeight = 340;
+  } else if (windowHeight <= 427) {
+    contentHeight = 356;
+  } else if (windowHeight <= 445) {
+    contentHeight = 374;
+  } else {
+    // For larger windows, maintain the same ratio (windowHeight - 71)
+    contentHeight = windowHeight - 71;
+  }
+
+  document.querySelector(".currency-converter-ex .content").style.height = `${contentHeight}px`;
+}
+
+//🔴++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//🔴+                                                     INITIALIZE APP                                                   +*/
+//🔴++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+async function initializeApp() {
+  try {
+    console.log("Initializing app...");
+
+    // Try to load rates (will throw if both network and cache fail)
+    exchangeRates = await fetchExchangeRates();
+
+    // Initialize currency list
+    try {
+      const loadedSuccessfully = loadCurrencyOrder();
+      if (!loadedSuccessfully) {
+        addCurrency("USD", false);
+        addCurrency("EUR", true);
+      }
+    } catch (currencyError) {
+      console.error("Currency init failed:", currencyError);
+      // If we have rates but no saved currencies, initialize defaults
+      if (exchangeRates) {
+        addCurrency("USD", false);
+        addCurrency("EUR", true);
+      }
+    }
+
+    // Update UI
+    updateLastUpdateElement(navigator.onLine);
+    updateAddButtonVisibility();
+    checkCurrencyCount();
+  } catch (mainError) {
+    console.error("App initialization failed:", mainError);
+    // Only show offline message if we have no cached data
+    if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
+      showOfflineMessage();
+    }
+  }
+}
+
+//🟣++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//🟣+                                                        LOAD APP                                                      +*/
+//🟣++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+// Define systemThemeChangeHandler outside of DOMContentLoaded to ensure it's available when needed
+function systemThemeChangeHandler(e) {
+  if (themeSelector.value === "auto") {
+    const prefersDark = e.matches;
+    const preferredTheme = prefersDark ? "dark" : "light";
+
+    root.classList.toggle("dark-mode", preferredTheme === "dark");
+    darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+    localStorage.setItem("darkMode", preferredTheme);
+    chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+    darkModeBtn.title = "Dark Mode - Auto";
+  }
+  if (themeSelector.value === "manual") {
+    darkModeBtn.classList.remove("auto");
+    if (darkModeBtn.classList.contains("active")) {
+      darkModeBtn.title = "Dark Mode - ON";
+    } else {
+      darkModeBtn.title = "Dark Mode - OFF";
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  loadDarkMode();
+  window.addEventListener("load", adjustContentHeight);
+  window.addEventListener("resize", adjustContentHeight);
+
+  checkCustomSettings();
+
+  // Initial check with proper online status
+  const isOnline = navigator.onLine;
+  const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
+
+  updateLastUpdateElement(isOnline, lastUpdated);
+
+  // Listen for network changes
+  window.addEventListener("online", () => {
+    updateLastUpdateElement(true, localStorage.getItem(LAST_UPDATED_KEY));
+  });
+
+  window.addEventListener("offline", () => {
+    updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
+  });
+
+  loadThemePreference().then((theme) => {
+    // Always set up listener for system theme changes, regardless of current theme
+    // This ensures theme changes are detected in real-time when the extension launches
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
+
+    // If theme is set to auto, apply the system theme immediately
+    if (theme === "auto" || themeSelector.value === "auto") {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const preferredTheme = prefersDark ? "dark" : "light";
+      root.classList.toggle("dark-mode", preferredTheme === "dark");
+      darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+      localStorage.setItem("darkMode", preferredTheme);
+      chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+      darkModeBtn.classList.add("auto");
+      darkModeBtn.title = "Dark Mode - Auto";
+    }
+  });
+  loadNumberFormat();
+  loadFiatDecimal();
+  loadCryptoDecimal();
+  loadPageConvert();
+  loadFilterMode();
+  loadConvertTarget();
+  loadTimeFormat();
+  loadDateFormat();
+  loadWhitelist();
+  loadBlacklist();
+
+  loadCheckboxState();
+  checkCurrencyCount();
+  updateAddButtonVisibility();
+  initializeInputStyles(); // Initialize input styles
+
+  // Donation Tab functionality
+  donationButton.addEventListener("click", handleDonationButtonClick);
+
+  saveCheckboxState();
+
+  // Initial check
+  updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
+
+  formatSelector.addEventListener("change", async function () {
+    await saveNumberFormat();
+
+    if (formatSelector.value !== "comma-dot") {
+      customFormat.classList.remove("custom-hidden");
+    } else {
+      customFormat.classList.add("custom-hidden");
+    }
+
+    // Reformat all inputs with new separators but preserve values
+    const inputs = document.querySelectorAll(".currency-input input");
+    for (const input of inputs) {
+      const currency = input.dataset.currency;
+      const separators = await getNumberFormatSeparators();
+
+      // Get current value without formatting
+      let rawValue = input.value
+        .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
+        .replace(separators.decimal, ".");
+
+      // Ensure proper decimal places
+      const decimalPlaces = await getDecimalPlaces(currency);
+      let formattedValue = parseFloat(rawValue).toFixed(decimalPlaces).replace(".", separators.decimal);
+
+      // Apply new formatting
+      input.value = await formatNumberWithCommas(formattedValue, input);
+      input.dataset.previousValue = rawValue;
+    }
+    await resetInputsWithNewFormat();
+    numToTextElement.textContent = "ABC..."; // Clear if input is invalid
+  });
+
+  fiatDecimalSelector.addEventListener("change", async function () {
+    await saveFiatDecimal();
+
+    if (fiatDecimalSelector.value != 2) {
+      customFiatDecimals.classList.remove("custom-hidden");
+    } else {
+      customFiatDecimals.classList.add("custom-hidden");
+    }
+
+    // Update all fiat currency inputs while preserving values and tax
+    await updateAllCurrencyDecimals();
+  });
+
+  cryptoDecimalSelector.addEventListener("change", async function () {
+    await saveCryptoDecimal();
+
+    if (cryptoDecimalSelector.value != 8) {
+      customCryptoDecimals.classList.remove("custom-hidden");
+    } else {
+      customCryptoDecimals.classList.add("custom-hidden");
+    }
+
+    // Update all crypto currency inputs while preserving values and tax
+    await updateAllCurrencyDecimals();
+  });
+
+  dateSelector.addEventListener("change", function () {
+    saveDateFormat();
+    updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
+
+    if (dateSelector.value !== "dd/mm/yyyy") {
+      customDate.classList.remove("custom-hidden");
+    } else {
+      customDate.classList.add("custom-hidden");
+    }
+  });
+
+  timeSelector.addEventListener("change", function () {
+    saveTimeFormat();
+    updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
+
+    if (timeSelector.value !== "ampm") {
+      customTime.classList.remove("custom-hidden");
+    } else {
+      customTime.classList.add("custom-hidden");
+    }
+  });
+
+  filterModeSelector.addEventListener("change", function () {
+    saveFilterMode();
+
+    if (filterModeSelector.value !== "blacklist") {
+      customFilterMode.classList.remove("custom-hidden");
+      blacklistStatus.classList.remove("selected");
+      whitelistStatus.classList.add("selected");
+    } else {
+      customFilterMode.classList.add("custom-hidden");
+      blacklistStatus.classList.add("selected");
+      whitelistStatus.classList.remove("selected");
+    }
+  });
+
+  convertTargetSelector.addEventListener("change", function () {
+    saveConvertTarget();
+
+    if (convertTargetSelector.value !== "all") {
+      customConvertTarget.classList.remove("custom-hidden");
+    } else {
+      customConvertTarget.classList.add("custom-hidden");
+    }
+  });
+
+  pageConvertSelector.addEventListener("change", function () {
+    pageConvertSlider.classList.add("currency-converter-ex-disabled");
+    // Disable the selector to prevent rapid clicking
+    pageConvertSelector.disabled = true;
+
+    savePageConvert();
+
+    if (pageConvertSelector.checked !== false) {
+      customPageConvert.classList.remove("custom-hidden");
+    } else {
+      customPageConvert.classList.add("custom-hidden");
+    }
+
+    // Re-enable the selector after 1 second
+    setTimeout(() => {
+      pageConvertSelector.disabled = false;
+      pageConvertSlider.classList.remove("currency-converter-ex-disabled");
+    }, 2000);
+  });
+
+  themeSelector.addEventListener("change", function () {
+    saveThemePreference();
+
+    // Immediately apply the theme change
+    const selectedTheme = themeSelector.value;
+
+    if (selectedTheme === "auto") {
+      darkModeBtn.title = "Dark Mode - Auto";
+      darkModeBtn.classList.add("auto");
+      darkModeBtn.title = "Dark Mode - Auto";
+
+      // Detect system preference immediately
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const preferredTheme = prefersDark ? "dark" : "light";
+
+      // Apply the theme
+      root.classList.toggle("dark-mode", preferredTheme === "dark");
+      darkModeBtn.classList.toggle("active", preferredTheme === "dark");
+
+      // Save the actual theme being used
+      localStorage.setItem("darkMode", preferredTheme);
+      chrome.storage.local.set({ ["darkMode"]: preferredTheme });
+
+      // Add event listener for future changes
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", systemThemeChangeHandler);
+    } else {
+      // Remove auto class and event listener when switching to manual mode
+      darkModeBtn.classList.remove("auto");
+      window.matchMedia("(prefers-color-scheme: dark)").removeEventListener("change", systemThemeChangeHandler);
+
+      // For light/dark modes, apply directly
+      const isDark = selectedTheme === "dark";
+      root.classList.toggle("dark-mode", isDark);
+      darkModeBtn.classList.toggle("active", isDark);
+      darkModeBtn.title = `Dark Mode - ${isDark ? "ON" : "OFF"}`;
+
+      // Save the theme
+      localStorage.setItem("darkMode", selectedTheme);
+      chrome.storage.local.set({ ["darkMode"]: selectedTheme });
+    }
+
+    // Update custom theme indicator
+    if (themeSelector.value !== "auto") {
+      customTheme.classList.remove("custom-hidden");
+    } else {
+      customTheme.classList.add("custom-hidden");
+    }
+  });
+
+  // systemThemeChangeHandler function is now defined above the DOMContentLoaded event listener
+  loadDarkMode();
+
+  initializeApp(); // Initialize the app
+  await updateExchangeRates(); // Load exchange rates first
+  // Add this to your DOMContentLoaded event listener
+  taxInput.addEventListener("input", () => {
+    // Find the first non-zero input to use as base for conversion
+    const baseInput = document.querySelector(
+      '.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])'
+    );
+    console.log("baseInput:", baseInput);
+
+    if (baseInput) {
+      updateCurrencyValues(baseInput.dataset.currency);
+    }
+  });
+});
+
+async function getDecimalPlaces(currency) {
+  // Default values
+  let fiatDecimals = 2;
+  let cryptoDecimals = 8;
+
+  try {
+    const storage = await chrome.storage.local.get(["fiatDecimals", "cryptoDecimals"]);
+    fiatDecimals = storage.fiatDecimals || 2;
+    cryptoDecimals = storage.cryptoDecimals || 8;
+  } catch (error) {
+    console.error("Error getting decimal places from storage:", error);
+  }
+
+  return currency === "BTC" ? cryptoDecimals : fiatDecimals;
+}
+
+async function updateAllCurrencyDecimals() {
+  const inputs = document.querySelectorAll(".currency-input input");
+  const taxPercentage = parseFloat(taxInput.value) || 0;
+  const taxMultiplier = 1 + taxPercentage / 100;
+
+  // Use the last input the user typed in, if available
+  let baseInput = lastUserInput;
+
+  // If no last input, get the first non-zero input to use as base
+  if (!baseInput) {
+    baseInput = document.querySelector(`.currency-input input:not([value="0"]):not([value^="0."]):not([value^="0,"])`);
+  }
+
+  // If no non-zero input found, use the first input
+  if (!baseInput && inputs.length > 0) {
+    baseInput = inputs[0];
+  }
+
+  if (baseInput) {
+    const baseCurrency = baseInput.dataset.currency;
+    const separators = await getNumberFormatSeparators();
+
+    // Get the raw value (remove thousand separators and standardize decimal)
+    let rawValue = baseInput.value
+      .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
+      .replace(separators.decimal, ".");
+    const baseValue = parseFloat(rawValue) || 0;
+
+    // Update all inputs with new decimal places
+    for (const input of inputs) {
+      const currency = input.dataset.currency;
+      const decimalPlaces = await getDecimalPlaces(currency);
+
+      // For the last input the user typed in, just reformat with new decimals
+      if (input === baseInput) {
+        // Preserve the original value, just adjust decimal places
+        const formattedValue = baseValue.toFixed(decimalPlaces).replace(".", separators.decimal);
+        input.value = await formatNumberWithCommas(formattedValue, input);
+        continue;
+      }
+
+      // For all other inputs, recalculate based on the user input value
+      let convertedValue;
+      if (baseCurrency === "USD") {
+        convertedValue = baseValue * exchangeRates[currency];
+      } else if (currency === "USD") {
+        convertedValue = baseValue / exchangeRates[baseCurrency];
+      } else {
+        convertedValue = baseValue * (exchangeRates[currency] / exchangeRates[baseCurrency]);
+      }
+
+      // Apply tax if percentage > 0
+      if (taxPercentage > 0) {
+        convertedValue *= taxMultiplier;
+      }
+
+      const formattedValue = convertedValue.toFixed(decimalPlaces).replace(".", separators.decimal);
+      input.value = await formatNumberWithCommas(formattedValue, input);
+    }
+  }
+}
+
+//////////////////////////
+//////////////////////////
+//////////////////////////
+//////////////////////////
+//////////////////////////
+//////////////////////////
+//////////////////////////
+
+async function getNumberFormatSeparators() {
+  try {
+    // Get the numberFormat from chrome.storage.local
+    const result = await chrome.storage.local.get("numberFormat");
+    const numberFormat = result.numberFormat;
+
+    // Define the separator mappings
+    const separatorMap = {
+      "comma-dot": { thousand: ",", decimal: "." },
+      "dot-comma": { thousand: ".", decimal: "," },
+      "space-dot": { thousand: " ", decimal: "." },
+      "space-comma": { thousand: " ", decimal: "," },
+      "none-dot": { thousand: "", decimal: "." },
+      "none-comma": { thousand: "", decimal: "," },
+    };
+
+    // Get the separators from the map or use defaults (comma and dot)
+    const separators = separatorMap[numberFormat] || {
+      thousand: ",",
+      decimal: ".",
+    };
+
+    return separators;
+  } catch (error) {
+    console.error("Error retrieving numberFormat:", error);
+    // Return default separators (comma and dot) in case of error
+    return { thousand: ",", decimal: "." };
+  }
+}
+
+async function formatNumberWithCommas(value, inputElement) {
+  try {
+    const separators = await getNumberFormatSeparators();
+
+    // Get current cursor position and original value
+    const cursorPos = inputElement?.selectionStart ?? 0;
+    const originalValue = inputElement?.value || "";
+
+    // Clean the input value
+    const decimalChar = separators.decimal === "." ? "\\." : separators.decimal;
+    const cleanRegex = new RegExp(`[^\\d${decimalChar}]`, "g");
+    let cleanValue = value.replace(cleanRegex, "");
+
+    // Handle multiple decimal points
+    const decimalSplit = cleanValue.split(separators.decimal);
+    if (decimalSplit.length > 2) {
+      cleanValue = decimalSplit[0] + separators.decimal + decimalSplit.slice(1).join("");
+    }
+
+    // Split into parts
+    let [integerPart, decimalPart] = cleanValue.split(separators.decimal);
+    integerPart = integerPart.replace(/^0+/, "") || "0";
+
+    // Format integer part with thousand separators
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, separators.thousand);
+
+    // Reconstruct full formatted value
+    let formattedValue = formattedInteger;
+    if (decimalPart !== undefined) {
+      formattedValue += separators.decimal + decimalPart;
+    }
+
+    if (inputElement) {
+      // Calculate new cursor position
+      let newCursorPos = calculateNewCursorPosition(originalValue, formattedValue, cursorPos, separators);
+
+      // REVISION REQUIRED: Update input value
+      if(inputElement.value || inputElement.value == separators.decimal || /\[0-9]/.test(inputElement.value)){
+        inputElement.value = formattedValue; //ORIGINAL: line before change
+      }else{
+        inputElement.value = "";
+      }
+
+      // Restore cursor position immediately (remove setTimeout)
+      setTimeout(() => {
+        inputElement.setSelectionRange(newCursorPos, newCursorPos);
+      }, 1);
+    }
+
+    return formattedValue;
+  } catch (error) {
+    console.error("Error formatting number:", error);
+    return value;
+  }
+}
+
+function calculateNewCursorPosition(originalValue, formattedValue, cursorPos, separators) {
+  // Handle edge cases
+  if (cursorPos <= 0) return 0;
+  if (cursorPos >= originalValue.length) return formattedValue.length;
+
+  // Check if we just added a decimal separator
+  const isAddingDecimal =
+    originalValue.length < formattedValue.length &&
+    originalValue.slice(0, cursorPos - 1) + separators.decimal === originalValue.slice(0, cursorPos);
+
+  if (isAddingDecimal) {
+    const decimalIndex = formattedValue.indexOf(separators.decimal);
+    return decimalIndex >= 0 ? decimalIndex + 1 : cursorPos;
+  }
+
+  // Count characters before cursor position in original value
+  let charCount = 0;
+  let digitCount = 0;
+
+  for (let i = 0; i < cursorPos && i < originalValue.length; i++) {
+    const char = originalValue[i];
+    if (/\d/.test(char)) {
+      digitCount++;
+    }
+    charCount++;
+  }
+
+  // Find the equivalent position in formatted value
+  let newPos = 0;
+  let currentDigitCount = 0;
+
+  for (let i = 0; i < formattedValue.length; i++) {
+    const char = formattedValue[i];
+
+    if (/\d/.test(char)) {
+      currentDigitCount++;
+      if (currentDigitCount >= digitCount) {
+        newPos = i + 1;
+        break;
+      }
+    }
+
+    // If we haven't found enough digits and we're at the end
+    if (i === formattedValue.length - 1) {
+      newPos = formattedValue.length;
+    }
+  }
+
+  // Ensure position is within bounds
+  return Math.min(Math.max(newPos, 0), formattedValue.length);
+}
+
+async function addCurrency(currency, shouldSave = true) {
+  // Prevent duplicate currencies
+  if (currencies.includes(currency)) return;
+
+  // Get current formatting preferences
+  const decimalPlaces = await getDecimalPlaces(currency);
+  const separators = await getNumberFormatSeparators();
+  const initialDecimalPart = "0".repeat(decimalPlaces);
+
+  // Find the best input to use as conversion base
+  let baseInput = findConversionBaseInput();
+  let initialValue = calculateInitialValue(baseInput, currency, decimalPlaces, separators);
+
+  // Create the new currency element
+  const currencyDiv = createCurrencyElement(currency, initialValue, separators);
+  currencyContainer.appendChild(currencyDiv);
+
+  // Set up event handlers
+  setupCurrencyInputHandlers(currencyDiv, currency);
+
+  // Update app state
+  currencies.push(currency);
+  checkCurrencyCount();
+  updateAddButtonVisibility();
+
+  if (shouldSave) {
+    saveCurrencyOrder();
+  }
+
+  // Helper functions
+  function findConversionBaseInput() {
+    // Try to find a non-zero input
+    const nonZeroInput = document.querySelector(
+      `.currency-input input:not([value="0"]):not([value^="0${separators.decimal}"])`
+    );
+    if (nonZeroInput) return nonZeroInput;
+
+    // Fallback to first input with value
+    const firstWithValue = document.querySelector('.currency-input input:not([value=""])');
+    if (firstWithValue) return firstWithValue;
+
+    // Final fallback to first input
+    return document.querySelector(".currency-input input");
+  }
+
+  function calculateInitialValue(baseInput, targetCurrency, decimalPlaces, separators) {
+    if (!baseInput || !baseInput.value || !exchangeRates) {
+      return `0${separators.decimal}${initialDecimalPart}`;
+    }
+
+    const baseCurrency = baseInput.dataset.currency;
+    const rawValue = baseInput.value
+      .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
+      .replace(separators.decimal, ".");
+    const baseValue = parseFloat(rawValue) || 0;
+
+    // Perform the conversion
+    let convertedValue;
+    if (baseCurrency === "USD") {
+      convertedValue = baseValue * exchangeRates[targetCurrency];
+    } else if (targetCurrency === "USD") {
+      convertedValue = baseValue / exchangeRates[baseCurrency];
+    } else {
+      convertedValue = baseValue * (exchangeRates[targetCurrency] / exchangeRates[baseCurrency]);
+    }
+
+    // Format with correct decimal places and separators
+    return convertedValue.toFixed(decimalPlaces).replace(".", separators.decimal);
+  }
+
+  function createCurrencyElement(currency, initialValue, separators) {
+    const countryCode = currencyToCountry[currency] || "??";
+    const currencyDiv = document.createElement("div");
+    currencyDiv.classList.add("currency-input");
+    currencyDiv.setAttribute("draggable", "true");
+
+    // <div class="flag"><span class="fi fi-${countryCode}"></span></div>
+    currencyDiv.innerHTML = `
+      <div class="currency-info">
+        <div class="flag"><img class="country-flag" src="icons/flags/${countryCode}.svg"></div>
+        <label>${currency}</label>
+      </div>
+      <input type="text" data-currency="${currency}" value="${initialValue}" data-previous-value="${initialValue}">
+      <button class="remove-btn" title="Remove">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+          <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
+        </svg>
+      </button>
+    `;
+
+    return currencyDiv;
+  }
+
+  async function setupCurrencyInputHandlers(currencyDiv, currency) {
+    const inputField = currencyDiv.querySelector("input");
+    const removeBtn = currencyDiv.querySelector(".remove-btn");
+
+    // Initial formatting
+    inputField.value = await formatNumberWithCommas(inputField.value, inputField);
+
+    inputField.addEventListener("paste", async (event) => {
+      event.preventDefault(); // Prevent default paste behavior
+
+      // Track this as the last input the user typed in
+      lastUserInput = inputField;
+
+      // Get pasted text
+      const pastedText = (event.clipboardData || window.clipboardData).getData("text");
+
+      if (!pastedText) return;
+
+      // Process the pasted value
+      const processedValue = await processPastedValue(pastedText, inputField);
+
+      // Set the processed value
+      inputField.value = processedValue.formatted;
+      inputField.dataset.previousValue = processedValue.raw;
+
+      // Update cursor position
+      setTimeout(() => {
+        inputField.setSelectionRange(processedValue.cursorPos, processedValue.cursorPos);
+
+        // Manually trigger the input event to update numToText
+        const inputEvent = new Event("input", {
+          bubbles: true,
+          cancelable: true,
+        });
+        inputField.dispatchEvent(inputEvent);
+      }, 1);
+
+      // Trigger conversion
+      updateCurrencyValues(inputField.dataset.currency);
+    });
+
+    inputField.addEventListener("input", async (event) => {
+      const input = event.target;
+      // Track this as the last input the user typed in
+      lastUserInput = input;
+      const separators = await getNumberFormatSeparators();
+      const cursorPos = input.selectionStart;
+
+      // Store the previous raw value (without any formatting)
+      const previousRawValue = input.dataset.previousValue || "";
+
+      // Get current value and clean it (remove all formatting)
+      let rawValue = input.value.replace(new RegExp(`[${separators.thousand}]`, "g"), "");
+
+      // Check if the change is valid
+      const isBackspace = event.inputType === "deleteContentBackward";
+      const isDelete = event.inputType === "deleteContentForward";
+
+      if (!isBackspace && !isDelete) {
+        // Validate characters - only allow digits and one decimal separator
+        const decimalRegex = new RegExp(`^[\\d${separators.decimal}]*$`);
+        if (!decimalRegex.test(rawValue)) {
+          // Invalid character entered - revert to previous value
+          input.value = await formatNumberWithCommas(previousRawValue, input);
+          setTimeout(() => {
+            const newPos = Math.max(0, cursorPos - 1);
+            input.setSelectionRange(newPos, newPos);
+          }, 0);
+          return;
+        }
+
+        // Prevent multiple decimal separators
+        const decimalCount = rawValue.split(separators.decimal).length - 1;
+        if (decimalCount > 1) {
+          input.value = await formatNumberWithCommas(previousRawValue, input);
+          setTimeout(() => {
+            const newPos = Math.max(0, cursorPos - 1);
+            input.setSelectionRange(newPos, newPos);
+          }, 0);
+          return;
+        }
+      }
+
+      // Save the raw value before formatting
+      input.dataset.previousValue = rawValue;
+
+      // Format the number (this will add thousand separators properly)
+      await formatNumberWithCommas(rawValue, input);
+
+      // Calculate and set the new cursor position
+      const newCursorPos = calculateNewCursorPosition(previousRawValue, input.value, cursorPos, separators);
+
+      setTimeout(() => {
+        input.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+
+      updateCurrencyValues(input.dataset.currency);
+    });
+
+    // Blur event handler for final formatting
+    inputField.addEventListener("blur", async () => {
+      const decimalPlaces = await getDecimalPlaces(currency);
+      const separators = await getNumberFormatSeparators();
+      let value = inputField.value.replace(new RegExp(`[${separators.thousand}]`, "g"), "");
+
+      if (value === "") value = "0";
+
+      // Ensure proper decimal places
+      if (!value.includes(separators.decimal)) {
+        value += separators.decimal + "0".repeat(decimalPlaces);
+      } else {
+        const parts = value.split(separators.decimal);
+        if (parts[1].length < decimalPlaces) {
+          parts[1] = parts[1].padEnd(decimalPlaces, "0");
+        }
+        value = parts.join(separators.decimal);
+      }
+
+      inputField.value = await formatNumberWithCommas(value, inputField);
+    });
+
+    // Focus event for UX
+    inputField.addEventListener("focus", (event) => {
+      // Track this as the last input the user clicked on
+      lastUserInput = inputField;
+      event.target.select();
+    });
+
+    // Remove currency handler
+    removeBtn.addEventListener("click", () => {
+      currencyDiv.remove();
+      currencies = currencies.filter((c) => c !== currency);
+      checkCurrencyCount();
+      updateAddButtonVisibility();
+      saveCurrencyOrder();
+    });
+  }
+}
+
+async function updateCurrencyValues(changedCurrency) {
+  if (!changedCurrency) {
+    console.warn("No currency specified for update");
+    return;
+  }
+
+  const separators = await getNumberFormatSeparators();
+
+  // Get tax percentage (default to 0 if empty)
+  const taxPercentage = parseFloat(taxInput.value) || 0;
+  const taxMultiplier = 1 + taxPercentage / 100;
+
+  const changedInput = document.querySelector(`input[data-currency="${changedCurrency}"]`);
+
+  if (!changedInput) {
+    console.warn(`Input element for currency ${changedCurrency} not found`);
+    return;
+  }
+
+  // Get raw value by removing thousand separators
+  let rawValue = changedInput.value
+    .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
+    .replace(separators.decimal, ".");
+
+  // If input is empty or invalid, set others to 0
+  if (rawValue === "" || isNaN(rawValue)) {
+    document.querySelectorAll(".currency-input input").forEach(async (input) => {
+      if (input.dataset.currency === changedCurrency) return;
+
+      const targetCurrency = input.dataset.currency;
+      const decimalPlaces = await getDecimalPlaces(targetCurrency);
+      const zeroValue = `0${separators.decimal}${"0".repeat(decimalPlaces)}`;
+
+      input.value = await formatNumberWithCommas(zeroValue, input);
+    });
+    return;
+  }
+
+  const baseValue = parseFloat(rawValue) || "0";
+  const baseCurrency = changedCurrency;
+
+  // Update all other currency inputs
+  document.querySelectorAll(".currency-input input").forEach(async (input) => {
+    if (!input.dataset.currency || input.dataset.currency === changedCurrency) {
+      return;
+    }
+
+    const targetCurrency = input.dataset.currency;
+    const decimalPlaces = await getDecimalPlaces(targetCurrency);
+
+    // Calculate converted value
+    let convertedValue;
+    if (baseCurrency === "USD") {
+      convertedValue = baseValue * (exchangeRates[targetCurrency] || 1);
+    } else if (targetCurrency === "USD") {
+      convertedValue = baseValue / (exchangeRates[baseCurrency] || 1);
+    } else {
+      const baseRate = exchangeRates[baseCurrency] || 1;
+      const targetRate = exchangeRates[targetCurrency] || 1;
+      convertedValue = baseValue * (targetRate / baseRate);
+    }
+
+    // Apply tax if percentage > 0
+    if (taxPercentage > 0) {
+      convertedValue *= taxMultiplier;
+    }
+
+    // Format the final value
+    let formattedValue = convertedValue.toFixed(decimalPlaces);
+    if (separators.decimal === ",") {
+      formattedValue = formattedValue.replace(".", ",");
+    }
+
+    input.value = await formatNumberWithCommas(formattedValue, input);
+  });
+}
+
+async function resetInputsWithNewFormat() {
+  const separators = await getNumberFormatSeparators();
+  const inputs = document.querySelectorAll(".currency-input input");
+
+  for (const input of inputs) {
+    const currency = input.dataset.currency;
+    const decimalPlaces = await getDecimalPlaces(currency);
+    const decimalPart = "0".repeat(decimalPlaces);
+    const zeroValue = `0${separators.decimal}${decimalPart}`;
+
+    // Format and set the value
+    input.value = await formatNumberWithCommas(zeroValue, input);
+    input.dataset.previousValue = zeroValue;
+  }
+}
+
+async function findBaseInput() {
+  try {
+    const separators = await getNumberFormatSeparators();
+
+    // Try to find a non-zero input first
+    const nonZeroInput = document.querySelector(
+      `.currency-input input:not([value="0"]):not([value^="0${separators.decimal}"])`
+    );
+    if (nonZeroInput) return nonZeroInput;
+
+    // Fallback to first input with any value
+    const firstWithValue = document.querySelector('.currency-input input:not([value=""])');
+    if (firstWithValue) return firstWithValue;
+
+    // Final fallback to first input
+    return document.querySelector(".currency-input input");
+  } catch (error) {
+    console.error("Error in findBaseInput:", error);
+    return document.querySelector(".currency-input input");
+  }
+}
+
+/*Paste formatting*/
+async function processPastedValue(pastedText, inputField) {
+  const separators = await getNumberFormatSeparators();
+  const decimalPlaces = await getDecimalPlaces(inputField.dataset.currency);
+
+  // Remove all thousand separators (both comma and dot initially)
+  let cleanedValue = pastedText.replace(/[,.]/g, (match) => {
+    // Decimal separator replacement will be handled separately
+    return match;
+  });
+
+  // Now find the rightmost separator that could be a decimal
+  const lastCommaPos = cleanedValue.lastIndexOf(",");
+  const lastDotPos = cleanedValue.lastIndexOf(".");
+
+  // Determine which separator to treat as decimal
+  let decimalSeparatorPos = -1;
+
+  // Check if there's only one separator and exactly three digits after it
+  const separatorsCount = (cleanedValue.match(/[,.]/g) || []).length;
+  const digitsAfterLastSeparator = cleanedValue
+    .substring(Math.max(lastCommaPos, lastDotPos) + 1)
+    .replace(/[^0-9]/g, "").length;
+
+  if (separatorsCount === 1 && digitsAfterLastSeparator === 3) {
+    // Single separator with exactly three digits after it - treat as thousand separator
+    decimalSeparatorPos = -1;
+  } else if (lastCommaPos > lastDotPos) {
+    decimalSeparatorPos = lastCommaPos;
+  } else if (lastDotPos > lastCommaPos) {
+    decimalSeparatorPos = lastDotPos;
+  }
+
+  // Process the number
+  if (decimalSeparatorPos >= 0) {
+    // Decimal separator found - split the number
+    const beforeDecimal = cleanedValue.substring(0, decimalSeparatorPos).replace(/[^0-9]/g, ""); // Remove any remaining non-digits
+    const afterDecimal = cleanedValue.substring(decimalSeparatorPos + 1).replace(/[^0-9]/g, ""); // Remove any remaining non-digits
+
+    // Reconstruct with proper decimal separator
+    cleanedValue = beforeDecimal + separators.decimal + afterDecimal;
+  } else {
+    // No decimal separator found - just clean all non-digits
+    cleanedValue = cleanedValue.replace(/[^0-9]/g, "");
+  }
+
+  // Ensure proper decimal places
+  const parts = cleanedValue.split(separators.decimal);
+  if (parts.length > 1) {
+    // parts[1] = parts[1].slice(0, decimalPlaces); //REVISION REQUIRED: remove decimal limit for pasted values
+    cleanedValue = parts[0] + separators.decimal + parts[1];
+  }
+
+  // Format with thousand separators
+  const formattedValue = await formatNumberWithCommas(cleanedValue, inputField);
+
+  // Calculate cursor position
+  const cursorPos = formattedValue.length;
+
+  return {
+    raw: cleanedValue,
+    formatted: formattedValue,
+    cursorPos: cursorPos,
+  };
+}

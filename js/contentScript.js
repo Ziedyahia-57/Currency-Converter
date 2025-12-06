@@ -237,6 +237,7 @@ const CURRENCY_REPRESENTATIONS = {
     "E.Caribbean Dollar",
     "E.Caribbean Dollars",
   ],
+  XCG: ["XCG", "Caribbean guilder", "Caribbean guilders", "CG"],
   LRD: ["LRD", "L$", "$L", "Liberian Dollar", "Liberian Dollars"],
   SRD: ["SRD", "SR$", "$SR", "Surinamese Dollar", "Surinamese Dollars"],
   GYD: ["GYD", "G$", "$G", "Guyanese Dollar", "Guyanese Dollars"],
@@ -617,6 +618,7 @@ const currencyToCountry = {
   XAG: "xg",
   XAU: "xu",
   XCD: "ag",
+  XCG: "sx",
   XDR: "xr",
   XOF: "bj",
   XPD: "xd",
@@ -948,7 +950,7 @@ function getFlagElement(currencyCode) {
     flagImg.style.borderRadius = "2px";
 
     // Try to load the flag
-    const flagPath = `flag-icons/flags/4x3/${countryCode}.svg`;
+    const flagPath = `icons/flags/${countryCode}.svg`;
     flagImg.src = chrome.runtime.getURL(flagPath);
 
     // Fallback if image fails to load
@@ -1333,6 +1335,19 @@ function tokenize(text) {
   const tokens = [];
   let remaining = upperText;
 
+  // Helper to check word boundary
+  const isBoundaryValid = (match, remainingText) => {
+    const lastChar = match.charAt(match.length - 1);
+    // If the match ends in a letter/digit
+    if (/[A-Z0-9]/.test(lastChar)) {
+      // And the next character is also a letter/digit
+      if (match.length < remainingText.length && /[A-Z0-9]/.test(remainingText.charAt(match.length))) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   while (remaining.length > 0) {
     // Try to match tokens at the beginning
     let matchFound = false;
@@ -1344,6 +1359,9 @@ function tokenize(text) {
     for (const [code, reps] of Object.entries(CURRENCY_REPRESENTATIONS)) {
       for (const rep of reps) {
         if (remaining.startsWith(rep.toUpperCase())) {
+          // Check boundary
+          if (!isBoundaryValid(rep.toUpperCase(), remaining)) continue;
+
           // Check if it's a longer match
           if (!longestMatch || rep.length > longestMatch.length) {
             longestMatch = rep;
@@ -1357,6 +1375,9 @@ function tokenize(text) {
     // 2. Check Symbols
     for (const [symbol, currencies] of Object.entries(CURRENCY_SYMBOLS)) {
       if (remaining.startsWith(symbol.toUpperCase())) {
+        // Check boundary
+        if (!isBoundaryValid(symbol.toUpperCase(), remaining)) continue;
+
         if (!longestMatch || symbol.length > longestMatch.length) {
           longestMatch = symbol;
           longestMatchType = "symbol";
@@ -1371,10 +1392,12 @@ function tokenize(text) {
       const potentialCountry = remaining.substring(0, 2).toLowerCase();
       if (countryToCurrency[potentialCountry]) {
         // This is a 2-letter country code
-        if (!longestMatch || 2 > longestMatch.length) {
-          longestMatch = remaining.substring(0, 2);
-          longestMatchType = "country";
-          longestMatchData = { countryCode: potentialCountry, currencies: countryToCurrency[potentialCountry] };
+        if (isBoundaryValid(remaining.substring(0, 2), remaining)) {
+          if (!longestMatch || 2 > longestMatch.length) {
+            longestMatch = remaining.substring(0, 2);
+            longestMatchType = "country";
+            longestMatchData = { countryCode: potentialCountry, currencies: countryToCurrency[potentialCountry] };
+          }
         }
       }
     }
@@ -1383,10 +1406,12 @@ function tokenize(text) {
     if (remaining.length >= 3) {
       const potentialCC = remaining.substring(0, 3).toUpperCase();
       if (currencyToCountry[potentialCC]) {
-        if (!longestMatch || 3 > longestMatch.length) {
-          longestMatch = remaining.substring(0, 3);
-          longestMatchType = "cc";
-          longestMatchData = { currency: potentialCC };
+        if (isBoundaryValid(remaining.substring(0, 3), remaining)) {
+          if (!longestMatch || 3 > longestMatch.length) {
+            longestMatch = remaining.substring(0, 3);
+            longestMatchType = "cc";
+            longestMatchData = { currency: potentialCC };
+          }
         }
       }
     }
@@ -2349,7 +2374,7 @@ class PriceDetector {
         .sort((a, b) => b.length - a.length);
     
     // Use lookarounds instead of \b to handle non-ASCII characters correctly (e.g. zł)
-    this.currencyRegex = new RegExp(`(?<!\\w)(${escapedCurrencyTerms.join('|')})(?!\\w)`, 'i');
+    this.currencyRegex = new RegExp(`(?<![a-zA-Z])(${escapedCurrencyTerms.join('|')})(?![a-zA-Z])`, 'i');
     this.symbolRegex = createRegex(symbolTerms);
   }
 

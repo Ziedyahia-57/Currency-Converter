@@ -25,7 +25,7 @@
     {
       "matches": ["<all_urls>"],
       "js": ["js/contentScript.js"],
-      "css": ["flag-icons/css/flag-icons.min.css", "css/content.css"],
+      "css": ["css/content.css"],
       "type": "module",
       "run_at": "document_end",
       "all_frames": true,

@@ -163,6 +163,7 @@ export const currencyToCountry = {
   XAG: "xg",
   XAU: "xu",
   XCD: "ag",
+  XCG: "sx", //correct?
   XDR: "xr",
   XOF: "bj",
   XPD: "xd",
