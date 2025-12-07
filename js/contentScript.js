@@ -2676,7 +2676,6 @@ function createPriceWrapper(textNode, text, parent, originalCurrency, possibleCu
     titleText = `\n⚠️ Multi-currency Symbol: ${textNode.textContent} (~${originalCurrency})`;
   }
   wrapper.title = titleText;
-  wrapper.style.cursor = `help`;
 
   // Copy all attributes from parent if it's a simple element
   if (parent.nodeType === Node.ELEMENT_NODE && parent.childNodes.length === 1) {
@@ -2698,7 +2697,8 @@ function createPriceWrapper(textNode, text, parent, originalCurrency, possibleCu
           .join("; ");
 
         if (filteredStyle) {
-          wrapper.setAttribute("style", filteredStyle);
+          // Preserve filtered styles and add our flex styles
+          wrapper.setAttribute("style", `${filteredStyle}; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;`);
         }
         return; // skip rest
       }
@@ -2719,7 +2719,33 @@ function createPriceWrapper(textNode, text, parent, originalCurrency, possibleCu
     });
   }
 
-  wrapper.textContent = text;
+  // Create and append the options container
+  const optionsSpan = document.createElement("span");
+  optionsSpan.id = "options-span";
+  optionsSpan.style.display = "flex";
+  optionsSpan.style.alignItems = "center";
+  optionsSpan.style.flexShrink = "0"; // Prevent container from shrinking
+  
+  const icon = document.createElement("img");
+  icon.id = "options-icon";
+  icon.src = chrome.runtime.getURL("icons/white_icon.svg");
+  icon.alt = "Currency converter options";
+  icon.title = "Change Source Currency";
+  icon.style.display = "block";
+  icon.style.width = "16px";
+  icon.style.height = "16px";
+  icon.style.flexShrink = "0"; // Prevent icon from shrinking
+  
+  optionsSpan.appendChild(icon);
+  wrapper.appendChild(optionsSpan);
+
+  // Add the converted price text
+  const textSpan = document.createElement("span");
+  textSpan.textContent = text;
+  textSpan.style.display = "inline";
+  textSpan.style.flexShrink = "0"; // Prevent text from shrinking
+  
+  wrapper.appendChild(textSpan);
 
   // Replace the text node with our wrapper
   parent.replaceChild(wrapper, textNode);
