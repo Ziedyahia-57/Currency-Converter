@@ -1035,6 +1035,7 @@ body {
   -moz-appearance: textfield;
   text-align: left;
   overflow: hidden;
+  font-size: 12px;
 }
 
 .currency-converter-ex #tax-input::-webkit-outer-spin-button,

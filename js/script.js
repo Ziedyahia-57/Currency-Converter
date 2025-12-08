@@ -1534,13 +1534,124 @@ taxBtn.addEventListener("click", function (e) {
 });
 
 // Handle input validation and submission
-taxInput.addEventListener("input", async function (e) {
-  let value = parseInt(e.target.value);
-  if (value < 0) {
-    e.target.value = 0;
-  } else if (value > 100) {
-    e.target.value = 100;
+// Handle keydown for strict character blocking
+taxInput.addEventListener("keydown", function (e) {
+  // Handle Arrow Up/Down
+  if (e.key === "ArrowUp") {
+    e.preventDefault();
+    let val = parseFloat(taxInput.value);
+    if (isNaN(val)) val = 0;
+    
+    const step = e.shiftKey ? 10 : 1;
+    
+    if (val < 100) {
+      val += step;
+      if (val > 100) val = 100; // Cap at 100
+      
+      // Fix floating point issues and keep decimals if present, otherwise integer
+      val = Math.round(val * 100) / 100;
+      taxInput.value = val;
+      taxInput.dispatchEvent(new Event("input"));
+    }
+    return;
   }
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    let val = parseFloat(taxInput.value);
+    if (isNaN(val)) val = 0;
+    
+    const step = e.shiftKey ? 10 : 1;
+    
+    if (val > -100) {
+      val -= step;
+      if (val < -100) val = -100; // Cap at -100
+      
+      val = Math.round(val * 100) / 100;
+      taxInput.value = val;
+      taxInput.dispatchEvent(new Event("input"));
+    }
+    return;
+  }
+  const allowedKeys = ["Backspace", "Delete", "Tab", "Escape", "Enter", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+  if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) return;
+
+  // Prevent +, e, E
+  if (["+", "e", "E"].includes(e.key)) {
+    e.preventDefault();
+    return;
+  }
+
+  // Handle minus
+  if (e.key === "-") {
+    // Allow only at start and if not already present
+    // Also allow if selecting everything (replacement)
+    const selectionLen = taxInput.selectionEnd - taxInput.selectionStart;
+    const isReplacing = selectionLen === taxInput.value.length;
+    
+    if ((taxInput.selectionStart === 0 && !taxInput.value.includes("-")) || isReplacing) {
+      return;
+    }
+    e.preventDefault();
+    return;
+  }
+
+  // Handle decimal point
+  if (e.key === "." || e.key === ",") {
+    if (taxInput.value.includes(".") || taxInput.value.includes(",")) {
+      e.preventDefault();
+    }
+    return;
+  }
+
+  // Allow only digits
+  if (!/^\d$/.test(e.key)) {
+    e.preventDefault();
+  }
+});
+
+// Handle input sanitization and logic
+taxInput.addEventListener("input", async function (e) {
+  let rawValue = e.target.value;
+  let cursorPosition = e.target.selectionStart;
+
+  // 1. Replace commas with dots
+  rawValue = rawValue.replace(/,/g, ".");
+
+  // 2. Strict sanitization: remove all invalid chars
+  let sanitized = rawValue.replace(/[^0-9.-]/g, "");
+
+  // 3. Fix minus checking (remove from anywhere except start)
+  if (sanitized.slice(1).includes("-")) {
+    sanitized = sanitized.charAt(0) + sanitized.slice(1).replace(/-/g, "");
+  }
+
+  // 4. Fix double dots
+  const parts = sanitized.split(".");
+  if (parts.length > 2) {
+    sanitized = parts[0] + "." + parts.slice(1).join("");
+  }
+
+  // 5. Leading zero fix (01 -> 1, -01 -> -1), but allow "0." and "-0."
+  if (/^0\d/.test(sanitized)) sanitized = sanitized.replace(/^0/, "");
+  if (/^-0\d/.test(sanitized)) sanitized = sanitized.replace(/^-0/, "-");
+
+  // 6. Range check
+  if (sanitized !== "" && sanitized !== "-" && sanitized !== ".") {
+    let numeric = parseFloat(sanitized);
+    if (!isNaN(numeric)) {
+      if (numeric < -100) sanitized = "-100";
+      else if (numeric > 100) sanitized = "100";
+    }
+  }
+
+  // Update value if changed
+  if (e.target.value !== sanitized) {
+    e.target.value = sanitized;
+    // Restore cursor (simple approximation)
+    let newCursor = Math.min(cursorPosition, sanitized.length);
+    e.target.setSelectionRange(newCursor, newCursor);
+  }
+
   // Update conversions
   const baseInput = await findBaseInput();
   if (baseInput && baseInput.dataset) {
@@ -1552,7 +1663,7 @@ taxInput.addEventListener("blur", function (e) {
   // Small delay to allow for other interactions
   setTimeout(() => {
     const value = taxInput.value;
-    if (!value || value == 0) {
+    if (!value || value == 0 || value == "-0" || value == "." || value == "-") {
       collapseTaxButton();
     }
   }, 300);
@@ -1564,7 +1675,7 @@ function collapseTaxButton() {
   isExpanded = false;
 
   // Don't clear if value is > 0
-  if (!value || parseFloat(value) === 0) {
+  if (!value || parseFloat(value) === 0 || value == "-0" || value == "." || value == "-") {
     taxInput.value = "";
     taxBtn.classList.remove("active");
 
@@ -1582,8 +1693,8 @@ taxInput.addEventListener("focus", function (e) {
 });
 document.addEventListener("click", function (e) {
   if (isExpanded && !taxBtn.contains(e.target)) {
-    const value = taxInput.value;
-    if (!value || value < 1 || value > 100) {
+    const value = parseFloat(taxInput.value);
+    if (!value || (value > -1 && value < 1) || value < -100 || value > 100) {
       collapseTaxButton();
     }
   }
@@ -2520,7 +2631,7 @@ async function updateAllCurrencyDecimals() {
       }
 
       // Apply tax if percentage > 0
-      if (taxPercentage > 0) {
+      if (taxPercentage !== 0) {
         convertedValue *= taxMultiplier;
       }
 
@@ -2971,7 +3082,7 @@ async function updateCurrencyValues(changedCurrency) {
     }
 
     // Apply tax if percentage > 0
-    if (taxPercentage > 0) {
+    if (taxPercentage !== 0) {
       convertedValue *= taxMultiplier;
     }
 

@@ -78,7 +78,7 @@ const CURRENCY_REPRESENTATIONS = {
   BTC: ["BTC", "Bitcoin"],
 
   // African currencies
-  EGP: ["EGP", "E£", "Egyptian Pound", "Egyptian Pounds"],
+  EGP: ["EGP", "E£", "LE", "Egyptian Pound", "Egyptian Pounds"],
   NGN: ["NGN", "N", "Nigerian Naira", "Nigerian Nairas"],
   KES: ["KES", "KSh", "Kenyan Shilling", "Kenyan Shillings"],
 
@@ -2743,6 +2743,7 @@ function createPriceWrapper(textNode, text, parent, originalCurrency, possibleCu
   const textSpan = document.createElement("span");
   textSpan.textContent = text;
   textSpan.style.display = "inline";
+  textSpan.style.fontSize = "clamp(10px, 30px)";
   textSpan.style.flexShrink = "0"; // Prevent text from shrinking
   
   wrapper.appendChild(textSpan);
