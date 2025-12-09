@@ -677,12 +677,27 @@ chrome.storage.local.get(
 
 // ===== UTILITY FUNCTIONS =====
 function formatNumber(num, currency) {
-  const fiatDecimals = savedCurrencies.fiatDecimals ?? 2;
+  const fiatDecimalsValue = savedCurrencies.fiatDecimals ?? 2;
   const cryptoDecimals = savedCurrencies.cryptoDecimals ?? 8;
   const [thousandOpt, decimalOpt] = (savedCurrencies.numberFormat ?? "comma-dot").split("-");
 
   const isCrypto = ["BTC", "ETH", "XRP"].includes(currency);
-  const decimals = isCrypto ? cryptoDecimals : fiatDecimals;
+  let decimals;
+
+  if (isCrypto) {
+    decimals = parseInt(cryptoDecimals);
+  } else if (fiatDecimalsValue === "currency-dependant") {
+    try {
+      decimals = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currency,
+      }).resolvedOptions().maximumFractionDigits;
+    } catch (e) {
+      decimals = 2; // Default fallback
+    }
+  } else {
+    decimals = parseInt(fiatDecimalsValue);
+  }
 
   // Determine separators
   const thousandSep = thousandOpt === "comma" ? "," : thousandOpt === "dot" ? "." : thousandOpt === "space" ? " " : "";

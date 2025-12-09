@@ -2570,13 +2570,30 @@ async function getDecimalPlaces(currency) {
 
   try {
     const storage = await chrome.storage.local.get(["fiatDecimals", "cryptoDecimals"]);
-    fiatDecimals = storage.fiatDecimals || 2;
+    fiatDecimals = storage.fiatDecimals || "2";
     cryptoDecimals = storage.cryptoDecimals || 8;
   } catch (error) {
     console.error("Error getting decimal places from storage:", error);
   }
 
-  return currency === "BTC" ? cryptoDecimals : fiatDecimals;
+  if (currency === "BTC") {
+    return parseInt(cryptoDecimals);
+  }
+
+  if (fiatDecimals === "currency-dependant") {
+    try {
+      // Use Intl.NumberFormat to get standard decimals for the currency
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currency,
+      }).resolvedOptions().maximumFractionDigits;
+    } catch (e) {
+      // Fallback for invalid currencies or errors
+      return 2;
+    }
+  }
+
+  return parseInt(fiatDecimals);
 }
 
 async function updateAllCurrencyDecimals() {
