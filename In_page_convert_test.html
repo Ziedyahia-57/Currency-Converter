@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Test Cases - Valid vs Invalid</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #444;
+            margin: 30px 0 15px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        h5 {
+            color: #666;
+            margin: 15px 0 5px 0;
+            font-size: 14px;
+        }
+        .test-case {
+            background-color: #f5f5f5;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .valid {
+            border-left: 4px solid #4CAF50;
+        }
+        .invalid {
+            border-left: 4px solid #f44336;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Currency Test Cases</h1>
+    <h2>Current: 100% (188/188) - (26/11/2025 - 11:10PM)</h2>
+    <p>attempt 2: 28.72% (54/188) - (26/11/2025 - 10:31PM)</p>
+    <p>attempt 1: 2.13% (40/187) - (25/11/2025 9:20PM)</p>
+
+    <div class="section">
+        <h2>Valid Test Cases (Green Border)</h2>
+        
+        <h5>Test 1</h5>
+        <div class="test-case valid">$ 100</div>
+        
+        <h5>Test 2</h5>
+        <div class="test-case valid">100 $</div>
+        
+        <h5>Test 3</h5>
+        <div class="test-case valid">US$ 100</div>
+        
+        <h5>Test 4</h5>
+        <div class="test-case valid">100 US$</div>
+        
+        <h5>Test 5</h5>
+        <div class="test-case valid">100 $ US$</div>
+        
+        <h5>Test 6</h5>
+        <div class="test-case valid">100 US$ $</div>
+        
+        <h5>Test 7</h5>
+        <div class="test-case valid">100 $ USD</div>
+        
+        <h5>Test 8</h5>
+        <div class="test-case valid">100 USD $</div>
+        
+        <h5>Test 9</h5>
+        <div class="test-case valid">$ US$ 100</div>
+        
+        <h5>Test 10</h5>
+        <div class="test-case valid">US$ $ 100</div>
+        
+        <h5>Test 11</h5>
+        <div class="test-case valid">$ USD 100</div>
+        
+        <h5>Test 12</h5>
+        <div class="test-case valid">USD $ 100</div>
+        
+        <h5>Test 13</h5>
+        <div class="test-case valid">$ 100 US$</div>
+        
+        <h5>Test 14</h5>
+        <div class="test-case valid">US$ 100 $</div>
+        
+        <h5>Test 15</h5>
+        <div class="test-case valid">$ 100 USD</div>
+        
+        <h5>Test 16</h5>
+        <div class="test-case valid">USD 100 $</div>
+        
+        <h5>Test 17</h5>
+        <div class="test-case valid">$100</div>
+        
+        <h5>Test 18</h5>
+        <div class="test-case valid">100$</div>
+        
+        <h5>Test 19</h5>
+        <div class="test-case valid">$US$100</div>
+        
+        <h5>Test 20</h5>
+        <div class="test-case valid">100$US$</div>
+        
+        <h5>Test 21</h5>
+        <div class="test-case valid">€ 100</div>
+        
+        <h5>Test 22</h5>
+        <div class="test-case valid">100 EUR</div>
+        
+        <h5>Test 23</h5>
+        <div class="test-case valid">100 Euro</div>
+        
+        <h5>Test 24</h5>
+        <div class="test-case valid">¥ 100</div>
+        
+        <h5>Test 25</h5>
+        <div class="test-case valid">usd 100</div>
+        
+        <h5>Test 26</h5>
+        <div class="test-case valid">100 eur</div>
+        
+        <h5>Test 27</h5>
+        <div class="test-case valid">100 gbp</div>
+        
+        <h5>Test 28</h5>
+        <div class="test-case valid">100 jpy</div>
+        
+        <h5>Test 29</h5>
+        <div class="test-case valid">100 cny</div>
+        
+        <h5>Test 30</h5>
+        <div class="test-case valid">100 aud</div>
+        
+        <h5>Test 31</h5>
+        <div class="test-case valid">100 cad</div>
+        
+        <h5>Test 32</h5>
+        <div class="test-case valid">100 chf</div>
+        
+        <h5>Test 33</h5>
+        <div class="test-case valid">100 hkd</div>
+        
+        <h5>Test 34</h5>
+        <div class="test-case valid">100 nzd</div>
+        
+        <h5>Test 35</h5>
+        <div class="test-case valid">100 sek</div>
+        
+        <h5>Test 36</h5>
+        <div class="test-case valid">100 nok</div>
+        
+        <h5>Test 37</h5>
+        <div class="test-case valid">100 dkk</div>
+        
+        <h5>Test 38</h5>
+        <div class="test-case valid">100 sgd</div>
+        
+        <h5>Test 39</h5>
+        <div class="test-case valid">100 mxn</div>
+        
+        <h5>Test 40</h5>
+        <div class="test-case valid">100 brl</div>
+        
+        <h5>Test 41</h5>
+        <div class="test-case valid">100 inr</div>
+        
+        <h5>Test 42</h5>
+        <div class="test-case valid">100 rub</div>
+        
+        <h5>Test 43</h5>
+        <div class="test-case valid">100 try</div>
+        
+        <h5>Test 44</h5>
+        <div class="test-case valid">100 zar</div>
+        
+        <h5>Test 45</h5>
+        <div class="test-case valid">100 sar</div>
+        
+        <h5>Test 46</h5>
+        <div class="test-case valid">100 aed</div>
+        
+        <h5>Test 47</h5>
+        <div class="test-case valid">100 qar</div>
+        
+        <h5>Test 48</h5>
+        <div class="test-case valid">100 krw</div>
+        
+        <h5>Test 49</h5>
+        <div class="test-case valid">100 thb</div>
+        
+        <h5>Test 50</h5>
+        <div class="test-case valid">100 vnd</div>
+        
+        <h5>Test 51</h5>
+        <div class="test-case valid">100 myr</div>
+        
+        <h5>Test 52</h5>
+        <div class="test-case valid">100 idr</div>
+        
+        <h5>Test 53</h5>
+        <div class="test-case valid">100 php</div>
+        
+        <h5>Test 54</h5>
+        <div class="test-case valid">100 twd</div>
+        
+        <h5>Test 55</h5>
+        <div class="test-case valid">100 btc</div>
+        
+        <h5>Test 56</h5>
+        <div class="test-case valid">100 egp</div>
+        
+        <h5>Test 57</h5>
+        <div class="test-case valid">100 ngn</div>
+        
+        <h5>Test 58</h5>
+        <div class="test-case valid">100 kes</div>
+        
+        <h5>Test 59</h5>
+        <div class="test-case valid">100 pln</div>
+        
+        <h5>Test 60</h5>
+        <div class="test-case valid">100 czk</div>
+        
+        <h5>Test 61</h5>
+        <div class="test-case valid">100 huf</div>
+        
+        <h5>Test 62</h5>
+        <div class="test-case valid">100 ars</div>
+        
+        <h5>Test 63</h5>
+        <div class="test-case valid">100 clp</div>
+        
+        <h5>Test 64</h5>
+        <div class="test-case valid">100 cop</div>
+        
+        <h5>Test 65</h5>
+        <div class="test-case valid">100 pen</div>
+        
+        <h5>Test 66</h5>
+        <div class="test-case valid">100 dzd</div>
+        
+        <h5>Test 67</h5>
+        <div class="test-case valid">100 mad</div>
+        
+        <h5>Test 68</h5>
+        <div class="test-case valid">100 tnd</div>
+        
+        <h5>Test 69</h5>
+        <div class="test-case valid">100 zmw</div>
+        
+        <h5>Test 70</h5>
+        <div class="test-case valid">100 rwf</div>
+        
+        <h5>Test 71</h5>
+        <div class="test-case valid">100 ugx</div>
+        
+        <h5>Test 72</h5>
+        <div class="test-case valid">100 sdg</div>
+        
+        <h5>Test 73</h5>
+        <div class="test-case valid">100 bwp</div>
+        
+        <h5>Test 74</h5>
+        <div class="test-case valid">100 mga</div>
+        
+        <h5>Test 75</h5>
+        <div class="test-case valid">100 mur</div>
+        
+        <h5>Test 76</h5>
+        <div class="test-case valid">100 scr</div>
+        
+        <h5>Test 77</h5>
+        <div class="test-case valid">100 xof</div>
+        
+        <h5>Test 78</h5>
+        <div class="test-case valid">100 xaf</div>
+        
+        <h5>Test 79</h5>
+        <div class="test-case valid">100 lsl</div>
+        
+        <h5>Test 80</h5>
+        <div class="test-case valid">100 szl</div>
+        
+        <h5>Test 81</h5>
+        <div class="test-case valid">100 mwk</div>
+        
+        <h5>Test 82</h5>
+        <div class="test-case valid">100 nad</div>
+        
+        <h5>Test 83</h5>
+        <div class="test-case valid">100 ttd</div>
+        
+        <h5>Test 84</h5>
+        <div class="test-case valid">100 uyu</div>
+        
+        <h5>Test 85</h5>
+        <div class="test-case valid">100 pyg</div>
+        
+        <h5>Test 86</h5>
+        <div class="test-case valid">100 bob</div>
+        
+        <h5>Test 87</h5>
+        <div class="test-case valid">100 vef</div>
+        
+        <h5>Test 88</h5>
+        <div class="test-case valid">100 ves</div>
+        
+        <h5>Test 89</h5>
+        <div class="test-case valid">100 xdr</div>
+        
+        <h5>Test 90</h5>
+        <div class="test-case valid">100 xag</div>
+        
+        <h5>Test 91</h5>
+        <div class="test-case valid">100 xau</div>
+        
+        <h5>Test 92</h5>
+        <div class="test-case valid">100 xpt</div>
+        
+        <h5>Test 93</h5>
+        <div class="test-case valid">100 xpd</div>
+        
+        <h5>Test 94</h5>
+        <div class="test-case valid">100 zwl</div>
+        
+        <h5>Test 95</h5>
+        <div class="test-case valid">100 bbd</div>
+        
+        <h5>Test 96</h5>
+        <div class="test-case valid">100 xcd</div>
+        
+        <h5>Test 97</h5>
+        <div class="test-case valid">100 lrd</div>
+        
+        <h5>Test 98</h5>
+        <div class="test-case valid">100 srd</div>
+        
+        <h5>Test 99</h5>
+        <div class="test-case valid">100 gyd</div>
+        
+        <h5>Test 100</h5>
+        <div class="test-case valid">100 kyd</div>
+        
+        <h5>Test 101</h5>
+        <div class="test-case valid">100 jmd</div>
+        
+        <h5>Test 102</h5>
+        <div class="test-case valid">us$ 100</div>
+        
+        <h5>Test 103</h5>
+        <div class="test-case valid">100 euro</div>
+        
+        <h5>Test 104</h5>
+        <div class="test-case valid">100 pounds</div>
+        
+        <h5>Test 105</h5>
+        <div class="test-case valid">100 yen</div>
+        
+        <h5>Test 106</h5>
+        <div class="test-case valid">100 yuan</div>
+        
+        <h5>Test 107</h5>
+        <div class="test-case valid">100 dollars</div>
+        
+        <h5>Test 108</h5>
+        <div class="test-case valid">100 pesos</div>
+        
+        <h5>Test 109</h5>
+        <div class="test-case valid">100 reais</div>
+        
+        <h5>Test 110</h5>
+        <div class="test-case valid">100 rupees</div>
+        
+        <h5>Test 111</h5>
+        <div class="test-case valid">100 rubles</div>
+        
+        <h5>Test 112</h5>
+        <div class="test-case valid">100 lira</div>
+        
+        <h5>Test 113</h5>
+        <div class="test-case valid">100 rand</div>
+        
+        <h5>Test 114</h5>
+        <div class="test-case valid">100 riyal</div>
+        
+        <h5>Test 115</h5>
+        <div class="test-case valid">100 dirham</div>
+        
+        <h5>Test 116</h5>
+        <div class="test-case valid">100 won</div>
+        
+        <h5>Test 117</h5>
+        <div class="test-case valid">100 baht</div>
+        
+        <h5>Test 118</h5>
+        <div class="test-case valid">100 dong</div>
+        
+        <h5>Test 119</h5>
+        <div class="test-case valid">100 ringgit</div>
+        
+        <h5>Test 120</h5>
+        <div class="test-case valid">100 rupiah</div>
+        
+        <h5>Test 121</h5>
+        <div class="test-case valid">100 franc</div>
+        
+        <h5>Test 122</h5>
+        <div class="test-case valid">100 krona</div>
+        
+        <h5>Test 123</h5>
+        <div class="test-case valid">100 krone</div>
+        
+        <h5>Test 124</h5>
+        <div class="test-case valid">1,234.56 EUR</div>
+        
+        <h5>Test 125</h5>
+        <div class="test-case valid">1.234,56 EUR</div>
+        
+        <h5>Test 126</h5>
+        <div class="test-case valid">1 234.56 EUR</div>
+        
+        <h5>Test 127</h5>
+        <div class="test-case valid">1 234,56 EUR</div>
+        
+        <h5>Test 128</h5>
+        <div class="test-case valid">1,234 EUR</div>
+        
+        <h5>Test 129</h5>
+        <div class="test-case valid">1.234 EUR</div>
+        
+        <h5>Test 130</h5>
+        <div class="test-case valid">1234,56 EUR</div>
+        
+        <h5>Test 131</h5>
+        <div class="test-case valid">1234.56 EUR</div>
+        
+        <h5>Test 132</h5>
+        <div class="test-case valid">1234 EUR</div>
+        
+        <h5>Test 133</h5>
+        <div class="test-case valid">1 234 567.89 EUR</div>
+        
+        <h5>Test 134</h5>
+        <div class="test-case valid">1,234,567.89 EUR</div>
+        
+        <h5>Test 135</h5>
+        <div class="test-case valid">1.234.567,89 EUR</div>
+        
+        <h5>Test 136</h5>
+        <div class="test-case valid">C$ 100 CAD</div>
+        
+        <h5>Test 137</h5>
+        <div class="test-case valid">$ 100 CAD</div>
+
+        <h5>Test 138</h5>
+        <div class="test-case valid">€100 eu</div>
+        
+        <h5>Test 139</h5>
+        <div class="test-case valid">€ 100 eu</div>
+        
+        <h5>Test 140</h5>
+        <div class="test-case valid">eu 100 €</div>
+        
+        <h5>Test 141</h5>
+        <div class="test-case valid">eu100€</div>
+        
+        <h5>Test 142</h5>
+        <div class="test-case valid">100 € eu</div>
+        
+        <h5>Test 143</h5>
+        <div class="test-case valid">100€eu</div>
+        
+        <h5>Test 144</h5>
+        <div class="test-case valid">100 eu €</div>
+        
+        <h5>Test 145</h5>
+        <div class="test-case valid">100eu€</div>
+    
+        <h5>Test 146</h5>
+        <div class="test-case valid">$100 us</div>
+        
+        <h5>Test 147</h5>
+        <div class="test-case valid">$ 100 us</div>
+        
+        <h5>Test 148</h5>
+        <div class="test-case valid">us 100 $</div>
+        
+        <h5>Test 149</h5>
+        <div class="test-case valid">us100$</div>
+        
+        <h5>Test 150</h5>
+        <div class="test-case valid">100 $ us</div>
+        
+        <h5>Test 151</h5>
+        <div class="test-case valid">100$us</div>
+
+        <h5>Test 152</h5>
+        <div class="test-case valid">100 us $</div>
+        
+        <h5>Test 153</h5>
+        <div class="test-case valid">100us$</div>
+
+        <!-- NEW: Tests for price directly connected to currency (no spaces) -->
+        <h5>Test 154</h5>
+        <div class="test-case valid">100USD</div>
+        
+        <h5>Test 155</h5>
+        <div class="test-case valid">USD100</div>
+        
+        <h5>Test 156</h5>
+        <div class="test-case valid">100EUR</div>
+        
+        <h5>Test 157</h5>
+        <div class="test-case valid">EUR100</div>
+        
+        <h5>Test 158</h5>
+        <div class="test-case valid">100GBP</div>
+        
+        <h5>Test 159</h5>
+        <div class="test-case valid">GBP100</div>
+        
+        <h5>Test 160</h5>
+        <div class="test-case valid">100JPY</div>
+        
+        <h5>Test 161</h5>
+        <div class="test-case valid">JPY100</div>
+        
+        <h5>Test 162</h5>
+        <div class="test-case valid">100CAD</div>
+        
+        <h5>Test 163</h5>
+        <div class="test-case valid">CAD100</div>
+        
+        <h5>Test 164</h5>
+        <div class="test-case valid">100AUD</div>
+        
+        <h5>Test 165</h5>
+        <div class="test-case valid">AUD100</div>
+        
+        <h5>Test 166</h5>
+        <div class="test-case valid">100CHF</div>
+        
+        <h5>Test 167</h5>
+        <div class="test-case valid">CHF100</div>
+        
+        <h5>Test 168</h5>
+        <div class="test-case valid">100CNY</div>
+        
+        <h5>Test 169</h5>
+        <div class="test-case valid">CNY100</div>
+        
+        <h5>Test 170</h5>
+        <div class="test-case valid">100usd</div>
+        
+        <h5>Test 171</h5>
+        <div class="test-case valid">usd100</div>
+        
+        <h5>Test 172</h5>
+        <div class="test-case valid">100eur</div>
+        
+        <h5>Test 173</h5>
+        <div class="test-case valid">eur100</div>
+        
+        <h5>Test 174</h5>
+        <div class="test-case valid">100gbp</div>
+        
+        <h5>Test 175</h5>
+        <div class="test-case valid">gbp100</div>
+        
+        <h5>Test 176</h5>
+        <div class="test-case valid">100jpy</div>
+        
+        <h5>Test 177</h5>
+        <div class="test-case valid">jpy100</div>
+
+        <h5>Test 178</h5>
+        <div class="test-case valid">100$USD</div>
+        <div class="test-case valid">$USD100</div>
+        <div class="test-case valid">100$AUD</div>
+        
+        <h5>Test 179</h5>
+        <div class="test-case valid">USD$100</div>
+        
+        <h5>Test 180</h5>
+        <div class="test-case valid">$100USD</div>
+        
+        <h5>Test 181</h5>
+        <div class="test-case valid">USD100$</div>
+        
+        <h5>Test 182</h5>
+        <div class="test-case valid">100€EUR</div>
+        
+        <h5>Test 183</h5>
+        <div class="test-case valid">EUR100€</div>
+        
+        <h5>Test 184</h5>
+        <div class="test-case valid">€100EUR</div>
+        
+        <h5>Test 185</h5>
+        <div class="test-case valid">EUR100€</div>
+        
+        <h5>Test 186</h5>
+        <div class="test-case valid">1.234EUR</div>
+        
+        <h5>Test 187</h5>
+        <div class="test-case valid">EUR1.234</div>
+        
+        <h5>Test 188</h5>
+        <div class="test-case valid">1,234EUR</div>
+        
+        <h5>Test 189</h5>
+        <div class="test-case valid">EUR1,234</div>
+        
+        <h5>Test 190</h5>
+        <div class="test-case valid">100.50USD</div>
+        
+        <h5>Test 191</h5>
+        <div class="test-case valid">USD100.50</div>
+        
+        <h5>Test 192</h5>
+        <div class="test-case valid">100,50EUR</div>
+        
+        <h5>Test 193</h5>
+        <div class="test-case valid">EUR100,50</div>
+    </div>
+
+    <div class="section">
+        <h2>Invalid Test Cases (Red Border)</h2>
+        
+        <h5>Test 194</h5>
+        <div class="test-case invalid">,1234 EUR</div>
+        
+        <h5>Test 195</h5>
+        <div class="test-case invalid">.1234 EUR</div>
+        
+        <h5>Test 196</h5>
+        <div class="test-case invalid">1234, EUR</div>
+        
+        <h5>Test 197</h5>
+        <div class="test-case invalid">1234. EUR</div>
+        
+        <h5>Test 198</h5>
+        <div class="test-case invalid">1,,234 EUR</div>
+        
+        <h5>Test 199</h5>
+        <div class="test-case invalid">1..234 EUR</div>
+        
+        <h5>Test 200</h5>
+        <div class="test-case invalid">1, .234 EUR</div>
+        
+        <h5>Test 201</h5>
+        <div class="test-case invalid">1. ,234 EUR</div>
+        
+        <h5>Test 202</h5>
+        <div class="test-case invalid">1.234.56 EUR</div>
+        
+        <h5>Test 203</h5>
+        <div class="test-case invalid">1,234,56 EUR</div>
+        
+        <h5>Test 204</h5>
+        <div class="test-case invalid">1,234.56.78 EUR</div>
+        
+        <h5>Test 205</h5>
+        <div class="test-case invalid">1.234,56,78 EUR</div>
+        
+        <h5>Test 206</h5>
+        <div class="test-case invalid">12,34.56 EUR</div>
+        
+        <h5>Test 207</h5>
+        <div class="test-case invalid">12.34,56 EUR</div>
+        
+        <h5>Test 208</h5>
+        <div class="test-case invalid">123,4.56 EUR</div>
+        
+        <h5>Test 209</h5>
+        <div class="test-case invalid">123.4,56 EUR</div>
+        
+        <h5>Test 210</h5>
+        <div class="test-case invalid">100</div>
+        
+        <h5>Test 211</h5>
+        <div class="test-case invalid">$ $ 100</div>
+        
+        <h5>Test 212</h5>
+        <div class="test-case invalid">100 $ $</div>
+        
+        <h5>Test 213</h5>
+        <div class="test-case invalid">USD USD 100</div>
+        
+        <h5>Test 214</h5>
+        <div class="test-case invalid">abc 100</div>
+        
+        <h5>Test 215</h5>
+        <div class="test-case invalid">$ 100 abc</div>
+        
+        <h5>Test 216</h5>
+        <div class="test-case invalid">100 200</div>
+        
+        <h5>Test 217</h5>
+        <div class="test-case invalid">$ 100 EUR</div>
+        
+        <h5>Test 218</h5>
+        <div class="test-case invalid">€ 100 USD</div>
+        
+        <h5>Test 219</h5>
+        <div class="test-case invalid">US$ 100 EUR</div>
+        
+        <h5>Test 220</h5>
+        <div class="test-case invalid">US$ 100 CAD</div>
+        
+        <h5>Test 221</h5>
+        <div class="test-case invalid">100 eu</div>
+        
+        <h5>Test 222</h5>
+        <div class="test-case invalid">100eu</div>
+        
+        <h5>Test 223</h5>
+        <div class="test-case invalid">eu 100</div>
+        
+        <h5>Test 224</h5>
+        <div class="test-case invalid">eu100</div>
+        
+        <h5>Test 225</h5>
+        <div class="test-case invalid">100 us</div>
+        
+        <h5>Test 226</h5>
+        <div class="test-case invalid">100us</div>
+        
+        <h5>Test 227</h5>
+        <div class="test-case invalid">us 100</div>
+        
+        <h5>Test 228</h5>
+        <div class="test-case invalid">us100</div>
+
+        <!-- NEW: False positives for connected price/currency patterns -->
+        <h5>Test 229</h5>
+        <div class="test-case invalid">100ABC</div>
+        
+        <h5>Test 230</h5>
+        <div class="test-case invalid">ABC100</div>
+        
+        <h5>Test 231</h5>
+        <div class="test-case invalid">100XYZ</div>
+        
+        <h5>Test 232</h5>
+        <div class="test-case invalid">XYZ100</div>
+        
+        <h5>Test 233</h5>
+        <div class="test-case invalid">123TEST</div>
+        
+        <h5>Test 234</h5>
+        <div class="test-case invalid">TEST123</div>
+        
+        <h5>Test 235</h5>
+        <div class="test-case invalid">100USD100</div>
+        
+        <h5>Test 236</h5>
+        <div class="test-case invalid">USD100EUR</div>
+        
+        <h5>Test 237</h5>
+        <div class="test-case invalid">100USDEUR</div>
+        
+        <h5>Test 238</h5>
+        <div class="test-case invalid">USD100USD</div>
+    </div>
+</body>
+</html>
