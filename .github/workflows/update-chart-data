@@ -1,0 +1,166 @@
+name: Process Monthly Exchange Rate Averages
+on:
+  schedule:
+    # Run at 1:01 AM GMT daily (after your data fetch job)
+    - cron: '1 1 * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Your-Existing-Data-Fetch-Workflow"]  # Trigger after your data fetch
+    types:
+      - completed
+
+jobs:
+  process-monthly-averages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Verify data.json exists
+        id: check-data
+        run: |
+          if [ -f "data.json" ]; then
+            echo "data.json found"
+            # Check if it has valid data
+            if jq empty data.json 2>/dev/null; then
+              echo "data_valid=true" >> $GITHUB_OUTPUT
+              echo "timestamp=$(jq -r '.timestamp // empty' data.json)" >> $GITHUB_OUTPUT
+            else
+              echo "data_valid=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "data_valid=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Process monthly averages
+        id: process
+        if: steps.check-data.outputs.data_valid == 'true'
+        run: |
+          echo "Processing monthly averages from data.json..."
+          echo "API timestamp: ${{ steps.check-data.outputs.timestamp }}"
+          
+          # Run the processor
+          node monthly-data-processor.js
+          
+          # Check the results
+          if [ -f "processed-data.json" ]; then
+            echo "processed_data_file=processed-data.json" >> $GITHUB_OUTPUT
+            echo "currencies_processed=$(jq '.monthData | length' processed-data.json)" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Create summary markdown
+        if: steps.process.outputs.processed_data_file
+        run: |
+          echo "Creating summary markdown..."
+          
+          node -e "
+          const fs = require('fs');
+          
+          // Read processed data
+          const processedData = JSON.parse(fs.readFileSync('processed-data.json', 'utf8'));
+          
+          // Read input data for latest rates
+          const inputData = JSON.parse(fs.readFileSync('data.json', 'utf8'));
+          
+          const today = new Date();
+          const dateStr = today.toISOString().split('T')[0];
+          
+          // Create summary
+          let markdown = '# Monthly Exchange Rate Averages\\n\\n';
+          markdown += \`**Last Updated:** \${new Date(processedData.lastUpdated).toLocaleString('en-US', {timeZone: 'UTC'})} UTC\\n\`;
+          markdown += \`**Processing Date:** \${dateStr}\\n\`;
+          markdown += \`**Currencies Tracked:** \${Object.keys(processedData.monthData).length}\\n\\n\`;
+          
+          // Current month summary
+          markdown += '## Current Month Progress\\n\\n';
+          markdown += '| Currency | Today\\'s Rate | Month Avg | Days Collected | Status |\\n';
+          markdown += '|----------|---------------|-----------|----------------|--------|\\n';
+          
+          const majorCurrencies = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CNY', 'CHF', 'INR', 'BRL', 'MXN'];
+          
+          majorCurrencies.forEach(currency => {
+            const monthData = processedData.monthData[currency] || [];
+            const chartData = processedData.chartData[currency] || [];
+            const latestMonth = chartData.length > 0 ? chartData[chartData.length - 1] : null;
+            
+            const todayRate = inputData.rates[currency] || 'N/A';
+            const monthAvg = latestMonth ? latestMonth.average.toFixed(6) : 'N/A';
+            const days = monthData.length;
+            const expectedDays = today.getDate(); // Days so far this month
+            const status = days === expectedDays ? '✅ Up to date' : \`⏳ \${days}/\${expectedDays}\`;
+            
+            markdown += \`| \${currency} | \${todayRate} | \${monthAvg} | \${days} | \${status} |\\n\`;
+          });
+          
+          // Monthly history
+          markdown += '\\n## Monthly Averages History\\n\\n';
+          markdown += '| Month | EUR | GBP | JPY | CAD |\\n';
+          markdown += '|-------|-----|-----|-----|-----|\\n';
+          
+          // Get last 6 months
+          const currencies = ['EUR', 'GBP', 'JPY', 'CAD'];
+          const allMonths = new Set();
+          
+          currencies.forEach(c => {
+            (processedData.chartData[c] || []).forEach(item => {
+              allMonths.add(item.month);
+            });
+          });
+          
+          const sortedMonths = Array.from(allMonths).sort().reverse().slice(0, 6);
+          
+          sortedMonths.forEach(month => {
+            markdown += \`| \${month} \`;
+            
+            currencies.forEach(currency => {
+              const monthData = (processedData.chartData[currency] || []).find(m => m.month === month);
+              markdown += \`| \${monthData ? monthData.average.toFixed(6) : '-'} \`;
+            });
+            
+            markdown += '|\\n';
+          });
+          
+          markdown += '\\n---\\n';
+          markdown += '*Data processed daily at 1:01 AM GMT*\\n';
+          markdown += '*Source: exchangerate.host*\\n';
+          
+          fs.writeFileSync('MONTHLY_AVERAGES.md', markdown);
+          console.log('Summary markdown created');
+          "
+          
+      - name: Commit processed data
+        if: steps.process.outputs.processed_data_file
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Check what files changed
+          git status
+          
+          # Add processed files
+          git add processed-data.json MONTHLY_AVERAGES.md
+          
+          # Check if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update monthly averages for $(date +'%Y-%m-%d') [skip ci]"
+            git push
+            echo "Processed data committed"
+          else
+            echo "No changes to commit"
+          fi
+          
+      - name: Handle missing data
+        if: steps.check-data.outputs.data_valid != 'true'
+        run: |
+          echo "Warning: data.json not found or invalid"
+          echo "Skipping monthly averages processing"
+          exit 0
