@@ -177,10 +177,10 @@ body {
 .currency-converter-ex .add-currency {
   text-align: center;
   display: flex;
-  padding: 4px;
+  padding: 4px 0;
   fill: white;
   margin: auto;
-  width: 268px;
+  width: 270px;
 }
 .currency-converter-ex .add-currency button {
   box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
@@ -210,6 +210,7 @@ body {
 .currency-converter-ex #add-currency-btn,
 .currency-converter-ex #support-dev-btn,
 .currency-converter-ex #tax-btn,
+.currency-converter-ex #chart-btn,
 .currency-converter-ex #dark-mode-btn {
   display: flex;
   cursor: pointer;
@@ -218,7 +219,7 @@ body {
   border: transparent solid 1px;
   border-radius: 50%;
   justify-content: center;
-  margin-left: 5px;
+  margin-left: 4px;
   align-self: center;
   background: var(--gray);
   fill: var(--font-color);
@@ -366,7 +367,7 @@ body {
 
 .currency-converter-ex .convert-select {
   /* font-weight: 400; */
-  font-size: 12px;
+  font-size: 11.5px;
   padding: 4px;
 }
 
@@ -781,7 +782,8 @@ body {
 
 .currency-converter-ex .settings-tab,
 .currency-converter-ex .whitelist-tab,
-.currency-converter-ex .blacklist-tab {
+.currency-converter-ex .blacklist-tab,
+.currency-converter-ex .charts-tab {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* This enables the smooth transition */
   position: absolute;
   z-index: 3;
@@ -804,6 +806,7 @@ body {
 }
 
 .currency-converter-ex button#restore,
+.currency-converter-ex button.chart-btn,
 .currency-converter-ex button.remove-link-btn,
 .currency-converter-ex button#edit-blacklist-btn,
 .currency-converter-ex button#edit-whitelist-btn,
@@ -855,6 +858,7 @@ body {
 .currency-converter-ex button#edit-blacklist-btn:hover,
 .currency-converter-ex button#edit-whitelist-btn:hover,
 .currency-converter-ex button#edit-link-btn:hover,
+.currency-converter-ex button.chart-btn:hover,
 .currency-converter-ex button#add-whitelist-link-btn:hover,
 .currency-converter-ex button#add-blacklist-link-btn:hover {
   cursor: pointer;
@@ -1117,4 +1121,116 @@ body {
   align-self: center;
   margin-right: 4px;
   border-radius: 4px;
+}
+
+
+
+
+/*chart*/
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+  justify-content: center;
+}
+
+.chart-container {
+    place-items: center;
+}
+
+.chart-zone{
+    box-shadow: rgba(255, 255, 255, 0.06) 0px 1px 2px inset, rgba(0, 0, 0, 0.19) 0px 1px 2px, rgba(0, 0, 0, 0.082) 0px 2px 4px;
+    background: var(--settings-content);
+    margin: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    place-items: center;
+}
+
+    .calendar-label {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    #testDate {
+      background: #1f2937;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .chart-container {
+      margin-top: 10px;
+      position: relative;
+    }
+
+    .info {
+      font-size: 11px;
+      color: var(--font-color2);
+      text-align: center;
+      justify-self: left;
+    }
+
+    .trend-indicator {
+      padding: 2px 6px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-left: 6px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .trend-up {
+      background: #03ffc02b;
+      color: var(--primary-color);
+    }
+    
+    .trend-down {
+      background: hsla(0, 100%, 51%, 0.169);
+      color: #ef4444;
+    }
+
+    .trend-neutral {
+      background-color: rgba(156, 163, 175, 0.2);
+      color: #9ca3af;
+    }
+
+    button.chart-btn {
+    margin: 0 !important;
+}
+    button.chart-btn.active {
+    background: #03ffc02b;
+  color: var(--primary-color);
+}
+button.chart-btn.btn1 {
+    border-radius: 8px 0 0 8px;
+}
+button.chart-btn.btn2 {
+    border-radius: 0;
+}
+button.chart-btn.btn3 {
+    border-radius: 0 8px 8px 0;
+}
+
+.calendar-container{
+  justify-self: center;
+}
+.hide {
+    opacity: 0;
+}
+#valueText{
+  font-size: 24px;
+  justify-self: left;
+  color: var(--font-color2);
+}
+
+.currency-converter-ex #chart-btn{
+  transition: opacity 0.15s ease;
+}
+
+.warning{
+      border-bottom: 1px dashed;
+      margin-left: 15px;
 }

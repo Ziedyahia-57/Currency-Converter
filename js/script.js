@@ -9,14 +9,17 @@ const currencyList = document.getElementById("currency-list");
 const hideCurrencyTab = document.getElementById("hide-currency-tab");
 const hideDonationTab = document.getElementById("hide-donation-tab");
 const hideSettingsTab = document.getElementById("hide-settings-tab");
+const hideChartsTab = document.getElementById("hide-charts-tab");
 const hideWhitelistTab = document.getElementById("hide-whitelist-tab");
 const hideBlacklistTab = document.getElementById("hide-blacklist-tab");
 const donationTab = document.getElementById("donation-tab");
 const settingsTab = document.getElementById("settings-tab");
+const chartsTab = document.getElementById("charts-tab");
 const whitelistTab = document.getElementById("whitelist-tab");
 const blacklistTab = document.getElementById("blacklist-tab");
 const supportDevBtn = document.getElementById("support-dev-btn");
 const settingsBtn = document.getElementById("settings-btn");
+const chartBtn = document.getElementById("chart-btn");
 const editWhitelistBtn = document.getElementById("edit-whitelist-btn");
 const editBlacklistBtn = document.getElementById("edit-blacklist-btn");
 const whitelistStatus = document.getElementById("whitelist-status");
@@ -983,6 +986,24 @@ hideSettingsTab.addEventListener("click", () => {
 });
 
 //⚪------------------------------------------------------------*/
+//⚪                         CHARTS TAB                         */
+//⚪------------------------------------------------------------*/
+function openChartsTab() {
+  chartsTab.classList.add("show");
+  chartsTab.classList.remove("hidden");
+}
+chartBtn.addEventListener("click", () => {
+  openChartsTab();
+});
+function closeChartsTab() {
+  chartsTab.classList.remove("show");
+  chartsTab.classList.add("hidden");
+}
+hideChartsTab.addEventListener("click", () => {
+  closeChartsTab();
+});
+
+//⚪------------------------------------------------------------*/
 //⚪                       WHITELIST TAB                        */
 //⚪------------------------------------------------------------*/
 const addLinkBtn = document.getElementById("add-whitelist-link-btn");
@@ -1525,6 +1546,11 @@ taxBtn.addEventListener("click", function (e) {
     // Expand the button
     taxBtn.classList.add("expanded");
     isExpanded = true;
+    // Hide charts button when tax button is expanded
+    chartBtn.classList.add("hide");
+    setTimeout(() => {
+    chartBtn.style.display = "none";
+    }, 50);
     // Focus on input after transition
     setTimeout(() => {
       taxInput.focus();
@@ -1610,32 +1636,82 @@ taxInput.addEventListener("keydown", function (e) {
 });
 
 // Handle input sanitization and logic
-taxInput.addEventListener("input", async function (e) {
+// taxInput.addEventListener("input", async function (e) {
+//   let rawValue = e.target.value;
+//   let cursorPosition = e.target.selectionStart;
+
+//   // 1. Replace commas with dots
+//   rawValue = rawValue.replace(/,/g, ".");
+
+//   // 2. Strict sanitization: remove all invalid chars
+//   let sanitized = rawValue.replace(/[^0-9.-]/g, "");
+
+//   // 3. Fix minus checking (remove from anywhere except start)
+//   if (sanitized.slice(1).includes("-")) {
+//     sanitized = sanitized.charAt(0) + sanitized.slice(1).replace(/-/g, "");
+//   }
+
+//   // 4. Fix double dots
+//   const parts = sanitized.split(".");
+//   if (parts.length > 2) {
+//     sanitized = parts[0] + "." + parts.slice(1).join("");
+//   }
+
+//   // 5. Leading zero fix (01 -> 1, -01 -> -1), but allow "0." and "-0."
+//   if (/^0\d/.test(sanitized)) sanitized = sanitized.replace(/^0/, "");
+//   if (/^-0\d/.test(sanitized)) sanitized = sanitized.replace(/^-0/, "-");
+
+//   // 6. Range check
+//   if (sanitized !== "" && sanitized !== "-" && sanitized !== ".") {
+//     let numeric = parseFloat(sanitized);
+//     if (!isNaN(numeric)) {
+//       if (numeric < -100) sanitized = "-100";
+//       else if (numeric > 100) sanitized = "100";
+//     }
+//   }
+
+//   // Update value if changed
+//   if (e.target.value !== sanitized) {
+//     e.target.value = sanitized;
+//     // Restore cursor (simple approximation)
+//     let newCursor = Math.min(cursorPosition, sanitized.length);
+//     e.target.setSelectionRange(newCursor, newCursor);
+//   }
+
+//   // Update conversions
+//   const baseInput = await findBaseInput();
+//   if (baseInput && baseInput.dataset) {
+//     updateCurrencyValues(baseInput.dataset.currency);
+//   }
+// });
+
+taxInput.addEventListener("input", async (e) => {
+  // 1. SANITIZATION PHASE
   let rawValue = e.target.value;
   let cursorPosition = e.target.selectionStart;
 
-  // 1. Replace commas with dots
+  // Replace commas with dots
   rawValue = rawValue.replace(/,/g, ".");
 
-  // 2. Strict sanitization: remove all invalid chars
+  // Strict sanitization: remove all invalid chars
   let sanitized = rawValue.replace(/[^0-9.-]/g, "");
 
-  // 3. Fix minus checking (remove from anywhere except start)
+  // Fix minus checking (remove from anywhere except start)
   if (sanitized.slice(1).includes("-")) {
     sanitized = sanitized.charAt(0) + sanitized.slice(1).replace(/-/g, "");
   }
 
-  // 4. Fix double dots
+  // Fix double dots
   const parts = sanitized.split(".");
   if (parts.length > 2) {
     sanitized = parts[0] + "." + parts.slice(1).join("");
   }
 
-  // 5. Leading zero fix (01 -> 1, -01 -> -1), but allow "0." and "-0."
+  // Leading zero fix (01 -> 1, -01 -> -1), but allow "0." and "-0."
   if (/^0\d/.test(sanitized)) sanitized = sanitized.replace(/^0/, "");
   if (/^-0\d/.test(sanitized)) sanitized = sanitized.replace(/^-0/, "-");
 
-  // 6. Range check
+  // Range check
   if (sanitized !== "" && sanitized !== "-" && sanitized !== ".") {
     let numeric = parseFloat(sanitized);
     if (!isNaN(numeric)) {
@@ -1652,11 +1728,83 @@ taxInput.addEventListener("input", async function (e) {
     e.target.setSelectionRange(newCursor, newCursor);
   }
 
-  // Update conversions
-  const baseInput = await findBaseInput();
-  if (baseInput && baseInput.dataset) {
-    updateCurrencyValues(baseInput.dataset.currency);
+  // 2. CONVERSION PHASE
+  // Get the current tax percentage (use sanitized value)
+  const taxPercentage = parseFloat(sanitized) || 0;
+  
+  // Find the base input that user manually typed into
+  let baseInput;
+  if (lastUserInput) {
+    baseInput = lastUserInput;
+  } else {
+    // Find the first input with a non-empty value that wasn't auto-filled
+    const allInputs = document.querySelectorAll(".currency-input input");
+    for (const input of allInputs) {
+      if (input.value.trim() !== "" && !input.dataset.autoCalculated) {
+        baseInput = input;
+        break;
+      }
+    }
   }
+  
+  if (!baseInput) return;
+  
+  const baseCurrency = baseInput.dataset.currency;
+  
+  // Get the raw value from the base input
+  const separators = getNumberFormatSeparators();
+  const rawBaseValue = baseInput.value
+    .replace(new RegExp(`[${separators.thousand}]`, "g"), "")
+    .replace(separators.decimal, ".");
+  const baseValue = parseFloat(rawBaseValue) || 0;
+  
+  // Store original value for the base input
+  if (taxPercentage !== 0) {
+    baseInput.dataset.originalValue = baseValue.toString();
+  }
+  
+  // Update all currencies with tax applied to all except the base input
+  document.querySelectorAll(".currency-input input").forEach(async (input) => {
+    const targetCurrency = input.dataset.currency;
+    
+    // Skip if this is the base input (user's input)
+    if (targetCurrency === baseCurrency) {
+      return;
+    }
+    
+    // Skip if user manually typed into this input recently
+    if (input === lastUserInput && input !== baseInput) {
+      return;
+    }
+    
+    const decimalPlaces = await getDecimalPlaces(targetCurrency);
+    
+    // Calculate the conversion from base currency to target currency
+    let convertedValue;
+    if (baseCurrency === "USD") {
+      convertedValue = baseValue * (exchangeRates[targetCurrency] || 1);
+    } else if (targetCurrency === "USD") {
+      convertedValue = baseValue / (exchangeRates[baseCurrency] || 1);
+    } else {
+      const baseRate = exchangeRates[baseCurrency] || 1;
+      const targetRate = exchangeRates[targetCurrency] || 1;
+      convertedValue = baseValue * (targetRate / baseRate);
+    }
+    
+    // Store the original value (without tax)
+    input.dataset.originalValue = convertedValue.toString();
+    input.dataset.autoCalculated = "true"; // Mark as auto-calculated
+    
+    // Apply tax if tax percentage is not zero
+    if (taxPercentage !== 0) {
+      const taxMultiplier = 1 + taxPercentage / 100;
+      convertedValue *= taxMultiplier;
+    }
+    
+    // Format and display
+    const formattedValue = convertedValue.toFixed(decimalPlaces).replace(".", separators.decimal);
+    input.value = await formatNumberWithCommas(formattedValue, input);
+  });
 });
 
 taxInput.addEventListener("blur", function (e) {
@@ -1673,6 +1821,10 @@ function collapseTaxButton() {
   const value = taxInput.value;
   taxBtn.classList.remove("expanded");
   isExpanded = false;
+  chartBtn.classList.remove("hide");
+  setTimeout(() => {
+    chartBtn.style.display = "flex";
+  }, 150);
 
   // Don't clear if value is > 0
   if (!value || parseFloat(value) === 0 || value == "-0" || value == "." || value == "-") {
@@ -1733,6 +1885,12 @@ document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
       closeDonationTab();
+    }
+  }
+  if (!chartsTab.classList.contains("hidden")) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeChartsTab();
     }
   }
   if (!settingsTab.classList.contains("hidden") && whitelistTab.classList.contains("hidden") && blacklistTab.classList.contains("hidden")) {
