@@ -2,7 +2,7 @@ name: Update Currency Rates
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # Daily at 12:00 UTC
+    - cron: '0 23 * * *'  # Daily at 23:00 UTC
   workflow_dispatch:
 
 permissions:
