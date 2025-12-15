@@ -26,5 +26,5 @@
 | 2025-12 | 0.850890 | 0.746840 | 155.016496 | 1.376360 |
 
 ---
-*Data processed daily at 1:01 AM GMT*
+*Data processed daily at 00:30 AM GMT*
 *Source: exchangerate.host*
