@@ -113,7 +113,7 @@ body {
 }
 
 /* Currency Input */
-.currency-converter-ex .currency-input{
+.currency-converter-ex .currency-input {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -835,7 +835,7 @@ body {
   margin: 0 0 0 4px;
   align-self: center;
 }
-.currency-converter-ex button.remove-link-btn{
+.currency-converter-ex button.remove-link-btn {
   line-height: 1px;
   width: 26px;
 }
@@ -893,7 +893,8 @@ body {
   margin: 0 0 0 2px;
 }
 
-.currency-converter-ex .content, .currency-converter-ex .link-content {
+.currency-converter-ex .content,
+.currency-converter-ex .link-content {
   overflow-y: overlay;
   scrollbar-color: #6e6e6e73 transparent;
   scrollbar-width: thin;
@@ -910,8 +911,7 @@ body {
   height: 325px;
 }
 
-.currency-converter-ex .currency-input
- {
+.currency-converter-ex .currency-input {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   /* overflow: hidden; */
@@ -1076,55 +1076,52 @@ body {
   background: hsl(180 0% 27% / 1) !important;
 }
 .added-link {
-     width: -webkit-fill-available;   
+  width: -webkit-fill-available;
 }
 .add-whitelist-link,
 .add-blacklist-link {
-    position: absolute;
-    bottom: 0;
-    width: -webkit-fill-available;
-    padding: 8px;
-    background: var(--dark-bg);
-    display: flex;
+  position: absolute;
+  bottom: 0;
+  width: -webkit-fill-available;
+  padding: 8px;
+  background: var(--dark-bg);
+  display: flex;
 }
 .currency-converter-ex .add-whitelist-link input,
 .currency-converter-ex .add-blacklist-link input {
   align-self: center;
-    width: -webkit-fill-available;
-    height: 26px;
-    border: transparent solid 1px;
-    border-radius: 8px;
-    background: var(--gray);
-    box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
-    padding: 0 8px;
-    color: var(--font-color2);
+  width: -webkit-fill-available;
+  height: 26px;
+  border: transparent solid 1px;
+  border-radius: 8px;
+  background: var(--gray);
+  box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
+  padding: 0 8px;
+  color: var(--font-color2);
 }
 
 .disabled-btn {
-    color: var(--font-color) !important;
-    background: var(--fill-color) !important;
+  color: var(--font-color) !important;
+  background: var(--fill-color) !important;
 }
 
 #blacklist-status,
 #whitelist-status {
-    color: var(--primary-color);
-    font-weight: 500;
-    padding-left: 4px;
-    opacity: 0;
+  color: var(--primary-color);
+  font-weight: 500;
+  padding-left: 4px;
+  opacity: 0;
 }
-.selected{
+.selected {
   opacity: 1 !important;
 }
-.favicon{
+.favicon {
   width: 16px;
   height: 16px;
   align-self: center;
   margin-right: 4px;
   border-radius: 4px;
 }
-
-
-
 
 /*chart*/
 .controls {
@@ -1135,102 +1132,103 @@ body {
 }
 
 .chart-container {
-    place-items: center;
+  place-items: center;
 }
 
-.chart-zone{
-    box-shadow: rgba(255, 255, 255, 0.06) 0px 1px 2px inset, rgba(0, 0, 0, 0.19) 0px 1px 2px, rgba(0, 0, 0, 0.082) 0px 2px 4px;
-    background: var(--settings-content);
-    margin: 8px;
-    padding: 8px;
-    border-radius: 4px;
-    place-items: center;
+.chart-zone {
+  box-shadow: rgba(255, 255, 255, 0.06) 0px 1px 2px inset, rgba(0, 0, 0, 0.19) 0px 1px 2px,
+    rgba(0, 0, 0, 0.082) 0px 2px 4px;
+  background: var(--settings-content);
+  margin: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  place-items: center;
 }
 
-    .calendar-label {
-      font-size: 12px;
-      color: #94a3b8;
-    }
-
-    #testDate {
-      background: #1f2937;
-      color: #e5e7eb;
-      border: 1px solid #334155;
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 12px;
-    }
-
-    .chart-container {
-      margin-top: 10px;
-      position: relative;
-    }
-
-    .info {
-      font-size: 11px;
-      color: var(--font-color2);
-      text-align: center;
-      justify-self: left;
-    }
-
-    .trend-indicator {
-      padding: 2px 6px;
-      border-radius: 3px;
-      display: inline-block;
-      margin-left: 6px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    .trend-up {
-      background: #03ffc02b;
-      color: var(--primary-color);
-    }
-    
-    .trend-down {
-      background: hsla(0, 100%, 51%, 0.169);
-      color: #ef4444;
-    }
-
-    .trend-neutral {
-      background-color: rgba(156, 163, 175, 0.2);
-      color: #9ca3af;
-    }
-
-    button.chart-btn {
-    margin: 0 !important;
+.calendar-label {
+  font-size: 12px;
+  color: #94a3b8;
 }
-    button.chart-btn.active {
-    background: #03ffc02b;
+
+#testDate {
+  background: #1f2937;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.chart-container {
+  margin-top: 10px;
+  position: relative;
+}
+
+.info {
+  font-size: 11px;
+  color: var(--font-color2);
+  text-align: center;
+  justify-self: left;
+}
+
+.trend-indicator {
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-left: 6px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.trend-up {
+  background: #03ffc02b;
+  color: var(--primary-color);
+}
+
+.trend-down {
+  background: hsla(0, 100%, 51%, 0.169);
+  color: #ef4444;
+}
+
+.trend-neutral {
+  background-color: rgba(156, 163, 175, 0.2);
+  color: #9ca3af;
+}
+
+button.chart-btn {
+  margin: 0 !important;
+}
+button.chart-btn.focused-btn {
+  background: #03ffc02b;
   color: var(--primary-color);
 }
 button.chart-btn.btn1 {
-    border-radius: 8px 0 0 8px;
+  border-radius: 8px 0 0 8px;
 }
 button.chart-btn.btn2 {
-    border-radius: 0;
+  border-radius: 0;
 }
 button.chart-btn.btn3 {
-    border-radius: 0 8px 8px 0;
+  border-radius: 0 8px 8px 0;
 }
 
-.calendar-container{
+.calendar-container {
   justify-self: center;
 }
 .hide {
-    opacity: 0;
+  opacity: 0;
 }
-#valueText{
+#valueText {
   font-size: 24px;
   justify-self: left;
   color: var(--font-color2);
 }
 
-.currency-converter-ex #chart-btn{
+.currency-converter-ex #chart-btn {
   transition: opacity 0.15s ease;
 }
 
-.warning{
-      border-bottom: 1px dashed;
-      margin-left: 15px;
+.warning {
+  border-bottom: 1px dashed;
+  margin-left: 15px;
 }
