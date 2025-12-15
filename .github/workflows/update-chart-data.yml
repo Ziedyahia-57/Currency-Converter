@@ -1,8 +1,8 @@
 name: Process Monthly Exchange Rate Averages
 on:
   schedule:
-    # Run at 00:00 AM GMT daily (after your data fetch job)
-    - cron: '0 0 * * *'
+    # Run at 00:30 AM GMT daily (after your data fetch job)
+    - cron: '30 0 * * *'
   workflow_dispatch:
   workflow_run:
     workflows: ["Your-Existing-Data-Fetch-Workflow"]  # Trigger after your data fetch
@@ -130,7 +130,7 @@ jobs:
           });
           
           markdown += '\\n---\\n';
-          markdown += '*Data processed daily at 1:01 AM GMT*\\n';
+          markdown += '*Data processed daily at 00:30 AM GMT*\\n';
           markdown += '*Source: exchangerate.host*\\n';
           
           fs.writeFileSync('MONTHLY_AVERAGES.md', markdown);
