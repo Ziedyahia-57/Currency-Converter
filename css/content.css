@@ -245,64 +245,53 @@
 }
 
 #change-currency {
-    width: fit-content;
-    color: var(--primary-color);
-    justify-self: center;
-    align-content: center;
-    text-align: center;
-    height: fit-content;
-    position: fixed;
-    top: 93%;
-    font-weight: 600;
-    background: rgba(0, 219, 193, 0.37);
-    padding: 4px;
-    border-radius: 8px;
-    border: 1px solid var(--primary-color);
-    transition: opacity 0.2s 
-ease;
-    opacity: 0.5;
-    cursor: pointer;
-    display: none;
+  width: fit-content;
+  color: var(--primary-color);
+  justify-self: center;
+  align-content: center;
+  text-align: center;
+  height: fit-content;
+  position: fixed;
+  top: 93%;
+  font-weight: 600;
+  background: rgba(0, 219, 193, 0.37);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--primary-color);
+  transition: opacity 0.2s ease;
+  opacity: 0.5;
+  cursor: pointer;
+  display: none;
 }
 
 #currency-converter-ex-score {
-    font-size: 12px;
-    color: darkslategray;
-    margin: 4px;
-    -webkit-user-select: none;
+  font-size: 12px;
+  color: darkslategray;
+  margin: 4px;
+  -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
 
 #detected-price.multi-currency-detected {
-  /* background: hsla(46, 100%, 43%, 0.37) !important;
-    color: hsl(39, 100%, 41%) !important;
-    text-shadow: orange 0px 0px 1px !important;
-    border: 1px solid orange !important; */
-
-    /* color: hsl(39, 100%, 46%) !important;
-    background: rgba(255, 165, 0, 0.37) !important; */
-
-    background: linear-gradient(315deg, hsl(47 93% 45% / 1), hsl(39 95% 46% / 1)) !important;
-    cursor: help !important;
-    
+  background: linear-gradient(315deg, hsl(47 93% 45% / 1), hsl(39 95% 46% / 1)) !important;
+  cursor: help !important;
 }
 #detected-price #options-span {
   width: fit-content !important;
   height: -webkit-fill-available !important;
   border-radius: 4px !important;
-  transition: background .3s ease !important;
+  transition: background 0.3s ease !important;
   align-content: center !important;
   background: rgb(50 50 50 / 14%) !important;
-
 }
 
-#options-span #options-icon{
+#options-span #options-icon {
   display: flex !important;
   justify-self: center !important;
   border-radius: 4px !important;
-  transition: background .3s ease !important;
+  transition: background 0.3s ease !important;
   max-width: 14px !important;
   box-sizing: content-box !important;
   user-select: all !important;
