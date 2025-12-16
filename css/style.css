@@ -191,13 +191,13 @@ body {
     rgba(0, 0, 0, 0.12) 0px 2px 4px inset;
 }
 
-.currency-converter-ex .add-currency button:hover:not(.expanded) {
+.currency-converter-ex .add-currency button:hover:not(.expanded),
+.currency-converter-ex #settings-btn:hover {
   transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), fill 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--primary-color) !important;
   fill: white !important;
 }
-.currency-converter-ex #tax-btn:hover,
-.currency-converter-ex #settings-btn:hover {
+.currency-converter-ex #tax-btn:hover {
   transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), fill 0.2s cubic-bezier(0.4, 0, 0.2, 1),
     width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--primary-color);
@@ -858,7 +858,6 @@ body {
 .currency-converter-ex button#edit-blacklist-btn:hover,
 .currency-converter-ex button#edit-whitelist-btn:hover,
 .currency-converter-ex button#edit-link-btn:hover,
-.currency-converter-ex button.chart-btn:hover,
 .currency-converter-ex button#add-whitelist-link-btn:hover,
 .currency-converter-ex button#add-blacklist-link-btn:hover {
   cursor: pointer;
@@ -1225,7 +1224,7 @@ button.chart-btn.btn3 {
 }
 
 .currency-converter-ex #chart-btn {
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, background 0.2s cubic-bezier(0.4, 0, 0.2, 1), fill 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .warning {
