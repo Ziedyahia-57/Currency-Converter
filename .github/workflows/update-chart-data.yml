@@ -1,11 +1,11 @@
 name: Process Monthly Exchange Rate Averages
 on:
   schedule:
-    # Run at 00:30 AM GMT daily (after your data fetch job)
+    # Run at 00:30 UTC daily (after data fetch job)
     - cron: '30 0 * * *'
   workflow_dispatch:
   workflow_run:
-    workflows: ["Your-Existing-Data-Fetch-Workflow"]  # Trigger after your data fetch
+    workflows: ["Your-Existing-Data-Fetch-Workflow"]  # Trigger after data fetch
     types:
       - completed
 
