@@ -14,42 +14,56 @@ window.today = today;
 testDateInput.style.opacity = "0.7"; // Visual cue that it's disabled
 
 // Create gradient contexts for different trends
-function createGradient(ctx, color, isUp) {
+function createGradient(ctx, color) {
   const gradient = ctx.createLinearGradient(0, 0, 0, 170);
-  if (isUp) {
-    gradient.addColorStop(
-      0,
-      color === "green"
-        ? "rgba(16, 185, 129, 0.45)"
-        : color === "red"
-        ? "rgba(239, 68, 68, 0.45)"
-        : "rgba(156, 163, 175, 0.45)"
-    );
-    gradient.addColorStop(
-      1,
-      color === "green" ? "rgba(16, 185, 129, 0)" : color === "red" ? "rgba(239, 68, 68, 0)" : "rgba(156, 163, 175, 0)"
-    );
-  } else {
-    gradient.addColorStop(
-      0,
-      color === "green"
-        ? "rgba(16, 185, 129, 0.45)"
-        : color === "red"
-        ? "rgba(239, 68, 68, 0.45)"
-        : "rgba(156, 163, 175, 0.45)"
-    );
-    gradient.addColorStop(
-      1,
-      color === "green" ? "rgba(16, 185, 129, 0)" : color === "red" ? "rgba(239, 68, 68, 0)" : "rgba(156, 163, 175, 0)"
-    );
-  }
+  const colorMap = {
+    green: { start: "rgba(16, 185, 129, 0.45)", end: "rgba(16, 185, 129, 0)" },
+    red: { start: "rgba(239, 68, 68, 0.45)", end: "rgba(239, 68, 68, 0)" },
+    gray: { start: "rgba(156, 163, 175, 0.45)", end: "rgba(156, 163, 175, 0)" },
+  };
+
+  const colors = colorMap[color] || colorMap.gray;
+  gradient.addColorStop(0, colors.start);
+  gradient.addColorStop(1, colors.end);
   return gradient;
 }
 
 let currentRange = "week";
 window.currentRange = currentRange;
 let currentData = null;
-let cachedMonthData = null; // Cache the month data for reuse
+let historicalData = null; // Store the fetched data
+
+// Fetch historical data from external source
+async function fetchHistoricalData() {
+  if (!navigator.onLine) {
+    console.warn("User is offline. Using cached data if available.");
+    return historicalData;
+  }
+
+  try {
+    const url = "https://ziedyahia-57.github.io/Currency-Converter/processed-data.json?t=" + Date.now();
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch historical data");
+    
+    historicalData = await response.json();
+    console.log("Historical data fetched successfully", historicalData);
+    return historicalData;
+  } catch (error) {
+    console.error("Error fetching historical data:", error);
+    return null;
+  }
+}
+window.fetchHistoricalData = fetchHistoricalData;
+
+// Get selected currencies from dropdowns
+function getSelectedCurrencies() {
+  const baseEl = document.querySelector("#chart-base-selected span");
+  const quoteEl = document.querySelector("#chart-quote-selected span");
+  return {
+    base: baseEl ? baseEl.textContent.trim() : "JPY",
+    quote: quoteEl ? quoteEl.textContent.trim() : "USD"
+  };
+}
 
 // Format date for display
 function formatDate(date) {
@@ -62,7 +76,8 @@ function formatMonth(date) {
 }
 
 // Determine trend color based on last two data points
-function getTrendColor(data) {
+function getTrendColor(data, isMissing = false) {
+  if (isMissing) return "gray";
   if (data.length < 2) return "gray";
 
   const lastValue = data[data.length - 1];
@@ -70,7 +85,7 @@ function getTrendColor(data) {
   const difference = lastValue - prevValue;
 
   // Use a small epsilon for floating point comparison
-  const epsilon = 0.001;
+  const epsilon = 0.0001;
 
   if (Math.abs(difference) < epsilon) {
     return "gray";
@@ -82,15 +97,15 @@ function getTrendColor(data) {
 }
 
 // Get trend indicator HTML
-function getTrendIndicator(data) {
-  if (data.length < 2) return "";
+function getTrendIndicator(data, isMissing = false) {
+  if (isMissing || data.length < 2) return `<span class="trend-indicator trend-neutral">0.0%</span>`;
 
   const lastValue = data[data.length - 1];
   const prevValue = data[data.length - 2];
   const difference = lastValue - prevValue;
   const percentage = prevValue !== 0 ? (Math.abs(difference / prevValue) * 100).toFixed(1) : "0.0";
 
-  const epsilon = 0.001;
+  const epsilon = 0.0001;
 
   if (Math.abs(difference) < epsilon) {
     return `<span class="trend-indicator trend-neutral">0.0%</span>`;
@@ -101,188 +116,147 @@ function getTrendIndicator(data) {
   }
 }
 
-// Generate month data (30 days) - this will be our base dataset
-function generateMonthData(testDate) {
-  const endDate = new Date(testDate);
-  endDate.setHours(23, 59, 59, 999);
+// Process data for charts
+async function getChartData(range) {
+  if (!historicalData) {
+    await fetchHistoricalData();
+  }
 
-  let labels = [];
-  let data = [];
-  let fullLabels = [];
-  let startDate = new Date(endDate);
-  startDate.setDate(endDate.getDate() - 29);
-  startDate.setHours(0, 0, 0, 0);
+  if (!historicalData) return null;
 
-  // Use consistent random seed based on testDate for reproducibility
-  const seed = testDate.getTime();
-  const seededRandom = (index) => {
-    const x = Math.sin(seed + index * 1000) * 10000;
-    return x - Math.floor(x);
+  const { base, quote } = getSelectedCurrencies();
+  const monthData = historicalData.monthData || {};
+  const chartData = historicalData.chartData || {};
+
+  let result = {
+    labels: [],
+    data: [],
+    fullLabels: [],
+    range: range,
+    isMissing: false
   };
 
-  // Generate 30 days of data
-  for (let i = 0; i < 30; i++) {
-    const currentDate = new Date(startDate);
-    currentDate.setDate(startDate.getDate() + i);
+  const baseMonthData = monthData[base] || [];
+  const quoteMonthData = monthData[quote] || [];
+  const baseYearData = chartData[base] || [];
+  const quoteYearData = chartData[quote] || [];
 
-    let displayLabel = "";
-    if (currentDate.getDay() === 1) {
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      displayLabel = `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}`;
+  if (range === "week" || range === "month") {
+    const points = range === "week" ? 7 : 30;
+    const masterTimeline = [];
+    const end = window.today || new Date();
+    
+    // Generate the last N days (sorted old to new)
+    for (let i = points - 1; i >= 0; i--) {
+      const d = new Date(end);
+      d.setDate(d.getDate() - i);
+      masterTimeline.push(d.toISOString().split("T")[0]);
     }
 
-    labels.push(displayLabel);
+    // Convert data arrays to Maps for $O(1)$ lookup
+    const baseMap = new Map(baseMonthData.map(p => [p.date, p.value]));
+    const quoteMap = new Map(quoteMonthData.map(p => [p.date, p.value]));
 
-    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    fullLabels.push(
-      `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()} (${dayNames[currentDate.getDay()].substring(
-        0,
-        3
-      )})`
-    );
-
-    const randomValue = 20 + seededRandom(i) * 80;
-    data.push(parseFloat(randomValue.toFixed(2)));
-  }
-
-  return {
-    labels,
-    data,
-    fullLabels,
-    startDate: new Date(startDate),
-    endDate: new Date(endDate),
-  };
-}
-
-// Generate year data (12 months)
-function generateYearData(testDate) {
-  const endDate = new Date(testDate);
-  endDate.setHours(23, 59, 59, 999);
-
-  let labels = [];
-  let data = [];
-  let fullLabels = [];
-  let startDate = new Date(endDate);
-  startDate.setMonth(endDate.getMonth() - 11);
-  startDate.setDate(1);
-  startDate.setHours(0, 0, 0, 0);
-
-  // Use consistent random seed based on testDate for reproducibility
-  const seed = testDate.getTime();
-  const seededRandom = (index) => {
-    const x = Math.sin(seed + index * 1000) * 10000;
-    return x - Math.floor(x);
-  };
-
-  for (let i = 0; i < 12; i++) {
-    const currentDate = new Date(startDate);
-    currentDate.setMonth(startDate.getMonth() + i);
-
-    const monthAbbr = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-    labels.push(monthAbbr[currentDate.getMonth()]);
-
-    const fullMonthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    fullLabels.push(`${fullMonthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`);
-
-    const randomValue = 200 + seededRandom(i) * 800;
-    data.push(parseFloat(randomValue.toFixed(2)));
-  }
-
-  return {
-    labels,
-    data,
-    fullLabels,
-    startDate: new Date(startDate),
-    endDate: new Date(endDate),
-  };
-}
-
-// Generate data for different ranges
-function generateRandomData(range, testDate) {
-  const endDate = new Date(testDate);
-  endDate.setHours(23, 59, 59, 999);
-
-  let result = null;
-
-  switch (range) {
-    case "week": // Last 7 days (taken from last 7 points of 30-day data)
-      // Generate or use cached month data
-      if (!cachedMonthData || cachedMonthData.endDate.getTime() !== endDate.getTime()) {
-        cachedMonthData = generateMonthData(testDate);
+    if (masterTimeline.length === 0) {
+      result.isMissing = true;
+      for (let i = 0; i < points; i++) {
+        result.data.push(0);
+        result.labels.push("");
+        result.fullLabels.push("No data available");
       }
-
-      // Take the last 7 data points
-      const weekData = cachedMonthData.data.slice(-7);
-      const weekLabels = [];
-      const weekFullLabels = cachedMonthData.fullLabels.slice(-7);
-      const weekStartDate = new Date(cachedMonthData.startDate);
-      weekStartDate.setDate(weekStartDate.getDate() + 23); // Start at day 24 (7 days from end)
-
-      // Create day labels for week view
-      for (let i = 0; i < 7; i++) {
-        const currentDate = new Date(weekStartDate);
-        currentDate.setDate(weekStartDate.getDate() + i);
+    } else {
+      masterTimeline.forEach(dateStr => {
+        const bVal = baseMap.get(dateStr) || 0;
+        const qVal = quoteMap.get(dateStr) || 0;
+        
+        let rate = (bVal > 0) ? (qVal / bVal) : 0;
+        result.data.push(rate);
+        
+        const date = new Date(dateStr);
         const dayLetters = ["S", "M", "T", "W", "T", "F", "S"];
-        weekLabels.push(dayLetters[currentDate.getDay()]);
-      }
+        
+        if (range === "week") {
+          result.labels.push(dayLetters[date.getDay()]);
+        } else {
+          result.labels.push(date.getDay() === 1 ? `${formatDate(date).split(",")[0]}` : "");
+        }
+        
+        result.fullLabels.push(`${formatDate(date)} (${dayLetters[date.getDay()]})`);
+      });
+      
+      if (result.data.every(v => v === 0)) result.isMissing = true;
+    }
+    
+    result.startDate = new Date(masterTimeline[0]);
+    result.endDate = new Date(masterTimeline[masterTimeline.length - 1]);
 
-      result = {
-        labels: weekLabels,
-        data: weekData,
-        fullLabels: weekFullLabels,
-        range: "week",
-        startDate: new Date(weekStartDate),
-        endDate: new Date(endDate),
-      };
+  } else if (range === "year") {
+    // Generate exactly 12 months ending at the current month
+    const masterMonths = [];
+    const now = window.today || new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      masterMonths.push(`${year}-${month}`);
+    }
 
-      const weekTrendIndicator = getTrendIndicator(weekData);
-      const lastValue = weekData[weekData.length - 1];
-      infoText.innerHTML = `${formatDate(result.startDate)} - ${formatDate(result.endDate)}`;
-      valueText.innerHTML = `${lastValue.toFixed(2)} ${weekTrendIndicator}`;
-      break;
+    const baseMap = new Map(baseYearData.map(p => [p.month, p.average]));
+    const quoteMap = new Map(quoteYearData.map(p => [p.month, p.average]));
 
-    case "month": // Last 30 days
-      result = generateMonthData(testDate);
-      result.range = "month";
+    if (masterMonths.length === 0) {
+      result.isMissing = true;
+      for (let i = 0; i < 12; i++) result.data.push(0);
+    } else {
+      masterMonths.forEach(monthStr => {
+        const bVal = baseMap.get(monthStr) || 0;
+        const qVal = quoteMap.get(monthStr) || 0;
+        
+        let rate = (bVal > 0) ? (qVal / bVal) : 0;
+        result.data.push(rate);
+        
+        const [year, month] = monthStr.split("-");
+        const date = new Date(year, parseInt(month) - 1);
+        const monthAbbr = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+        result.labels.push(monthAbbr[date.getMonth()]);
+        result.fullLabels.push(`${formatMonth(date)}`);
+      });
+      
+      if (result.data.every(v => v === 0)) result.isMissing = true;
+    }
+    
+    result.startDate = new Date(masterMonths[0] + "-01");
+    const lastMonthStr = masterMonths[masterMonths.length - 1];
+    const [y, m] = lastMonthStr.split("-");
+    result.endDate = new Date(y, parseInt(m), 0);
+  }
 
-      const monthTrendIndicator = getTrendIndicator(result.data);
-      const monthLastValue = result.data[result.data.length - 1];
-      infoText.innerHTML = `${formatDate(result.startDate)} - ${formatDate(result.endDate)}`;
-      valueText.innerHTML = `${monthLastValue.toFixed(2)} ${monthTrendIndicator}`;
+  // Update UI texts
+  const trendIndicator = getTrendIndicator(result.data, result.isMissing);
+  const lastValue = result.data.length > 0 ? result.data[result.data.length - 1] : 0;
+  
+  if (range === "year") {
+    infoText.innerHTML = `${formatMonth(result.startDate)} - ${formatMonth(result.endDate)}`;
+  } else {
+    infoText.innerHTML = `${formatDate(result.startDate)} - ${formatDate(result.endDate)}`;
+  }
+  
+  const displayValue = lastValue.toLocaleString(undefined, {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4
+  });
 
-      // Cache the month data for week view
-      cachedMonthData = result;
-      break;
-
-    case "year": // Last 12 months
-      result = generateYearData(testDate);
-      result.range = "year";
-
-      const yearTrendIndicator = getTrendIndicator(result.data);
-      const yearLastValue = result.data[result.data.length - 1];
-      infoText.innerHTML = `${formatMonth(result.startDate)} - ${formatMonth(result.endDate)}`;
-      valueText.innerHTML = `${yearLastValue.toFixed(2)} ${yearTrendIndicator}`;
-      break;
+  if (result.isMissing) {
+    valueText.innerHTML = `${displayValue} ${trendIndicator}`;
+    result.data = Array(points || 12).fill(0);
+  } else {
+    valueText.innerHTML = `${displayValue} ${trendIndicator}`;
   }
 
   currentData = result;
   return result;
 }
-window.generateRandomData = generateRandomData;
+window.generateRandomData = getChartData; // Keep window name for compatibility
 
 // Function to update chart x-axis grid display
 function updateXAxisGrid(range) {
@@ -314,28 +288,33 @@ function updateXAxisGrid(range) {
       return this.getLabelForValue(value);
     };
   }
-}
 
-// Initialize chart with today's data
-const initialData = generateRandomData(currentRange, today);
-const initialTrendColor = getTrendColor(initialData.data);
+  // Optimize Y-axis for currency rates
+  const yAxisConfig = chart.options.scales.y;
+  yAxisConfig.ticks.callback = function(value) {
+    if (this.max - this.min < 0.1) {
+      return value.toFixed(4);
+    }
+    if (value >= 1000) return (value / 1000).toFixed(1) + "K";
+    return value.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  };
+}
 
 const chart = new Chart(ctx, {
   type: "line",
   data: {
-    labels: initialData.labels,
+    labels: [],
     datasets: [
       {
-        data: initialData.data,
+        data: [],
         fill: true,
-        backgroundColor: createGradient(ctx, initialTrendColor),
-        borderColor: initialTrendColor === "green" ? "#10b981" : initialTrendColor === "red" ? "#ef4444" : "#9ca3af",
+        backgroundColor: "rgba(156, 163, 175, 0.45)",
+        borderColor: "#9ca3af",
         borderWidth: 2,
-        tension: 0.4,
+        tension: 0,
         pointRadius: 0,
         pointHoverRadius: 4,
-        pointHoverBackgroundColor:
-          initialTrendColor === "green" ? "#10b981" : initialTrendColor === "red" ? "#ef4444" : "#9ca3af",
+        pointHoverBackgroundColor: "#9ca3af",
         spanGaps: true,
       },
     ],
@@ -354,27 +333,30 @@ const chart = new Chart(ctx, {
         titleColor: "#e5e7eb",
         bodyColor: "#e5e7eb",
         borderColor: function (context) {
-          const trendColor = getTrendColor(context.chart.data.datasets[0].data);
+          const trendColor = getTrendColor(context.chart.data.datasets[0].data, currentData?.isMissing);
           return trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : "#9ca3af";
         },
         borderWidth: 1,
         displayColors: false,
         callbacks: {
           title: function (context) {
-            return context[0].parsed.y.toFixed(2);
+            const val = context[0].parsed.y;
+            if (val === 0) return "No Data";
+            // Popup should have 4 decimal digits max
+            return val.toLocaleString(undefined, { 
+              minimumFractionDigits: 4, 
+              maximumFractionDigits: 4 
+            });
           },
           label: function (context) {
-            return currentData.fullLabels[context.dataIndex];
-          },
-          afterLabel: function () {
-            return null;
+            return currentData?.fullLabels[context.dataIndex] || "";
           },
         },
       },
     },
     scales: {
       x: {
-        grid: { display: false }, // Initially no grid for week view
+        grid: { display: false },
         ticks: {
           color: "#94a3b8",
           maxTicksLimit: 12,
@@ -391,9 +373,13 @@ const chart = new Chart(ctx, {
           maxTicksLimit: 7,
           callback: function (value) {
             if (currentRange === "year" && value >= 1000) {
-              return (value / 1000).toFixed(0) + "K";
+              return (value / 1000).toFixed(1) + "K";
             }
-            return value;
+            // Simplified Y-axis: max 4 decimals
+            return value.toLocaleString(undefined, { 
+              minimumFractionDigits: 0, 
+              maximumFractionDigits: 4 
+            });
           },
         },
       },
@@ -401,60 +387,71 @@ const chart = new Chart(ctx, {
   },
 });
 
-// Set initial grid display based on current range
-updateXAxisGrid(currentRange);
-
-const weekButton = document.querySelector('[data-range="week"]');
-if (weekButton) {
-  weekButton.classList.add("focused-btn");
-}
-
 // Update chart when time range button is clicked
 document.querySelectorAll(".chart-btn").forEach((button) => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll("button").forEach((b) => b.classList.remove("focused-btn"));
+  button.addEventListener("click", async () => {
+    document.querySelectorAll(".chart-btn").forEach((b) => b.classList.remove("focused-btn"));
     button.classList.add("focused-btn");
 
     currentRange = button.dataset.range;
     window.currentRange = currentRange;
-    // Always use today's date
-    const newData = generateRandomData(currentRange, today);
-
-    // Update grid display before updating chart
+    
+    const newData = await getChartData(currentRange);
     updateXAxisGrid(currentRange);
     updateChartWithData(newData);
   });
 });
 
-// Remove the date change listener since we always want today
-// testDateInput.addEventListener('change', () => {
-//   const testDate = new Date(testDateInput.value);
-//   const newData = generateRandomData(currentRange, testDate);
-//
-//   // Update grid display before updating chart
-//   updateXAxisGrid(currentRange);
-//   updateChartWithData(newData);
-// });
+async function updateChartWithData(newData) {
+  if (newData instanceof Promise) {
+    newData = await newData;
+  }
 
-function updateChartWithData(newData) {
-  const trendColor = getTrendColor(newData.data);
+  if (!newData) {
+    newData = await getChartData(currentRange);
+  }
+  
+  if (!newData) return;
+
+  const trendColor = getTrendColor(newData.data, newData.isMissing);
 
   chart.data.labels = newData.labels;
   chart.data.datasets[0].data = newData.data;
-  chart.data.datasets[0].backgroundColor = createGradient(ctx, trendColor);
+  chart.data.datasets[0].backgroundColor = newData.isMissing ? "transparent" : createGradient(ctx, trendColor);
   chart.data.datasets[0].borderColor =
     trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : "#9ca3af";
   chart.data.datasets[0].pointHoverBackgroundColor =
     trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : "#9ca3af";
 
+  // Handle missing data: dashed line and NO fill
+  if (newData.isMissing) {
+    chart.data.datasets[0].borderDash = [5, 5];
+    chart.data.datasets[0].fill = false;
+    chart.data.datasets[0].pointRadius = 0;
+    // Set a neutral Y-axis range for missing data to ensure the line is visible
+    chart.options.scales.y.min = 0;
+    chart.options.scales.y.max = 2;
+  } else {
+    chart.data.datasets[0].borderDash = []; // Reset dash
+    chart.data.datasets[0].fill = "start"; // Fill to the bottom of the axis
+    chart.data.datasets[0].pointRadius = 0; // Keep points hidden but show on hover
+    // Reset Y-axis to auto-scale
+    chart.options.scales.y.min = undefined;
+    chart.options.scales.y.max = undefined;
+  }
+
   chart.update();
 }
 window.updateChartWithData = updateChartWithData;
 
-// Remove the test function since we don't want to change the date
-// function testDataConsistency() {
-//   // This function changes the date, so we remove it
-// }
-
-// Remove the test call since we don't want to run it
-// testDataConsistency();
+// Initial fetch and render
+(async () => {
+  await fetchHistoricalData();
+  const initialData = await getChartData(currentRange);
+  updateXAxisGrid(currentRange);
+  updateChartWithData(initialData);
+  
+  // Set initial focused button
+  const weekBtn = document.querySelector('[data-range="week"]');
+  if (weekBtn) weekBtn.classList.add("focused-btn");
+})();
