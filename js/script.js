@@ -971,6 +971,8 @@ window.addEventListener("offline", () => {
 //⚪                        SETTINGS TAB                        */
 //⚪------------------------------------------------------------*/
 function openSettingsTab() {
+  settingsTab.style.display = "block";
+  void settingsTab.offsetHeight;
   settingsTab.classList.add("show");
   settingsTab.classList.remove("hidden");
 }
@@ -980,6 +982,7 @@ settingsBtn.addEventListener("click", () => {
 function closeSettingsTab() {
   settingsTab.classList.remove("show");
   settingsTab.classList.add("hidden");
+  setTimeout(() => { if (settingsTab.classList.contains("hidden")) settingsTab.style.display = "none"; }, 300);
 }
 hideSettingsTab.addEventListener("click", () => {
   closeSettingsTab();
@@ -989,6 +992,8 @@ hideSettingsTab.addEventListener("click", () => {
 //⚪                         CHARTS TAB                         */
 //⚪------------------------------------------------------------*/
 function openChartsTab() {
+  chartsTab.style.display = "block";
+  void chartsTab.offsetHeight;
   chartsTab.classList.add("show");
   chartsTab.classList.remove("hidden");
 }
@@ -998,6 +1003,7 @@ chartBtn.addEventListener("click", () => {
 function closeChartsTab() {
   chartsTab.classList.remove("show");
   chartsTab.classList.add("hidden");
+  setTimeout(() => { if (chartsTab.classList.contains("hidden")) chartsTab.style.display = "none"; }, 300);
 }
 hideChartsTab.addEventListener("click", () => {
   closeChartsTab();
@@ -1013,6 +1019,8 @@ const WHITELIST_KEY = "whitelistedWebsites";
 let whitelist = [];
 
 function openWhitelistTab() {
+  whitelistTab.style.display = "block";
+  void whitelistTab.offsetHeight;
   whitelistTab.classList.add("show");
   whitelistTab.classList.remove("hidden");
   loadWhitelist(); // Load fresh data when opening tab
@@ -1023,6 +1031,7 @@ editWhitelistBtn.addEventListener("click", () => {
 function closeWhitelistTab() {
   whitelistTab.classList.remove("show");
   whitelistTab.classList.add("hidden");
+  setTimeout(() => { if (whitelistTab.classList.contains("hidden")) whitelistTab.style.display = "none"; }, 300);
 }
 hideWhitelistTab.addEventListener("click", () => {
   closeWhitelistTab();
@@ -1341,6 +1350,8 @@ const BLACKLIST_KEY = "blacklistedWebsites";
 let blacklist = [];
 
 function openBlacklistTab() {
+  blacklistTab.style.display = "block";
+  void blacklistTab.offsetHeight;
   blacklistTab.classList.add("show");
   blacklistTab.classList.remove("hidden");
   loadBlacklist(); // Load fresh data when opening tab
@@ -1351,6 +1362,7 @@ editBlacklistBtn.addEventListener("click", () => {
 function closeBlacklistTab() {
   blacklistTab.classList.remove("show");
   blacklistTab.classList.add("hidden");
+  setTimeout(() => { if (blacklistTab.classList.contains("hidden")) blacklistTab.style.display = "none"; }, 300);
 }
 hideBlacklistTab.addEventListener("click", () => {
   closeBlacklistTab();
@@ -1518,12 +1530,15 @@ addBlacklistLinkInput.addEventListener("keydown", (e) => {
 //⚪                        CURRENCY TAB                        */
 //⚪------------------------------------------------------------*/
 function openCurrencyTab() {
+  currencyTab.style.display = "block";
+  void currencyTab.offsetHeight;
   currencyTab.classList.add("show");
   currencyTab.classList.remove("hidden");
 }
 function closeCurrencyTab() {
   currencyTab.classList.remove("show");
   currencyTab.classList.add("hidden");
+  setTimeout(() => { if (currencyTab.classList.contains("hidden")) currencyTab.style.display = "none"; }, 300);
   // Reset selection state
   currentLetter = "";
   currentIndex = 0;
@@ -2529,6 +2544,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Initial check
   updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
 
+  // Initialize Chart Dropdowns
+  initChartDropdowns();
+
   formatSelector.addEventListener("change", async function () {
     await saveNumberFormat();
 
@@ -3373,4 +3391,283 @@ async function processPastedValue(pastedText, inputField) {
     formatted: formattedValue,
     cursorPos: cursorPos,
   };
+}
+
+//⚪------------------------------------------------------------*/
+//⚪                    CHART CURRENCY DROPDOWNS                */
+//⚪------------------------------------------------------------*/
+function initChartDropdowns() {
+  const baseDropdown = document.getElementById("chart-base-dropdown");
+  const quoteDropdown = document.getElementById("chart-quote-dropdown");
+  const baseSelected = document.getElementById("chart-base-selected");
+  const quoteSelected = document.getElementById("chart-quote-selected");
+  const baseList = document.getElementById("chart-base-list");
+  const quoteList = document.getElementById("chart-quote-list");
+  const baseSearch = baseDropdown.querySelector(".dropdown-search");
+  const quoteSearch = quoteDropdown.querySelector(".dropdown-search");
+
+  let currentBase = localStorage.getItem("chartBase") || "JPY";
+  let currentQuote = localStorage.getItem("chartQuote") || "USD";
+
+  // Initial UI sync
+  function syncSelectedUI(dropdown, currency) {
+    const isBase = dropdown.id === "chart-base-dropdown";
+    const selectedEl = isBase ? baseSelected : quoteSelected;
+    const countryCode = currencyToCountry[currency] || "??";
+    
+    selectedEl.innerHTML = `
+      <div class="selected-inner">
+        <img src="icons/flags/${countryCode}.svg" class="selected-flag" onerror="this.src='./icons/website.png'">
+        <span>${currency}</span>
+      </div>
+    `;
+  }
+  
+  syncSelectedUI(baseDropdown, currentBase);
+  syncSelectedUI(quoteDropdown, currentQuote);
+
+  function toggleDropdown(dropdown) {
+    const content = dropdown.querySelector(".dropdown-content");
+    
+    // Close all other dropdowns first
+    document.querySelectorAll(".custom-dropdown").forEach(d => {
+      if (d !== dropdown) {
+        d.classList.remove("open");
+        const c = d.querySelector(".dropdown-content");
+        if (!c.classList.contains("hidden")) {
+          c.classList.add("hidden");
+          setTimeout(() => { if (c.classList.contains("hidden")) c.style.display = "none"; }, 200);
+        }
+      }
+    });
+
+    if (content.classList.contains("hidden")) {
+      content.style.display = "block"; // Start showing
+      void content.offsetHeight; // Force reflow to ensure animation plays
+      content.classList.remove("hidden");
+      dropdown.classList.add("open");
+      
+      const searchInput = dropdown.querySelector(".dropdown-search");
+      searchInput.value = ""; 
+      dropdown.querySelector(".clear-search").classList.add("hidden");
+      searchInput.focus();
+      populateDropdown(dropdown);
+    } else {
+      content.classList.add("hidden");
+      dropdown.classList.remove("open");
+      setTimeout(() => { if (content.classList.contains("hidden")) content.style.display = "none"; }, 200);
+    }
+  }
+
+  let highlightedIndex = -1;
+
+  window.populateDropdown = function populateDropdown(dropdown) {
+    const list = dropdown.id === "chart-base-dropdown" ? baseList : quoteList;
+    const searchVal = dropdown.querySelector(".dropdown-search").value.toLowerCase();
+    const otherCurrency = dropdown.id === "chart-base-dropdown" ? currentQuote : currentBase;
+    const selectedCurrency = dropdown.id === "chart-base-dropdown" ? currentBase : currentQuote;
+    
+    list.innerHTML = "";
+    highlightedIndex = -1; // Reset highlighting on search
+
+    // Check if exchangeRates is available
+    if (!exchangeRates || Object.keys(exchangeRates).length === 0) {
+      const loading = document.createElement("div");
+      loading.classList.add("dropdown-item");
+      loading.textContent = "Loading...";
+      list.appendChild(loading);
+      return;
+    }
+    
+    const sortedCurrencies = Object.keys(exchangeRates).sort();
+    
+    sortedCurrencies.forEach(currency => {
+      // Mutual exclusion: don't show the currency selected in the other dropdown
+      if (currency === otherCurrency) return;
+      
+      if (currency.toLowerCase().includes(searchVal)) {
+        const item = document.createElement("div");
+        item.classList.add("dropdown-item");
+        if (currency === selectedCurrency) {
+          item.classList.add("selected");
+        }
+        
+        const countryCode = currencyToCountry[currency] || "??";
+        item.innerHTML = `
+          <img src="icons/flags/${countryCode}.svg" onerror="this.src='./icons/website.png'">
+          <span>${currency}</span>
+        `;
+        
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          selectCurrency(dropdown, currency);
+        });
+        
+        list.appendChild(item);
+      }
+    });
+
+    if (searchVal && list.children.length > 0) {
+      highlightItem(list, 0);
+    }
+  }
+
+  function highlightItem(list, index) {
+    const items = list.querySelectorAll(".dropdown-item");
+    items.forEach(item => item.classList.remove("highlighted"));
+    
+    if (index >= 0 && index < items.length) {
+      highlightedIndex = index;
+      const item = items[index];
+      item.classList.add("highlighted");
+      item.scrollIntoView({ block: "nearest" });
+    } else {
+      highlightedIndex = -1;
+    }
+  }
+
+  function selectCurrency(dropdown, currency) {
+    const isBase = dropdown.id === "chart-base-dropdown";
+    const selectedEl = isBase ? baseSelected : quoteSelected;
+    const countryCode = currencyToCountry[currency] || "??";
+
+    if (isBase) {
+      currentBase = currency;
+      localStorage.setItem("chartBase", currency);
+    } else {
+      currentQuote = currency;
+      localStorage.setItem("chartQuote", currency);
+    }
+    
+    // Save to chrome storage for consistency
+    chrome.storage.local.set({ 
+      chartBase: currentBase, 
+      chartQuote: currentQuote 
+    });
+
+    selectedEl.innerHTML = `
+      <div class="selected-inner">
+        <img src="icons/flags/${countryCode}.svg" class="selected-flag" onerror="this.src='./icons/website.png'">
+        <span>${currency}</span>
+      </div>
+    `;
+
+    const content = dropdown.querySelector(".dropdown-content");
+    content.classList.add("hidden");
+    dropdown.classList.remove("open");
+    setTimeout(() => { if (content.classList.contains("hidden")) content.style.display = "none"; }, 200);
+
+    // Trigger chart update
+    if (typeof window.updateChartWithData === 'function') {
+      const range = window.currentRange || "week";
+      const date = window.today || new Date();
+      const newData = window.generateRandomData(range, date);
+      window.updateChartWithData(newData);
+    }
+  }
+
+  baseDropdown.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (e.target.closest(".dropdown-selected")) {
+      toggleDropdown(baseDropdown);
+    }
+  });
+
+  quoteDropdown.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (e.target.closest(".dropdown-selected")) {
+      toggleDropdown(quoteDropdown);
+    }
+  });
+
+  // Prevent dropdown collapse when clicking anywhere inside the content
+  baseDropdown.querySelector(".dropdown-content").addEventListener("click", (e) => e.stopPropagation());
+  quoteDropdown.querySelector(".dropdown-content").addEventListener("click", (e) => e.stopPropagation());
+
+  baseSearch.addEventListener("input", (e) => {
+    e.stopPropagation();
+    const clearBtn = baseDropdown.querySelector(".clear-search");
+    clearBtn.classList.toggle("hidden", !e.target.value);
+    populateDropdown(baseDropdown);
+  });
+
+  quoteSearch.addEventListener("input", (e) => {
+    e.stopPropagation();
+    const clearBtn = quoteDropdown.querySelector(".clear-search");
+    clearBtn.classList.toggle("hidden", !e.target.value);
+    populateDropdown(quoteDropdown);
+  });
+
+  function handleKeydown(e, dropdown) {
+    const list = dropdown.id === "chart-base-dropdown" ? baseList : quoteList;
+    const items = list.querySelectorAll(".dropdown-item");
+    
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      highlightItem(list, (highlightedIndex + 1) % items.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      highlightItem(list, (highlightedIndex - 1 + items.length) % items.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && items[highlightedIndex]) {
+        const currency = items[highlightedIndex].querySelector("span").textContent;
+        selectCurrency(dropdown, currency);
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation(); // Stop propagation to prevent closing charts tab on first Esc
+      const content = dropdown.querySelector(".dropdown-content");
+      content.classList.add("hidden");
+      dropdown.classList.remove("open");
+      setTimeout(() => { if (content.classList.contains("hidden")) content.style.display = "none"; }, 200);
+    }
+  }
+
+  baseSearch.addEventListener("keydown", (e) => handleKeydown(e, baseDropdown));
+  quoteSearch.addEventListener("keydown", (e) => handleKeydown(e, quoteDropdown));
+
+  baseDropdown.querySelector(".clear-search").addEventListener("click", (e) => {
+    e.stopPropagation();
+    baseSearch.value = "";
+    baseSearch.dispatchEvent(new Event("input"));
+    baseSearch.focus();
+  });
+
+  quoteDropdown.querySelector(".clear-search").addEventListener("click", (e) => {
+    e.stopPropagation();
+    quoteSearch.value = "";
+    quoteSearch.dispatchEvent(new Event("input"));
+    quoteSearch.focus();
+  });
+
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".custom-dropdown").forEach(d => {
+      d.classList.remove("open");
+      const c = d.querySelector(".dropdown-content");
+      if (!c.classList.contains("hidden")) {
+        c.classList.add("hidden");
+        setTimeout(() => { if (c.classList.contains("hidden")) c.style.display = "none"; }, 200);
+      }
+    });
+  });
+
+  // Tiered Escape key logic
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const openDropdown = document.querySelector(".custom-dropdown.open");
+      if (openDropdown) {
+        // This handles cases where focus might not be on the search input
+        const c = openDropdown.querySelector(".dropdown-content");
+        if (!c.classList.contains("hidden")) {
+          c.classList.add("hidden");
+          openDropdown.classList.remove("open");
+          setTimeout(() => { if (c.classList.contains("hidden")) c.style.display = "none"; }, 200);
+        }
+      } else if (chartsTab && !chartsTab.classList.contains("hidden")) {
+        // If charts tab is open and no dropdown is open, close charts tab
+        closeChartsTab();
+      }
+    }
+  });
 }

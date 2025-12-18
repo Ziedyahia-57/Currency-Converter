@@ -8,6 +8,9 @@ const today = new Date();
 today.setHours(0, 0, 0, 0);
 testDateInput.value = today.toISOString().split("T")[0];
 testDateInput.disabled = true; // Disable the input so it can't be changed
+
+// Expose to window for access from script.js
+window.today = today;
 testDateInput.style.opacity = "0.7"; // Visual cue that it's disabled
 
 // Create gradient contexts for different trends
@@ -44,6 +47,7 @@ function createGradient(ctx, color, isUp) {
 }
 
 let currentRange = "week";
+window.currentRange = currentRange;
 let currentData = null;
 let cachedMonthData = null; // Cache the month data for reuse
 
@@ -278,6 +282,7 @@ function generateRandomData(range, testDate) {
   currentData = result;
   return result;
 }
+window.generateRandomData = generateRandomData;
 
 // Function to update chart x-axis grid display
 function updateXAxisGrid(range) {
@@ -411,6 +416,7 @@ document.querySelectorAll(".chart-btn").forEach((button) => {
     button.classList.add("focused-btn");
 
     currentRange = button.dataset.range;
+    window.currentRange = currentRange;
     // Always use today's date
     const newData = generateRandomData(currentRange, today);
 
@@ -443,6 +449,7 @@ function updateChartWithData(newData) {
 
   chart.update();
 }
+window.updateChartWithData = updateChartWithData;
 
 // Remove the test function since we don't want to change the date
 // function testDataConsistency() {

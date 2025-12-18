@@ -431,7 +431,7 @@
           <div class="chart-zone">
 
             <div class="controls">
-              <button class="chart-btn btn1" data-range="week" class="active">7 Days</button>
+              <button class="chart-btn btn1 active" data-range="week">7 Days</button>
               <button class="chart-btn btn2" data-range="month">30 Days</button>
               <button class="chart-btn btn3" data-range="year">YTD</button>
           </div>
@@ -453,19 +453,48 @@
           
           <script src="js/chart.js"></script>
           </div>
-          <div class="chart-zone" style="display: flex; padding: 8px 24px;">
-            <p class="option-name">Base:<span class="custom custom-hidden" id="custom-convert-target" title="Custom">*</span></p>
-            <select id="target" style="margin-right: auto;">
-              <option value="all" selected="">TND</option>
-            </select>
-            <p class="option-name">Quote:<span class="custom custom-hidden" id="custom-convert-target" title="Custom">*</span></p>
-            <select id="target">
-              <option value="all" selected="">USD</option>
-            </select>
+          <div class="chart-zone dropdown-controls" style="display: flex; padding: 8px 24px;">
+            <div class="dropdown-wrapper">
+              <p class="option-name">Base:</p>
+              <div class="custom-dropdown" id="chart-base-dropdown">
+                <div class="dropdown-selected" id="chart-base-selected">
+                  <div class="selected-inner">
+                    <img src="icons/flags/jp.svg" class="selected-flag" onerror="this.src='./icons/website.png'">
+                    <span>JPY</span>
+                  </div>
+                </div>
+                <div class="dropdown-content hidden" style="display: none">
+                  <div class="search-container">
+                    <input type="text" class="dropdown-search" placeholder="Search...">
+                    <button class="clear-search hidden" title="Clear search">
+                      <svg viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
+                    </button>
+                  </div>
+                  <div class="dropdown-list" id="chart-base-list"></div>
+                </div>
+              </div>
+            </div>
+            <div class="dropdown-wrapper">
+              <p class="option-name">Quote:</p>
+              <div class="custom-dropdown" id="chart-quote-dropdown">
+                <div class="dropdown-selected" id="chart-quote-selected">
+                  <div class="selected-inner">
+                    <img src="icons/flags/us.svg" class="selected-flag" onerror="this.src='./icons/website.png'">
+                    <span>USD</span>
+                  </div>
+                </div>
+                <div class="dropdown-content hidden" style="display: none">
+                  <div class="search-container">
+                    <input type="text" class="dropdown-search" placeholder="Search...">
+                    <button class="clear-search hidden" title="Clear search">
+                      <svg viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
+                    </button>
+                  </div>
+                  <div class="dropdown-list" id="chart-quote-list"></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="last-update">
-            <span class="green">● Online</span> - Last Updated: <span class="date">15/12/2025</span>
-          </div>  
         </div>
 
       </div>

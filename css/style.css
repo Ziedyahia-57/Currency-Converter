@@ -1223,11 +1223,209 @@ button.chart-btn.btn3 {
   color: var(--font-color2);
 }
 
+.currency-converter-ex #chart-btn:hover {
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
 .currency-converter-ex #chart-btn {
-  transition: opacity 0.15s ease, background 0.2s cubic-bezier(0.4, 0, 0.2, 1), fill 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.15s ease;
 }
 
 .warning {
   border-bottom: 1px dashed;
   margin-left: 15px;
 }
+
+/* Custom Searchable Dropdown Styles */
+.dropdown-controls {
+  gap: 12px;
+  justify-content: center !important;
+}
+
+.dropdown-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.custom-dropdown {
+  position: relative;
+  flex: 1;
+  min-width: 80px;
+}
+
+.dropdown-selected {
+  height: 28px;
+  padding: 0 10px;
+  background: var(--gray);
+  border: 1px solid var(--border-dark);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--font-color2);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s ease;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.selected-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 15px);
+}
+
+.selected-flag {
+  width: 18px;
+  height: 12px;
+  border-radius: 2px;
+  object-fit: cover;
+}
+
+.dropdown-selected::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--font-color);
+  margin-left: 8px;
+}
+
+.custom-dropdown.open .dropdown-selected::after {
+  transform: rotate(180deg);
+}
+
+.dropdown-content {
+  position: absolute;
+  left: 0;
+  width: 150px;
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  overflow: hidden;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  bottom: calc(100% + 4px);
+  background: var(--light-gray);
+  align-content: flex-end;
+  padding-bottom: 45px;
+  height: fit-content;
+  box-shadow: 0px 0px 4px 1px #05050559;
+}
+
+.dropdown-content.hidden {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.search-container {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-dark);
+  background: var(--light-gray);
+  position: absolute;
+  bottom: 0px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.clear-search {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  fill: var(--font-color);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.clear-search:hover {
+  opacity: 1;
+}
+
+.clear-search svg {
+  width: 12px;
+  height: 12px;
+}
+
+.clear-search.hidden {
+  display: none;
+}
+
+.dropdown-search {
+  width: 100%;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--border-dark);
+  border-radius: 4px;
+  font-size: 12px;
+  background: var(--gray);
+  color: var(--font-color);
+  box-sizing: border-box;
+}
+
+.dropdown-search:focus {
+  outline: 1px solid var(--primary-color);
+}
+
+.dropdown-list {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(110, 110, 110, 0.45) transparent;
+  max-height: 256px;
+  background: var(--light-gray);
+}
+.dropdown-list > :first-child {
+    border-radius: 6px 6px 0 0;
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--font-color2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s ease;
+  background: var(--gray);
+  margin: 1px;
+}
+
+.dropdown-item:hover {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.dropdown-item.selected {
+  background: var(--primary-color);
+  color: white;
+}
+
+.dropdown-item.highlighted {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  outline: 1px solid var(--primary-color);
+}
+
+/* Base vs Quote difference or specific width */
+#chart-quote-dropdown .dropdown-content {
+  right: 0;
+  left: auto;
+}
+
+.dropdown-item img {
+  width: 16px;
+  border-radius: 2px !important;
+}
+
+
