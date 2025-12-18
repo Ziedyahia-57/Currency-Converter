@@ -35,9 +35,26 @@ let historicalData = null; // Store the fetched data
 
 // Fetch historical data from external source
 async function fetchHistoricalData() {
+  // Try to load from cache first if historicalData is null
+  if (!historicalData) {
+    try {
+      const result = await chrome.storage.local.get("cachedHistoricalData");
+      if (result.cachedHistoricalData) {
+        historicalData = result.cachedHistoricalData;
+        console.log("Historical data loaded from cache");
+      }
+    } catch (e) {
+      console.warn("Failed to load historical data from cache", e);
+    }
+  }
+
   if (!navigator.onLine) {
-    console.warn("User is offline. Using cached data if available.");
-    return historicalData;
+    if (historicalData) {
+      console.warn("User is offline. Using cached data.");
+      return historicalData;
+    }
+    console.warn("User is offline and no cached data available.");
+    return null;
   }
 
   try {
@@ -47,10 +64,16 @@ async function fetchHistoricalData() {
     
     historicalData = await response.json();
     console.log("Historical data fetched successfully", historicalData);
+    
+    // Save to cache
+    chrome.storage.local.set({ cachedHistoricalData: historicalData }, () => {
+      console.log("Historical data saved to cache");
+    });
+
     return historicalData;
   } catch (error) {
     console.error("Error fetching historical data:", error);
-    return null;
+    return historicalData; // Return cached data as fallback on error
   }
 }
 window.fetchHistoricalData = fetchHistoricalData;
@@ -84,8 +107,8 @@ function getTrendColor(data, isMissing = false) {
   const prevValue = data[data.length - 2];
   const difference = lastValue - prevValue;
 
-  // Use a small epsilon for floating point comparison
-  const epsilon = 0.0001;
+  // Use a small epsilon for floating point comparison (5 decimals)
+  const epsilon = 0.00001;
 
   if (Math.abs(difference) < epsilon) {
     return "gray";
@@ -105,7 +128,7 @@ function getTrendIndicator(data, isMissing = false) {
   const difference = lastValue - prevValue;
   const percentage = prevValue !== 0 ? (Math.abs(difference / prevValue) * 100).toFixed(1) : "0.0";
 
-  const epsilon = 0.0001;
+  const epsilon = 0.00001;
 
   if (Math.abs(difference) < epsilon) {
     return `<span class="trend-indicator trend-neutral">0.0%</span>`;
@@ -170,6 +193,8 @@ async function getChartData(range) {
         const qVal = quoteMap.get(dateStr) || 0;
         
         let rate = (bVal > 0) ? (qVal / bVal) : 0;
+        // User requested 5 decimal places
+        rate = Number(rate.toFixed(5));
         result.data.push(rate);
         
         const date = new Date(dateStr);
@@ -213,6 +238,8 @@ async function getChartData(range) {
         const qVal = quoteMap.get(monthStr) || 0;
         
         let rate = (bVal > 0) ? (qVal / bVal) : 0;
+        // User requested 5 decimal places
+        rate = Number(rate.toFixed(5));
         result.data.push(rate);
         
         const [year, month] = monthStr.split("-");
@@ -242,13 +269,12 @@ async function getChartData(range) {
   }
   
   const displayValue = lastValue.toLocaleString(undefined, {
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4
+    minimumFractionDigits: 5,
+    maximumFractionDigits: 5
   });
 
   if (result.isMissing) {
     valueText.innerHTML = `${displayValue} ${trendIndicator}`;
-    result.data = Array(points || 12).fill(0);
   } else {
     valueText.innerHTML = `${displayValue} ${trendIndicator}`;
   }
@@ -293,10 +319,10 @@ function updateXAxisGrid(range) {
   const yAxisConfig = chart.options.scales.y;
   yAxisConfig.ticks.callback = function(value) {
     if (this.max - this.min < 0.1) {
-      return value.toFixed(4);
+      return value.toFixed(5);
     }
     if (value >= 1000) return (value / 1000).toFixed(1) + "K";
-    return value.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    return value.toLocaleString(undefined, { maximumFractionDigits: 5 });
   };
 }
 
@@ -342,10 +368,10 @@ const chart = new Chart(ctx, {
           title: function (context) {
             const val = context[0].parsed.y;
             if (val === 0) return "No Data";
-            // Popup should have 4 decimal digits max
+            // Popup should have 5 decimal digits
             return val.toLocaleString(undefined, { 
-              minimumFractionDigits: 4, 
-              maximumFractionDigits: 4 
+              minimumFractionDigits: 5, 
+              maximumFractionDigits: 5 
             });
           },
           label: function (context) {
@@ -375,10 +401,10 @@ const chart = new Chart(ctx, {
             if (currentRange === "year" && value >= 1000) {
               return (value / 1000).toFixed(1) + "K";
             }
-            // Simplified Y-axis: max 4 decimals
+            // Simplified Y-axis: max 5 decimals
             return value.toLocaleString(undefined, { 
               minimumFractionDigits: 0, 
-              maximumFractionDigits: 4 
+              maximumFractionDigits: 5 
             });
           },
         },
