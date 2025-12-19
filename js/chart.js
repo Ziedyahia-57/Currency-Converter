@@ -499,12 +499,48 @@ async function updateChartWithData(newData) {
 }
 window.updateChartWithData = updateChartWithData;
 
+// Timer to show when the chart data will be updated (Daily at 00:30 UTC)
+function startChartUpdateTimer() {
+  const timerHm = document.getElementById("timer-hm");
+  const timerS = document.getElementById("timer-s");
+
+  if (!timerHm || !timerS) return;
+
+  function update() {
+    const now = new Date();
+    // Target is today at 00:30 UTC
+    let target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 30, 0));
+
+    // If we've passed 00:30 UTC today, target is tomorrow at 00:30 UTC
+    if (now >= target) {
+      target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 30, 0));
+    }
+
+    const diff = target - now;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    // Format as HH:MM and :SS
+    const hStr = hours > 0 ? `${hours}:` : "";
+    const mStr = minutes.toString().padStart(2, "0");
+    const sStr = seconds.toString().padStart(2, "0");
+
+    timerHm.textContent = `${hStr}${mStr}`;
+    timerS.textContent = `:${sStr}`;
+  }
+
+  update();
+  setInterval(update, 1000);
+}
+
 // Initial fetch and render
 (async () => {
   await fetchHistoricalData();
   const initialData = await getChartData(currentRange);
   updateXAxisGrid(currentRange);
   updateChartWithData(initialData);
+  startChartUpdateTimer();
 
   // Set initial focused button
   const weekBtn = document.querySelector('[data-range="week"]');
