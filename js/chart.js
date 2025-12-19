@@ -146,7 +146,7 @@ function getTrendIndicator(data, isMissing = false) {
   const lastValue = data[data.length - 1];
   const prevValue = data[data.length - 2];
   const difference = lastValue - prevValue;
-  const percentage = prevValue !== 0 ? (Math.abs(difference / prevValue) * 100).toFixed(1) : "0.0";
+  const percentage = prevValue !== 0 ? (Math.abs(difference / prevValue) * 100).toFixed(2) : "0.00";
 
   const { quote } = getSelectedCurrencies();
   const epsilon = quote === "BTC" ? 0.00000001 : 0.00001;
@@ -288,15 +288,10 @@ async function getChartData(range) {
     infoText.innerHTML = `${formatDate(result.startDate)} - ${formatDate(result.endDate)}`;
   }
 
-  let displayValue;
-  if (quote === "BTC" && lastValue > 0 && lastValue < 0.0001) {
-    displayValue = formatScientific(lastValue, true);
-  } else {
-    displayValue = lastValue.toLocaleString(undefined, {
-      minimumFractionDigits: quote === "BTC" ? 8 : 5,
-      maximumFractionDigits: quote === "BTC" ? 8 : 5,
-    });
-  }
+  const displayValue = lastValue.toLocaleString(undefined, {
+    minimumFractionDigits: quote === "BTC" ? 8 : 5,
+    maximumFractionDigits: quote === "BTC" ? 8 : 5,
+  });
 
   if (result.isMissing) {
     valueText.innerHTML = `${displayValue} ${trendIndicator}`;
@@ -397,11 +392,8 @@ const chart = new Chart(ctx, {
           title: function (context) {
             const val = context[0].parsed.y;
             if (val === 0) return "No Data";
-            // Popup should have 5 decimal digits
+            // Popup should have 5 or 8 decimal digits
             const { quote } = getSelectedCurrencies();
-            if (quote === "BTC" && val > 0 && val < 0.0001) {
-              return formatScientific(val, false);
-            }
             return val.toLocaleString(undefined, {
               minimumFractionDigits: quote === "BTC" ? 8 : 5,
               maximumFractionDigits: quote === "BTC" ? 8 : 5,

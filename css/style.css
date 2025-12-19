@@ -1251,7 +1251,7 @@ button.chart-btn.btn3 {
 .custom-dropdown {
   position: relative;
   flex: 1;
-  min-width: 80px;
+  min-width: 90px;
 }
 
 .swap-currencies-btn {
