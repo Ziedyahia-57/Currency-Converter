@@ -1070,6 +1070,37 @@ body {
   border-radius: 4px 0 0 4px;
   z-index: 1;
 }
+
+.tax-difference {
+  position: absolute;
+  bottom: 0px;
+  left: 80px;
+  font-size: 10px;
+  color: var(--primary-color);
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0.8;
+  pointer-events: none;
+  animation: fadeIn 0.1s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(1px); }
+  to { opacity: 0.8; transform: translateY(0); }
+}
+
+.currency-converter-ex .currency-input.has-tax-diff {
+  height: auto !important;
+}
+
+.currency-converter-ex .currency-input.has-tax-diff input {
+  padding-bottom: 10px !important;
+}
+
+.currency-converter-ex .currency-input:focus-within .tax-difference {
+  display: none !important;
+}
+
 .currency-converter-ex-disabled {
   cursor: not-allowed !important;
   background: hsl(180 0% 27% / 1) !important;
@@ -1468,8 +1499,7 @@ button.chart-btn.btn3 {
   color: var(--font-color2);
 }
 .seconds{
-  font-size: 10px;
-  color: var(--font-color2);
+  color: #94a3b8;
   position: relative; 
   left: -3px;
 }
