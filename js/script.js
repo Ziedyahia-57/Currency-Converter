@@ -3641,6 +3641,16 @@ function initChartDropdowns() {
     quoteSearch.focus();
   });
 
+  document.getElementById("swap-charts-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const tempBase = currentBase;
+    const tempQuote = currentQuote;
+    
+    // Use selectCurrency to handle all the updates, storage, and chart refreshes
+    selectCurrency(baseDropdown, tempQuote);
+    selectCurrency(quoteDropdown, tempBase);
+  });
+
   document.addEventListener("click", () => {
     document.querySelectorAll(".custom-dropdown").forEach(d => {
       d.classList.remove("open");

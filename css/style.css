@@ -51,7 +51,7 @@ body {
   width: 330px;
   overflow: hidden;
   height: auto;
-  min-height: 410px;
+  min-height: 426px;
   position: relative;
   -webkit-user-select: none; /* Safari */
   -ms-user-select: none; /* IE 10 and IE 11 */
@@ -93,7 +93,7 @@ body {
 
 .currency-converter-ex #currency-container {
   height: fit-content;
-  min-height: 254px;
+  min-height: 270px;
   max-height: 288px;
   overflow-y: overlay;
   background: var(--light-gray);
@@ -1237,7 +1237,7 @@ button.chart-btn.btn3 {
 
 /* Custom Searchable Dropdown Styles */
 .dropdown-controls {
-  gap: 12px;
+  gap: 6px;
   justify-content: center !important;
 }
 
@@ -1252,6 +1252,34 @@ button.chart-btn.btn3 {
   position: relative;
   flex: 1;
   min-width: 80px;
+}
+
+.swap-currencies-btn {
+  background: var(--gray);
+  border: 1px solid var(--border-dark);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  fill: var(--font-color);
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.swap-currencies-btn:hover {
+  background: var(--primary-color);
+  fill: white;
+  transform: rotate(180deg);
+  border-color: var(--primary-color);
+}
+
+.swap-currencies-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .dropdown-selected {

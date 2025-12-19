@@ -5,7 +5,6 @@ const valueText = document.getElementById("valueText");
 
 // Set default test date to today and disable the input
 const today = new Date();
-today.setHours(0, 0, 0, 0);
 testDateInput.value = today.toISOString().split("T")[0];
 testDateInput.disabled = true; // Disable the input so it can't be changed
 
@@ -61,10 +60,10 @@ async function fetchHistoricalData() {
     const url = "https://ziedyahia-57.github.io/Currency-Converter/processed-data.json?t=" + Date.now();
     const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch historical data");
-    
+
     historicalData = await response.json();
     console.log("Historical data fetched successfully", historicalData);
-    
+
     // Save to cache
     chrome.storage.local.set({ cachedHistoricalData: historicalData }, () => {
       console.log("Historical data saved to cache");
@@ -84,7 +83,7 @@ function getSelectedCurrencies() {
   const quoteEl = document.querySelector("#chart-quote-selected span");
   return {
     base: baseEl ? baseEl.textContent.trim() : "JPY",
-    quote: quoteEl ? quoteEl.textContent.trim() : "USD"
+    quote: quoteEl ? quoteEl.textContent.trim() : "USD",
   };
 }
 
@@ -98,6 +97,26 @@ function formatMonth(date) {
   return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
+// Helper to format scientific notation for BTC
+function formatScientific(value, isHTML = false) {
+  if (value === 0) return "0.0";
+  let exp = Math.floor(Math.log10(value));
+  let base = value / Math.pow(10, exp);
+  
+  if (isHTML) {
+    return `${base.toFixed(1)}x10<sup>${exp}</sup>`;
+  }
+  
+  // Unicode superscripts for Canvas
+  const superscripts = {
+    '0': '\u2070', '1': '\u00B9', '2': '\u00B2', '3': '\u00B3', '4': '\u2074',
+    '5': '\u2075', '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079',
+    '-': '\u207B'
+  };
+  const expStr = exp.toString().split('').map(char => superscripts[char] || char).join('');
+  return `${base.toFixed(1)}x10${expStr}`;
+}
+
 // Determine trend color based on last two data points
 function getTrendColor(data, isMissing = false) {
   if (isMissing) return "gray";
@@ -107,8 +126,9 @@ function getTrendColor(data, isMissing = false) {
   const prevValue = data[data.length - 2];
   const difference = lastValue - prevValue;
 
-  // Use a small epsilon for floating point comparison (5 decimals)
-  const epsilon = 0.00001;
+  // Use a smaller epsilon for BTC (8 decimals) vs others (5 decimals)
+  const { quote } = getSelectedCurrencies();
+  const epsilon = quote === "BTC" ? 0.00000001 : 0.00001;
 
   if (Math.abs(difference) < epsilon) {
     return "gray";
@@ -128,7 +148,8 @@ function getTrendIndicator(data, isMissing = false) {
   const difference = lastValue - prevValue;
   const percentage = prevValue !== 0 ? (Math.abs(difference / prevValue) * 100).toFixed(1) : "0.0";
 
-  const epsilon = 0.00001;
+  const { quote } = getSelectedCurrencies();
+  const epsilon = quote === "BTC" ? 0.00000001 : 0.00001;
 
   if (Math.abs(difference) < epsilon) {
     return `<span class="trend-indicator trend-neutral">0.0%</span>`;
@@ -156,7 +177,7 @@ async function getChartData(range) {
     data: [],
     fullLabels: [],
     range: range,
-    isMissing: false
+    isMissing: false,
   };
 
   const baseMonthData = monthData[base] || [];
@@ -168,7 +189,7 @@ async function getChartData(range) {
     const points = range === "week" ? 7 : 30;
     const masterTimeline = [];
     const end = window.today || new Date();
-    
+
     // Generate the last N days (sorted old to new)
     for (let i = points - 1; i >= 0; i--) {
       const d = new Date(end);
@@ -177,8 +198,8 @@ async function getChartData(range) {
     }
 
     // Convert data arrays to Maps for $O(1)$ lookup
-    const baseMap = new Map(baseMonthData.map(p => [p.date, p.value]));
-    const quoteMap = new Map(quoteMonthData.map(p => [p.date, p.value]));
+    const baseMap = new Map(baseMonthData.map((p) => [p.date, p.value]));
+    const quoteMap = new Map(quoteMonthData.map((p) => [p.date, p.value]));
 
     if (masterTimeline.length === 0) {
       result.isMissing = true;
@@ -188,33 +209,32 @@ async function getChartData(range) {
         result.fullLabels.push("No data available");
       }
     } else {
-      masterTimeline.forEach(dateStr => {
+      masterTimeline.forEach((dateStr) => {
         const bVal = baseMap.get(dateStr) || 0;
         const qVal = quoteMap.get(dateStr) || 0;
-        
-        let rate = (bVal > 0) ? (qVal / bVal) : 0;
-        // User requested 5 decimal places
-        rate = Number(rate.toFixed(5));
+
+        let rate = bVal > 0 ? qVal / bVal : 0;
+        // If quote is BTC, use 8 decimals, otherwise 5
+        rate = Number(rate.toFixed(quote === "BTC" ? 8 : 5));
         result.data.push(rate);
-        
+
         const date = new Date(dateStr);
         const dayLetters = ["S", "M", "T", "W", "T", "F", "S"];
-        
+
         if (range === "week") {
           result.labels.push(dayLetters[date.getDay()]);
         } else {
           result.labels.push(date.getDay() === 1 ? `${formatDate(date).split(",")[0]}` : "");
         }
-        
+
         result.fullLabels.push(`${formatDate(date)} (${dayLetters[date.getDay()]})`);
       });
-      
-      if (result.data.every(v => v === 0)) result.isMissing = true;
+
+      if (result.data.every((v) => v === 0)) result.isMissing = true;
     }
-    
+
     result.startDate = new Date(masterTimeline[0]);
     result.endDate = new Date(masterTimeline[masterTimeline.length - 1]);
-
   } else if (range === "year") {
     // Generate exactly 12 months ending at the current month
     const masterMonths = [];
@@ -222,36 +242,36 @@ async function getChartData(range) {
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, "0");
       masterMonths.push(`${year}-${month}`);
     }
 
-    const baseMap = new Map(baseYearData.map(p => [p.month, p.average]));
-    const quoteMap = new Map(quoteYearData.map(p => [p.month, p.average]));
+    const baseMap = new Map(baseYearData.map((p) => [p.month, p.average]));
+    const quoteMap = new Map(quoteYearData.map((p) => [p.month, p.average]));
 
     if (masterMonths.length === 0) {
       result.isMissing = true;
       for (let i = 0; i < 12; i++) result.data.push(0);
     } else {
-      masterMonths.forEach(monthStr => {
+      masterMonths.forEach((monthStr) => {
         const bVal = baseMap.get(monthStr) || 0;
         const qVal = quoteMap.get(monthStr) || 0;
-        
-        let rate = (bVal > 0) ? (qVal / bVal) : 0;
-        // User requested 5 decimal places
-        rate = Number(rate.toFixed(5));
+
+        let rate = bVal > 0 ? qVal / bVal : 0;
+        // If quote is BTC, use 8 decimals, otherwise 5
+        rate = Number(rate.toFixed(quote === "BTC" ? 8 : 5));
         result.data.push(rate);
-        
+
         const [year, month] = monthStr.split("-");
         const date = new Date(year, parseInt(month) - 1);
         const monthAbbr = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
         result.labels.push(monthAbbr[date.getMonth()]);
         result.fullLabels.push(`${formatMonth(date)}`);
       });
-      
-      if (result.data.every(v => v === 0)) result.isMissing = true;
+
+      if (result.data.every((v) => v === 0)) result.isMissing = true;
     }
-    
+
     result.startDate = new Date(masterMonths[0] + "-01");
     const lastMonthStr = masterMonths[masterMonths.length - 1];
     const [y, m] = lastMonthStr.split("-");
@@ -261,17 +281,22 @@ async function getChartData(range) {
   // Update UI texts
   const trendIndicator = getTrendIndicator(result.data, result.isMissing);
   const lastValue = result.data.length > 0 ? result.data[result.data.length - 1] : 0;
-  
+
   if (range === "year") {
     infoText.innerHTML = `${formatMonth(result.startDate)} - ${formatMonth(result.endDate)}`;
   } else {
     infoText.innerHTML = `${formatDate(result.startDate)} - ${formatDate(result.endDate)}`;
   }
-  
-  const displayValue = lastValue.toLocaleString(undefined, {
-    minimumFractionDigits: 5,
-    maximumFractionDigits: 5
-  });
+
+  let displayValue;
+  if (quote === "BTC" && lastValue > 0 && lastValue < 0.0001) {
+    displayValue = formatScientific(lastValue, true);
+  } else {
+    displayValue = lastValue.toLocaleString(undefined, {
+      minimumFractionDigits: quote === "BTC" ? 8 : 5,
+      maximumFractionDigits: quote === "BTC" ? 8 : 5,
+    });
+  }
 
   if (result.isMissing) {
     valueText.innerHTML = `${displayValue} ${trendIndicator}`;
@@ -317,12 +342,16 @@ function updateXAxisGrid(range) {
 
   // Optimize Y-axis for currency rates
   const yAxisConfig = chart.options.scales.y;
-  yAxisConfig.ticks.callback = function(value) {
+  yAxisConfig.ticks.callback = function (value) {
+    const { quote } = getSelectedCurrencies();
+    if (quote === "BTC" && value > 0 && value < 0.0001) {
+      return formatScientific(value, false);
+    }
     if (this.max - this.min < 0.1) {
-      return value.toFixed(5);
+      return value.toFixed(quote === "BTC" ? 8 : 5);
     }
     if (value >= 1000) return (value / 1000).toFixed(1) + "K";
-    return value.toLocaleString(undefined, { maximumFractionDigits: 5 });
+    return value.toLocaleString(undefined, { maximumFractionDigits: quote === "BTC" ? 8 : 5 });
   };
 }
 
@@ -369,9 +398,13 @@ const chart = new Chart(ctx, {
             const val = context[0].parsed.y;
             if (val === 0) return "No Data";
             // Popup should have 5 decimal digits
-            return val.toLocaleString(undefined, { 
-              minimumFractionDigits: 5, 
-              maximumFractionDigits: 5 
+            const { quote } = getSelectedCurrencies();
+            if (quote === "BTC" && val > 0 && val < 0.0001) {
+              return formatScientific(val, false);
+            }
+            return val.toLocaleString(undefined, {
+              minimumFractionDigits: quote === "BTC" ? 8 : 5,
+              maximumFractionDigits: quote === "BTC" ? 8 : 5,
             });
           },
           label: function (context) {
@@ -398,13 +431,17 @@ const chart = new Chart(ctx, {
           color: "#94a3b8",
           maxTicksLimit: 7,
           callback: function (value) {
+            const { quote } = getSelectedCurrencies();
+            if (quote === "BTC" && value > 0 && value < 0.0001) {
+              return formatScientific(value, false);
+            }
             if (currentRange === "year" && value >= 1000) {
               return (value / 1000).toFixed(1) + "K";
             }
-            // Simplified Y-axis: max 5 decimals
-            return value.toLocaleString(undefined, { 
-              minimumFractionDigits: 0, 
-              maximumFractionDigits: 5 
+            // Simplified Y-axis: max 5 or 8 decimals
+            return value.toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: quote === "BTC" ? 8 : 5,
             });
           },
         },
@@ -421,7 +458,7 @@ document.querySelectorAll(".chart-btn").forEach((button) => {
 
     currentRange = button.dataset.range;
     window.currentRange = currentRange;
-    
+
     const newData = await getChartData(currentRange);
     updateXAxisGrid(currentRange);
     updateChartWithData(newData);
@@ -436,7 +473,7 @@ async function updateChartWithData(newData) {
   if (!newData) {
     newData = await getChartData(currentRange);
   }
-  
+
   if (!newData) return;
 
   const trendColor = getTrendColor(newData.data, newData.isMissing);
@@ -476,7 +513,7 @@ window.updateChartWithData = updateChartWithData;
   const initialData = await getChartData(currentRange);
   updateXAxisGrid(currentRange);
   updateChartWithData(initialData);
-  
+
   // Set initial focused button
   const weekBtn = document.querySelector('[data-range="week"]');
   if (weekBtn) weekBtn.classList.add("focused-btn");
