@@ -2741,18 +2741,19 @@ function createPriceWrapper(textNode, text, parent, originalCurrency, possibleCu
   optionsSpan.style.alignItems = "center";
   optionsSpan.style.flexShrink = "0"; // Prevent container from shrinking
   
-  const icon = document.createElement("img");
-  icon.id = "options-icon";
-  icon.src = chrome.runtime.getURL("icons/white_icon.svg");
-  icon.alt = "Currency converter options";
-  icon.title = "Change Source Currency";
-  icon.style.display = "block";
-  icon.style.width = "16px";
-  icon.style.height = "16px";
-  icon.style.flexShrink = "0"; // Prevent icon from shrinking
+  //!!! currency highlight icon
+  // const icon = document.createElement("img");
+  // icon.id = "options-icon";
+  // icon.src = chrome.runtime.getURL("icons/white_icon.svg");
+  // icon.alt = "Currency converter options";
+  // icon.title = "Change Source Currency";
+  // icon.style.display = "block";
+  // icon.style.width = "16px";
+  // icon.style.height = "16px";
+  // icon.style.flexShrink = "0"; // Prevent icon from shrinking
   
-  optionsSpan.appendChild(icon);
-  wrapper.appendChild(optionsSpan);
+  // optionsSpan.appendChild(icon);
+  // wrapper.appendChild(optionsSpan);
 
   // Add the converted price text
   const textSpan = document.createElement("span");
