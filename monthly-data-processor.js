@@ -102,6 +102,29 @@ function getDaysInMonth(year, month) {
     return new Date(year, month, 0).getDate();
 }
 
+// FIXED: Simple ISO timestamp parser
+function parseTimestamp(timestamp) {
+    if (!timestamp) {
+        return new Date();
+    }
+    
+    try {
+        // Directly create Date from ISO string
+        const date = new Date(timestamp);
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            console.log(`Invalid date from timestamp: ${timestamp}, using current date`);
+            return new Date();
+        }
+        
+        return date;
+    } catch (error) {
+        console.log(`Failed to parse timestamp: ${timestamp}, using current date`);
+        return new Date();
+    }
+}
+
 function detectMonthBoundary(apiDateStr) {
     const todayMonthLabel = getMonthLabelFromDate(apiDateStr);
     
@@ -217,15 +240,27 @@ function processData() {
         
         const inputData = JSON.parse(fs.readFileSync(INPUT_DATA_FILE, 'utf8'));
         console.log(`Loaded input data`);
-        console.log(`Timestamp: ${inputData.timestamp ? new Date(inputData.timestamp * 1000).toISOString() : 'N/A'}`);
+        console.log(`Raw timestamp: ${inputData.timestamp}`);
         
-        loadProcessedData();
+        // FIXED: Simple ISO timestamp parsing
+        let apiTimestamp;
+        try {
+            apiTimestamp = new Date(inputData.timestamp);
+            if (isNaN(apiTimestamp.getTime())) {
+                console.log('Timestamp is invalid, using current date');
+                apiTimestamp = new Date();
+            }
+        } catch (error) {
+            console.log(`Error parsing timestamp: ${error.message}, using current date`);
+            apiTimestamp = new Date();
+        }
         
-        const apiTimestamp = inputData.timestamp ? 
-            new Date(inputData.timestamp * 1000) : new Date();
         const apiDateStr = apiTimestamp.toISOString().split('T')[0];
         
-        console.log(`\nProcessing date: ${apiDateStr}`);
+        console.log(`Parsed date: ${apiDateStr}`);
+        console.log(`Processing date: ${apiDateStr}`);
+        
+        loadProcessedData();
         
         // Detect month boundary
         const monthBoundary = detectMonthBoundary(apiDateStr);
@@ -270,6 +305,7 @@ function processData() {
                     timestamp: apiTimestamp.toISOString()
                 };
                 skippedDuplicates++;
+                console.log(`Updated ${currency} for ${apiDateStr}`);
             } else {
                 // Add new
                 monthData[currency].push({
@@ -278,6 +314,7 @@ function processData() {
                     timestamp: apiTimestamp.toISOString()
                 });
                 newDataAdded = true;
+                console.log(`Added ${currency} for ${apiDateStr}: ${rate}`);
             }
             
             // Keep sorted and limit to 30 days
@@ -344,7 +381,7 @@ function processData() {
             lastProcessedDates[currency] = apiDateStr;
         });
         
-        lastUpdated = apiTimestamp.toISOString();
+        lastUpdated = new Date().toISOString();
         
         // Save processed data
         saveProcessedData();
