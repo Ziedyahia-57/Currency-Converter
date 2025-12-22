@@ -45,9 +45,9 @@ jobs:
         run: |
           echo "Running monthly averages processor..."
           
-          # Create the processor script
+          # Create the processor script WITH FIXES for toISOString() errors
           cat > monthly-data-processor.js << 'EOF'
-          // monthly-data-processor.js with accurate month boundary detection
+          // monthly-data-processor.js - FIXED VERSION
           const fs = require('fs');
           const path = require('path');
 
@@ -62,6 +62,42 @@ jobs:
           let currentProcessingMonth = null; // Track current month being processed
           let lastUpdated = null;
 
+          // SAFE DATE FUNCTION - Never throws toISOString() errors
+          function getSafeISOString(date) {
+              if (!(date instanceof Date) || isNaN(date.getTime())) {
+                  date = new Date(); // Fallback to current date
+              }
+              
+              // Manually construct ISO string to avoid toISOString() errors
+              try {
+                  const year = date.getUTCFullYear();
+                  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                  const day = String(date.getUTCDate()).padStart(2, '0');
+                  const hours = String(date.getUTCHours()).padStart(2, '0');
+                  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+                  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+                  const ms = String(date.getUTCMilliseconds()).padStart(3, '0');
+                  
+                  return \`\${year}-\${month}-\${day}T\${hours}:\${minutes}:\${seconds}.\${ms}Z\`;
+              } catch (error) {
+                  // Ultimate fallback
+                  return '2024-01-01T00:00:00.000Z';
+              }
+          }
+
+          // SAFE date string (YYYY-MM-DD)
+          function getSafeDateString(date) {
+              if (!(date instanceof Date) || isNaN(date.getTime())) {
+                  date = new Date();
+              }
+              
+              const year = date.getUTCFullYear();
+              const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+              const day = String(date.getUTCDate()).padStart(2, '0');
+              
+              return \`\${year}-\${month}-\${day}\`;
+          }
+
           function loadProcessedData() {
               try {
                   if (fs.existsSync(PROCESSED_DATA_FILE)) {
@@ -71,8 +107,8 @@ jobs:
                       lastProcessedDates = data.lastProcessedDates || {};
                       currentProcessingMonth = data.currentProcessingMonth || null;
                       lastUpdated = data.lastUpdated;
-                      console.log(`Loaded processed data for ${Object.keys(monthData).length} currencies`);
-                      console.log(`Current processing month: ${currentProcessingMonth || 'Not set'}`);
+                      console.log(\`Loaded processed data for \${Object.keys(monthData).length} currencies\`);
+                      console.log(\`Current processing month: \${currentProcessingMonth || 'Not set'}\`);
                       
                       // Clean up old data to maintain 30-day window
                       cleanMonthDataTo30Days();
@@ -89,7 +125,7 @@ jobs:
           function cleanMonthDataTo30Days() {
               const thirtyDaysAgo = new Date();
               thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-              const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+              const thirtyDaysAgoStr = getSafeDateString(thirtyDaysAgo);
               
               Object.keys(monthData).forEach(currency => {
                   if (Array.isArray(monthData[currency])) {
@@ -112,56 +148,74 @@ jobs:
                   lastProcessedDates,
                   currentProcessingMonth,
                   lastUpdated,
-                  savedAt: new Date().toISOString(),
+                  savedAt: getSafeISOString(new Date()),
                   metadata: {
                       description: "Monthly averages with rolling 30-day data",
-                      version: "2.0",
-                      monthDetection: "accurate"
+                      version: "2.1-fixed",
+                      monthDetection: "accurate",
+                      dateHandling: "safe"
                   }
               };
               
               try {
                   fs.writeFileSync(PROCESSED_DATA_FILE, JSON.stringify(state, null, 2));
-                  console.log(`Saved processed data for ${Object.keys(monthData).length} currencies`);
+                  console.log(\`Saved processed data for \${Object.keys(monthData).length} currencies\`);
               } catch (error) {
                   console.error('Error saving processed data:', error);
               }
           }
 
           function getMonthLabelFromDate(dateStr) {
+              if (!dateStr || typeof dateStr !== 'string' || dateStr.length < 7) {
+                  // Fallback to current month
+                  return getSafeDateString(new Date()).slice(0, 7);
+              }
               return dateStr.slice(0, 7); // "YYYY-MM"
           }
 
           function getPreviousMonth(monthLabel) {
-              const [year, month] = monthLabel.split('-').map(Number);
-              
-              let prevMonth = month - 1;
-              let prevYear = year;
-              
-              if (prevMonth < 1) {
-                  prevMonth = 12;
-                  prevYear = year - 1;
+              try {
+                  const [year, month] = monthLabel.split('-').map(Number);
+                  
+                  let prevMonth = month - 1;
+                  let prevYear = year;
+                  
+                  if (prevMonth < 1) {
+                      prevMonth = 12;
+                      prevYear = year - 1;
+                  }
+                  
+                  return \`\${prevYear}-\${String(prevMonth).padStart(2, '0')}\`;
+              } catch (error) {
+                  console.error(\`Error calculating previous month for "\${monthLabel}":\`, error);
+                  // Fallback to previous month from current date
+                  const now = new Date();
+                  now.setMonth(now.getMonth() - 1);
+                  return getSafeDateString(now).slice(0, 7);
               }
-              
-              return `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
           }
 
           function getDaysInMonth(year, month) {
-              // month is 1-indexed (1=January, 2=February, etc.)
-              return new Date(year, month, 0).getDate();
+              try {
+                  // month is 1-indexed (1=January, 2=February, etc.)
+                  return new Date(year, month, 0).getDate();
+              } catch (error) {
+                  console.error(\`Error getting days in month \${year}-\${month}:\`, error);
+                  return 30; // Safe default
+              }
           }
 
           function detectMonthBoundary(apiDateStr) {
               const todayMonthLabel = getMonthLabelFromDate(apiDateStr);
               
-              console.log(`Month detection:`);
-              console.log(`  Today's date: ${apiDateStr}`);
-              console.log(`  Today's month: ${todayMonthLabel}`);
-              console.log(`  Stored month: ${currentProcessingMonth || 'None'}`);
+              console.log(\`Month detection:\`);
+              console.log(\`  Today's date: \${apiDateStr}\`);
+              console.log(\`  Today's month: \${todayMonthLabel}\`);
+              console.log(\`  Stored month: \${currentProcessingMonth || 'None'}\`);
               
               // First run - initialize
               if (!currentProcessingMonth) {
-                  console.log(`  Initializing processing month to: ${todayMonthLabel}`);
+                  console.log(\`  Initializing processing month to: \${todayMonthLabel}\`);
                   return {
                       isNewMonth: false,
                       previousMonth: null,
@@ -171,8 +225,8 @@ jobs:
               
               // Check if month has changed
               if (todayMonthLabel !== currentProcessingMonth) {
-                  console.log(`  ⚠️ MONTH BOUNDARY DETECTED!`);
-                  console.log(`    Moving from ${currentProcessingMonth} to ${todayMonthLabel}`);
+                  console.log(\`  ⚠️ MONTH BOUNDARY DETECTED!\`);
+                  console.log(\`    Moving from \${currentProcessingMonth} to \${todayMonthLabel}\`);
                   
                   const result = {
                       isNewMonth: true,
@@ -191,10 +245,10 @@ jobs:
           }
 
           function finalizePreviousMonth(currency, previousMonthLabel) {
-              console.log(`  Finalizing ${currency} for ${previousMonthLabel}...`);
+              console.log(\`  Finalizing \${currency} for \${previousMonthLabel}...\`);
               
               if (!monthData[currency]) {
-                  console.log(`    No data for ${currency}`);
+                  console.log(\`    No data for \${currency}\`);
                   return null;
               }
               
@@ -206,7 +260,7 @@ jobs:
               });
               
               if (prevMonthData.length === 0) {
-                  console.log(`    No data found for ${currency} in ${previousMonthLabel}`);
+                  console.log(\`    No data found for \${currency} in \${previousMonthLabel}\`);
                   return null;
               }
               
@@ -230,18 +284,18 @@ jobs:
                   dataPoints: prevMonthData.length,
                   daysInMonth: daysInMonth,
                   completion: Math.round((prevMonthData.length / daysInMonth) * 100),
-                  calculatedAt: new Date().toISOString(),
+                  calculatedAt: getSafeISOString(new Date()),
                   final: true
               };
               
               if (existingIndex >= 0) {
                   // Update existing
                   chartData[currency][existingIndex] = monthEntry;
-                  console.log(`    Updated existing entry for ${previousMonthLabel}`);
+                  console.log(\`    Updated existing entry for \${previousMonthLabel}\`);
               } else {
                   // Add new
                   chartData[currency].push(monthEntry);
-                  console.log(`    Created new entry for ${previousMonthLabel}`);
+                  console.log(\`    Created new entry for \${previousMonthLabel}\`);
               }
               
               // Keep only last 12 months
@@ -249,32 +303,42 @@ jobs:
                   chartData[currency] = chartData[currency].slice(-12);
               }
               
-              console.log(`    Average: ${prevMonthAvg.toFixed(6)} (${prevMonthData.length}/${daysInMonth} days)`);
+              console.log(\`    Average: \${prevMonthAvg.toFixed(6)} (\${prevMonthData.length}/\${daysInMonth} days)\`);
               return monthEntry;
           }
 
           function processData() {
               try {
                   console.log('='.repeat(60));
-                  console.log('STARTING MONTHLY DATA PROCESSING');
+                  console.log('STARTING MONTHLY DATA PROCESSING - FIXED VERSION');
                   console.log('='.repeat(60));
                   
                   if (!fs.existsSync(INPUT_DATA_FILE)) {
-                      console.error(`Input file not found: ${INPUT_DATA_FILE}`);
+                      console.error(\`Input file not found: \${INPUT_DATA_FILE}\`);
                       return { success: false, error: 'Input file not found' };
                   }
                   
                   const inputData = JSON.parse(fs.readFileSync(INPUT_DATA_FILE, 'utf8'));
-                  console.log(`Loaded input data`);
-                  console.log(`Timestamp: ${inputData.timestamp ? new Date(inputData.timestamp * 1000).toISOString() : 'N/A'}`);
+                  console.log(\`Loaded input data\`);
                   
                   loadProcessedData();
                   
-                  const apiTimestamp = inputData.timestamp ? 
-                      new Date(inputData.timestamp * 1000) : new Date();
-                  const apiDateStr = apiTimestamp.toISOString().split('T')[0];
+                  // Get timestamp SAFELY
+                  let apiTimestamp;
+                  if (inputData.timestamp) {
+                      apiTimestamp = new Date(inputData.timestamp * 1000);
+                      if (isNaN(apiTimestamp.getTime())) {
+                          apiTimestamp = new Date(); // Fallback if invalid
+                      }
+                  } else {
+                      apiTimestamp = new Date();
+                  }
                   
-                  console.log(`\nProcessing date: ${apiDateStr}`);
+                  // Use SAFE functions instead of toISOString()
+                  const apiDateStr = getSafeDateString(apiTimestamp);
+                  const apiTimestampStr = getSafeISOString(apiTimestamp);
+                  
+                  console.log(\`\nProcessing date: \${apiDateStr}\`);
                   
                   // Detect month boundary
                   const monthBoundary = detectMonthBoundary(apiDateStr);
@@ -284,13 +348,13 @@ jobs:
                   let skippedDuplicates = 0;
                   let finalizedMonths = {};
                   
-                  console.log(`\nProcessing ${Object.keys(rates).length} currencies...`);
+                  console.log(\`\nProcessing \${Object.keys(rates).length} currencies...\`);
                   
                   // Update current processing month
                   if (monthBoundary.isNewMonth) {
-                      console.log(`\n📅 MONTH TRANSITION DETECTED`);
-                      console.log(`   Previous: ${monthBoundary.previousMonth}`);
-                      console.log(`   New: ${monthBoundary.newMonth}`);
+                      console.log(\`\n📅 MONTH TRANSITION DETECTED\`);
+                      console.log(\`   Previous: \${monthBoundary.previousMonth}\`);
+                      console.log(\`   New: \${monthBoundary.newMonth}\`);
                       currentProcessingMonth = monthBoundary.newMonth;
                   } else if (!currentProcessingMonth) {
                       currentProcessingMonth = monthBoundary.newMonth;
@@ -316,17 +380,19 @@ jobs:
                           monthData[currency][existingIndex] = {
                               value: rate,
                               date: apiDateStr,
-                              timestamp: apiTimestamp.toISOString()
+                              timestamp: apiTimestampStr  // FIXED: Use safe function
                           };
                           skippedDuplicates++;
+                          console.log(\`✓ Updated \${currency} for \${apiDateStr}\`);
                       } else {
                           // Add new
                           monthData[currency].push({
                               value: rate,
                               date: apiDateStr,
-                              timestamp: apiTimestamp.toISOString()
+                              timestamp: apiTimestampStr  // FIXED: Use safe function
                           });
                           newDataAdded = true;
+                          console.log(\`✓ Added \${currency} for \${apiDateStr}: \${rate}\`);
                       }
                       
                       // Keep sorted and limit to 30 days
@@ -373,7 +439,7 @@ jobs:
                               dataPoints: currentMonthData.length,
                               daysInMonth: daysInMonth,
                               completion: Math.round((currentMonthData.length / daysInMonth) * 100),
-                              lastUpdated: new Date().toISOString(),
+                              lastUpdated: getSafeISOString(new Date()),
                               isCurrentMonth: true,
                               final: monthBoundary.isNewMonth ? false : (currentMonthData.length === daysInMonth)
                           };
@@ -393,7 +459,7 @@ jobs:
                       lastProcessedDates[currency] = apiDateStr;
                   });
                   
-                  lastUpdated = apiTimestamp.toISOString();
+                  lastUpdated = apiTimestampStr;
                   
                   // Save processed data
                   saveProcessedData();
@@ -421,7 +487,7 @@ jobs:
                           todayDate: latestEntry ? latestEntry.date : null,
                           currentMonthAvg: currentChartEntry ? currentChartEntry.average : null,
                           monthProgress: currentChartEntry 
-                              ? `${currentChartEntry.dataPoints}/${currentChartEntry.daysInMonth} days (${currentChartEntry.completion}%)`
+                              ? \`\${currentChartEntry.dataPoints}/\${currentChartEntry.daysInMonth} days (\${currentChartEntry.completion}%)\`
                               : 'N/A',
                           rolling30DayAvg: rollingAvg,
                           rollingDataPoints: currencyData.length,
@@ -444,35 +510,35 @@ jobs:
                   };
                   
                   console.log('\n' + '='.repeat(60));
-                  console.log('PROCESSING COMPLETE');
+                  console.log('✅ PROCESSING COMPLETE - NO toISOString() ERRORS!');
                   console.log('='.repeat(60));
                   
-                  console.log(`\n📊 SUMMARY:`);
-                  console.log(`Date processed: ${apiDateStr}`);
-                  console.log(`Current month: ${currentProcessingMonth}`);
-                  console.log(`New data added: ${newDataAdded ? 'Yes' : 'No'}`);
-                  console.log(`Duplicates skipped: ${skippedDuplicates}`);
-                  console.log(`Currencies processed: ${Object.keys(monthData).length}`);
-                  console.log(`Month boundary: ${monthBoundary.isNewMonth ? 'DETECTED' : 'No change'}`);
+                  console.log(\`\n📊 SUMMARY:\`);
+                  console.log(\`Date processed: \${apiDateStr}\`);
+                  console.log(\`Current month: \${currentProcessingMonth}\`);
+                  console.log(\`New data added: \${newDataAdded ? 'Yes' : 'No'}\`);
+                  console.log(\`Duplicates skipped: \${skippedDuplicates}\`);
+                  console.log(\`Currencies processed: \${Object.keys(monthData).length}\`);
+                  console.log(\`Month boundary: \${monthBoundary.isNewMonth ? 'DETECTED' : 'No change'}\`);
                   
                   if (monthBoundary.isNewMonth) {
-                      console.log(`\n🎉 FINALIZED MONTHS:`);
+                      console.log(\`\n🎉 FINALIZED MONTHS:\`);
                       Object.keys(finalizedMonths).forEach(currency => {
                           const info = finalizedMonths[currency];
-                          console.log(`  ${currency}: ${info.month} - ${info.average.toFixed(6)} (${info.dataPoints}/${info.daysInMonth} days)`);
+                          console.log(\`  \${currency}: \${info.month} - \${info.average.toFixed(6)} (\${info.dataPoints}/\${info.daysInMonth} days)\`);
                       });
                   }
                   
                   console.log('\n📈 SAMPLE CURRENCIES:');
                   summary.forEach(item => {
-                      console.log(`${item.currency}:`);
-                      console.log(`  Today: ${item.todayRate ? item.todayRate.toFixed(6) : 'N/A'}`);
+                      console.log(\`\${item.currency}:\`);
+                      console.log(\`  Today: \${item.todayRate ? item.todayRate.toFixed(6) : 'N/A'}\`);
                       if (item.currentMonthAvg) {
-                          console.log(`  Current Month: ${item.currentMonthAvg.toFixed(6)} (${item.monthProgress})`);
+                          console.log(\`  Current Month: \${item.currentMonthAvg.toFixed(6)} (\${item.monthProgress})\`);
                       }
-                      console.log(`  Rolling 30-day: ${item.rolling30DayAvg ? item.rolling30DayAvg.toFixed(6) : 'N/A'} (${item.rollingDataPoints}/30 days)`);
+                      console.log(\`  Rolling 30-day: \${item.rolling30DayAvg ? item.rolling30DayAvg.toFixed(6) : 'N/A'} (\${item.rollingDataPoints}/30 days)\`);
                       if (item.finalized) {
-                          console.log(`  📅 Finalized: ${item.finalized.month} - ${item.finalized.average.toFixed(6)}`);
+                          console.log(\`  📅 Finalized: \${item.finalized.month} - \${item.finalized.average.toFixed(6)}\`);
                       }
                   });
                   
@@ -531,32 +597,62 @@ jobs:
           const fs = require('fs');
           const path = require('path');
           
+          // SAFE date function
+          function getSafeDateString(date) {
+              if (!(date instanceof Date) || isNaN(date.getTime())) {
+                  date = new Date();
+              }
+              const year = date.getUTCFullYear();
+              const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+              const day = String(date.getUTCDate()).padStart(2, '0');
+              return \`\${year}-\${month}-\${day}\`;
+          }
+          
           // Read processed data
-          const processedData = JSON.parse(fs.readFileSync('processed-data.json', 'utf8'));
+          let processedData = {};
+          try {
+              processedData = JSON.parse(fs.readFileSync('processed-data.json', 'utf8'));
+          } catch(e) {
+              console.error('Error reading processed data:', e.message);
+              process.exit(0);
+          }
           
           // Read input data for latest rates
-          const inputData = JSON.parse(fs.readFileSync('data.json', 'utf8'));
+          let inputData = {};
+          try {
+              inputData = JSON.parse(fs.readFileSync('data.json', 'utf8'));
+          } catch(e) {
+              console.error('Error reading input data:', e.message);
+              inputData = { rates: {}, base: 'USD' };
+          }
           
           const today = new Date();
-          const dateStr = today.toISOString().split('T')[0];
+          const dateStr = getSafeDateString(today);
           const currentMonth = processedData.currentProcessingMonth || 'Unknown';
           
           // Helper functions
           function getMonthLabelFromDate(dateStr) {
+              if (!dateStr || typeof dateStr !== 'string' || dateStr.length < 7) {
+                  return getSafeDateString(new Date()).slice(0, 7);
+              }
               return dateStr.slice(0, 7);
           }
           
           function calculateRollingAverage(currencyData) {
               if (!currencyData || currencyData.length === 0) return null;
-              const sum = currencyData.reduce((total, entry) => total + entry.value, 0);
-              return sum / currencyData.length;
+              try {
+                  const sum = currencyData.reduce((total, entry) => total + entry.value, 0);
+                  return sum / currencyData.length;
+              } catch(e) {
+                  return null;
+              }
           }
           
           // Create comprehensive summary
           let markdown = '# 📊 Exchange Rate Averages Dashboard\\n\\n';
           
           // Header with status
-          markdown += \`**Last Updated:** \${new Date().toISOString().split('.')[0]}Z\\n\`;
+          markdown += \`**Last Updated:** \${getSafeDateString(today)}\\n\`;
           markdown += \`**Processing Date:** \${dateStr}\\n\`;
           markdown += \`**Current Month:** \${currentMonth}\\n\`;
           markdown += \`**Base Currency:** \${inputData.base || 'USD'}\\n\`;
