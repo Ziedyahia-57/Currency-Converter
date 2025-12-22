@@ -1,22 +1,19 @@
-// monthly-data-processor.js - ULTRA SIMPLE WORKING VERSION
+// monthly-data-processor.js - FIXED VERSION
 const fs = require('fs');
 const path = require('path');
+
+console.log('🚀 RUNNING FIXED VERSION - NO toISOString() ERRORS!');
 
 const INPUT_DATA_FILE = path.join(__dirname, 'data.json');
 const PROCESSED_DATA_FILE = path.join(__dirname, 'processed-data.json');
 
-// ULTRA-SAFE date function - ALWAYS returns valid date
-function getValidDate() {
-    const now = Date.now();
-    return new Date(now);
-}
-
-// ULTRA-SAFE timestamp - NEVER calls toISOString() on potentially invalid dates
-function getValidTimestamp() {
-    const now = Date.now();
-    const date = new Date(now);
+// SAFE DATE FUNCTIONS
+function getSafeISOString(date) {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+        date = new Date(); // Fallback to now
+    }
     
-    // Manually construct ISO string WITHOUT using toISOString()
+    // Manually construct ISO string to avoid toISOString() errors
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
     const day = String(date.getUTCDate()).padStart(2, '0');
@@ -28,9 +25,11 @@ function getValidTimestamp() {
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${ms}Z`;
 }
 
-function getDateString() {
-    const now = Date.now();
-    const date = new Date(now);
+function getDateString(date) {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+        date = new Date();
+    }
+    
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
     const day = String(date.getUTCDate()).padStart(2, '0');
@@ -38,38 +37,12 @@ function getDateString() {
     return `${year}-${month}-${day}`;
 }
 
-function loadExistingData() {
-    try {
-        if (fs.existsSync(PROCESSED_DATA_FILE)) {
-            const data = JSON.parse(fs.readFileSync(PROCESSED_DATA_FILE, 'utf8'));
-            console.log('✓ Loaded existing data');
-            return data.data || {};
-        }
-    } catch (error) {
-        console.log('Starting fresh');
-    }
-    return {};
-}
-
-function saveData(data) {
-    try {
-        const state = {
-            data,
-            lastUpdated: getValidTimestamp(),
-            version: '3.0-simple'
-        };
-        fs.writeFileSync(PROCESSED_DATA_FILE, JSON.stringify(state, null, 2));
-        console.log('✓ Data saved successfully');
-    } catch (error) {
-        console.error('Error saving:', error.message);
-    }
-}
-
+// SIMPLIFIED PROCESSING FUNCTION
 function processData() {
-    console.log('🚀 STARTING PROCESSING...');
+    console.log('📊 Starting data processing...');
     
     try {
-        // 1. Check input file
+        // 1. Check input
         if (!fs.existsSync(INPUT_DATA_FILE)) {
             console.error('❌ Input file not found');
             return { success: false, error: 'No input file' };
@@ -79,73 +52,105 @@ function processData() {
         const inputData = JSON.parse(fs.readFileSync(INPUT_DATA_FILE, 'utf8'));
         const rates = inputData.rates || {};
         
-        console.log(`📊 Processing ${Object.keys(rates).length} currencies`);
+        console.log(`✓ Loaded ${Object.keys(rates).length} currencies`);
         
-        // 3. Load existing
-        let allData = loadExistingData();
+        // 3. Get date info SAFELY
+        let apiTimestamp;
+        if (inputData.timestamp) {
+            apiTimestamp = new Date(inputData.timestamp * 1000);
+        } else {
+            apiTimestamp = new Date();
+        }
         
-        // 4. Get date info (SAFELY)
-        const todayDateStr = getDateString();
-        const timestamp = getValidTimestamp(); // SAFE - no toISOString()
+        // Validate date
+        if (isNaN(apiTimestamp.getTime())) {
+            apiTimestamp = new Date(); // Fallback
+        }
         
-        console.log(`📅 Date: ${todayDateStr}`);
-        console.log(`⏰ Timestamp: ${timestamp.substring(0, 19)}...`);
+        const apiDateStr = getDateString(apiTimestamp);
+        const timestampStr = getSafeISOString(apiTimestamp);
+        
+        console.log(`✓ Date: ${apiDateStr}`);
+        console.log(`✓ Timestamp: ${timestampStr}`);
+        
+        // 4. Load existing data
+        let processedData = {};
+        if (fs.existsSync(PROCESSED_DATA_FILE)) {
+            try {
+                processedData = JSON.parse(fs.readFileSync(PROCESSED_DATA_FILE, 'utf8'));
+                console.log(`✓ Loaded existing data for ${Object.keys(processedData.data || {}).length} currencies`);
+            } catch (e) {
+                console.log('⚠️ Could not load existing data, starting fresh');
+                processedData = { data: {}, metadata: { version: '3.0-fixed' } };
+            }
+        }
+        
+        if (!processedData.data) processedData.data = {};
         
         // 5. Process each currency
-        let updatedCount = 0;
-        let addedCount = 0;
+        let updated = 0;
+        let added = 0;
         
         Object.entries(rates).forEach(([currency, rate]) => {
-            if (!allData[currency]) {
-                allData[currency] = [];
+            if (!processedData.data[currency]) {
+                processedData.data[currency] = [];
             }
             
-            // Check if we already have today's data
-            const existingIndex = allData[currency].findIndex(
-                entry => entry && entry.date === todayDateStr
+            // Check if today already exists
+            const existingIndex = processedData.data[currency].findIndex(
+                entry => entry && entry.date === apiDateStr
             );
             
             const entry = {
                 value: rate,
-                date: todayDateStr,
-                timestamp: timestamp  // SAFE - manually constructed
+                date: apiDateStr,
+                timestamp: timestampStr, // SAFE - manually constructed
+                updatedAt: Date.now()
             };
             
             if (existingIndex >= 0) {
-                // Update existing
-                allData[currency][existingIndex] = entry;
-                updatedCount++;
+                // Update
+                processedData.data[currency][existingIndex] = entry;
+                updated++;
             } else {
-                // Add new
-                allData[currency].push(entry);
-                addedCount++;
+                // Add
+                processedData.data[currency].push(entry);
+                added++;
                 
-                // Keep only last 30 days
-                if (allData[currency].length > 30) {
-                    allData[currency] = allData[currency].slice(-30);
+                // Keep only last 30
+                if (processedData.data[currency].length > 30) {
+                    processedData.data[currency] = processedData.data[currency].slice(-30);
                 }
             }
         });
         
         // 6. Save
-        saveData(allData);
+        processedData.metadata = {
+            processedAt: getSafeISOString(new Date()),
+            date: apiDateStr,
+            currencies: Object.keys(processedData.data).length,
+            added,
+            updated,
+            version: '3.0-fixed-yaml'
+        };
+        
+        fs.writeFileSync(PROCESSED_DATA_FILE, JSON.stringify(processedData, null, 2));
         
         console.log('\n✅ PROCESSING COMPLETE!');
-        console.log(`✨ Added: ${addedCount} currencies`);
-        console.log(`✏️ Updated: ${updatedCount} currencies`);
-        console.log(`💾 Total: ${Object.keys(allData).length} currencies in storage`);
+        console.log(`✨ Added: ${added}`);
+        console.log(`✏️ Updated: ${updated}`);
+        console.log(`💾 Total: ${Object.keys(processedData.data).length}`);
         
         return {
             success: true,
-            added: addedCount,
-            updated: updatedCount,
-            total: Object.keys(allData).length,
-            date: todayDateStr
+            date: apiDateStr,
+            added,
+            updated,
+            total: Object.keys(processedData.data).length
         };
         
     } catch (error) {
-        console.error('💥 PROCESSING FAILED:', error.message);
-        console.error(error.stack);
+        console.error('💥 ERROR:', error.message);
         return { success: false, error: error.message };
     }
 }
