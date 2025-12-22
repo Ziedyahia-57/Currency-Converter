@@ -45,208 +45,35 @@ jobs:
         run: |
           echo "Running monthly averages processor..."
           
-          # Create the processor script WITH PROPER ESCAPING
-          cat > monthly-data-processor.js << 'EOF'
-          // monthly-data-processor.js - SIMPLE WORKING VERSION
-          const fs = require('fs');
-          const path = require('path');
-
-          const INPUT_DATA_FILE = path.join(__dirname, 'data.json');
-          const PROCESSED_DATA_FILE = path.join(__dirname, 'processed-data.json');
-
-          // SAFE DATE FUNCTION - No toISOString() errors
-          function getSafeDateString() {
-              const now = Date.now();
-              const date = new Date(now);
-              
-              const year = date.getUTCFullYear();
-              const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-              const day = String(date.getUTCDate()).padStart(2, '0');
-              
-              return year + '-' + month + '-' + day;
-          }
-
-          function getSafeTimestamp() {
-              const now = Date.now();
-              const date = new Date(now);
-              
-              // Manually construct ISO string
-              const year = date.getUTCFullYear();
-              const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-              const day = String(date.getUTCDate()).padStart(2, '0');
-              const hours = String(date.getUTCHours()).padStart(2, '0');
-              const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-              const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-              const ms = String(date.getUTCMilliseconds()).padStart(3, '0');
-              
-              return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes + ':' + seconds + '.' + ms + 'Z';
-          }
-
-          function loadExistingData() {
-              try {
-                  if (fs.existsSync(PROCESSED_DATA_FILE)) {
-                      const data = JSON.parse(fs.readFileSync(PROCESSED_DATA_FILE, 'utf8'));
-                      console.log('Loaded existing data for ' + Object.keys(data.data || {}).length + ' currencies');
-                      return data.data || {};
-                  }
-              } catch (error) {
-                  console.log('Starting fresh - no existing data');
-              }
-              return {};
-          }
-
-          function saveData(data) {
-              try {
-                  const state = {
-                      data: data,
-                      metadata: {
-                          processedAt: getSafeTimestamp(),
-                          date: getSafeDateString(),
-                          version: '2.0-simple'
-                      }
-                  };
-                  fs.writeFileSync(PROCESSED_DATA_FILE, JSON.stringify(state, null, 2));
-                  console.log('Saved data for ' + Object.keys(data).length + ' currencies');
-              } catch (error) {
-                  console.error('Error saving data:', error.message);
-              }
-          }
-
-          function processData() {
-              console.log('='.repeat(60));
-              console.log('STARTING MONTHLY DATA PROCESSING - SIMPLE VERSION');
-              console.log('='.repeat(60));
-              
-              try {
-                  // 1. Check input file
-                  if (!fs.existsSync(INPUT_DATA_FILE)) {
-                      console.error('Input file not found: ' + INPUT_DATA_FILE);
-                      return { success: false, error: 'Input file not found' };
-                  }
-                  
-                  console.log('Input file exists');
-                  
-                  // 2. Read input
-                  const inputData = JSON.parse(fs.readFileSync(INPUT_DATA_FILE, 'utf8'));
-                  const rates = inputData.rates || {};
-                  
-                  console.log('Successfully parsed input data');
-                  
-                  // 3. Get date info SAFELY
-                  const todayDateStr = getSafeDateString();
-                  const timestamp = getSafeTimestamp();
-                  
-                  console.log('Using date: ' + todayDateStr);
-                  
-                  // 4. Load existing data
-                  const existingData = loadExistingData();
-                  
-                  let newDataAdded = false;
-                  let skippedDuplicates = 0;
-                  
-                  console.log('Processing ' + Object.keys(rates).length + ' currencies...');
-                  
-                  // 5. Process each currency
-                  Object.keys(rates).forEach(currency => {
-                      const rate = rates[currency];
-                      
-                      // Initialize if needed
-                      if (!existingData[currency]) {
-                          existingData[currency] = [];
-                      }
-                      
-                      // Check for existing entry
-                      const existingIndex = existingData[currency].findIndex(
-                          entry => entry && entry.date === todayDateStr
-                      );
-                      
-                      // Add/update
-                      if (existingIndex >= 0) {
-                          // Update existing
-                          existingData[currency][existingIndex] = {
-                              value: rate,
-                              date: todayDateStr,
-                              timestamp: timestamp
-                          };
-                          skippedDuplicates++;
-                          console.log('Updated ' + currency + ' for ' + todayDateStr);
-                      } else {
-                          // Add new
-                          existingData[currency].push({
-                              value: rate,
-                              date: todayDateStr,
-                              timestamp: timestamp
-                          });
-                          newDataAdded = true;
-                          console.log('Added ' + currency + ' for ' + todayDateStr + ': ' + rate);
-                      }
-                      
-                      // Keep only last 30 entries
-                      if (existingData[currency].length > 30) {
-                          existingData[currency] = existingData[currency].slice(-30);
-                      }
-                  });
-                  
-                  // 6. Save
-                  saveData(existingData);
-                  
-                  // 7. Create result
-                  const result = {
-                      success: true,
-                      newDataAdded: newDataAdded,
-                      skippedDuplicates: skippedDuplicates,
-                      totalCurrencies: Object.keys(rates).length,
-                      processedCurrencies: Object.keys(existingData).length,
-                      date: todayDateStr
-                  };
-                  
-                  console.log('');
-                  console.log('='.repeat(60));
-                  console.log('PROCESSING COMPLETE');
-                  console.log('='.repeat(60));
-                  console.log('');
-                  console.log('Date processed: ' + todayDateStr);
-                  console.log('New data added: ' + (newDataAdded ? 'Yes' : 'No'));
-                  console.log('Duplicates skipped: ' + skippedDuplicates);
-                  console.log('Currencies processed: ' + Object.keys(existingData).length);
-                  
-                  return result;
-                  
-              } catch (error) {
-                  console.error('Error processing data:', error.message);
-                  console.error('Stack trace:', error.stack);
-                  return { success: false, error: error.message };
-              }
-          }
-
-          // Export for use in GitHub Actions
-          module.exports = { processData };
-
-          // If run directly, process the data
-          if (require.main === module) {
-              const result = processData();
-              process.exit(result.success ? 0 : 1);
-          }
-          EOF
-          
-          # Run the processor
+          # Run the processor (using the separate file)
           node monthly-data-processor.js
           
-          # Extract metrics
+          # Check if processed data was created
           if [ -f "processed-data.json" ]; then
             echo "data_file=processed-data.json" >> $GITHUB_OUTPUT
             
-            # Count data points
-            ROLLING_POINTS=$(jq '[.data[] | length] | add // 0' processed-data.json)
+            # Get processed data info
+            PROCESSED_DATE=$(node -e "console.log(require('./processed-data.json').metadata.date || '')")
+            CURRENCY_COUNT=$(node -e "console.log(Object.keys(require('./processed-data.json').data || {}).length || 0)")
+            
+            # Count total data points
+            ROLLING_POINTS=$(node -e "
+              const data = require('./processed-data.json').data || {};
+              const total = Object.values(data).reduce((sum, arr) => sum + arr.length, 0);
+              console.log(total);
+            ")
+            
             echo "rolling_data_points=$ROLLING_POINTS" >> $GITHUB_OUTPUT
-            
-            # Get date
-            CURRENT_DATE=$(jq -r '.metadata.date // empty' processed-data.json)
-            echo "current_date=$CURRENT_DATE" >> $GITHUB_OUTPUT
-            
-            # Count currencies
-            CURRENCY_COUNT=$(jq '.data | length' processed-data.json)
+            echo "current_date=$PROCESSED_DATE" >> $GITHUB_OUTPUT
             echo "currency_count=$CURRENCY_COUNT" >> $GITHUB_OUTPUT
+            
+            echo "✓ Data processing successful"
+            echo "  Date: $PROCESSED_DATE"
+            echo "  Currencies: $CURRENCY_COUNT"
+            echo "  Data points: $ROLLING_POINTS"
+          else
+            echo "❌ processed-data.json was not created"
+            exit 1
           fi
           
       - name: Create summary markdown
@@ -254,57 +81,78 @@ jobs:
         run: |
           echo "Creating summary markdown..."
           
+          # Simple Node script for summary
           node -e "
           const fs = require('fs');
           
-          // Read processed data
-          let processedData = {};
-          try {
-              processedData = JSON.parse(fs.readFileSync('processed-data.json', 'utf8'));
-          } catch(e) {
-              console.log('No processed data found');
-              process.exit(0);
+          function createSummary() {
+              try {
+                  // Read processed data
+                  const processedData = JSON.parse(fs.readFileSync('processed-data.json', 'utf8'));
+                  
+                  // Read input data
+                  let inputData = {};
+                  try {
+                      inputData = JSON.parse(fs.readFileSync('data.json', 'utf8'));
+                  } catch(e) {
+                      console.log('Note: Could not read data.json');
+                  }
+                  
+                  // Create markdown
+                  let markdown = '# Exchange Rate Averages\\n\\n';
+                  markdown += '**Last Updated:** ' + (processedData.metadata.date || 'Unknown') + '\\n';
+                  markdown += '**Base Currency:** ' + (inputData.base || 'USD') + '\\n';
+                  markdown += '**Currencies Tracked:** ' + Object.keys(processedData.data || {}).length + '\\n';
+                  
+                  // Count total data points
+                  const totalPoints = Object.values(processedData.data || {}).reduce((sum, arr) => sum + arr.length, 0);
+                  markdown += '**Total Data Points:** ' + totalPoints + '\\n\\n';
+                  
+                  markdown += '## Current Rates (Today)\\n\\n';
+                  markdown += '| Currency | Rate |\\n';
+                  markdown += '|----------|------|\\n';
+                  
+                  const majorCurrencies = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CNY', 'CHF', 'INR', 'BRL', 'MXN'];
+                  
+                  // Get today's date
+                  const today = processedData.metadata.date || '';
+                  
+                  majorCurrencies.forEach(currency => {
+                      if (processedData.data[currency]) {
+                          // Find today's rate
+                          const todayEntry = processedData.data[currency].find(entry => entry.date === today);
+                          if (todayEntry) {
+                              markdown += '| ' + currency + ' | ' + todayEntry.value.toFixed(6) + ' |\\n';
+                          } else {
+                              // Use latest if today not found
+                              const latest = processedData.data[currency][processedData.data[currency].length - 1];
+                              if (latest) {
+                                  markdown += '| ' + currency + ' | ' + latest.value.toFixed(6) + ' (latest) |\\n';
+                              }
+                          }
+                      }
+                  });
+                  
+                  markdown += '\\n## Data Collection Status\\n\\n';
+                  markdown += 'Rolling 30-day coverage:\\n\\n';
+                  
+                  majorCurrencies.forEach(currency => {
+                      if (processedData.data[currency]) {
+                          const count = processedData.data[currency].length;
+                          const coverage = Math.round((count / 30) * 100);
+                          markdown += '- ' + currency + ': ' + count + '/30 days (' + coverage + '% coverage)\\n';
+                      }
+                  });
+                  
+                  fs.writeFileSync('AVERAGES_SUMMARY.md', markdown);
+                  console.log('Summary created: AVERAGES_SUMMARY.md');
+                  
+              } catch (error) {
+                  console.error('Error creating summary:', error.message);
+              }
           }
           
-          // Read input data
-          let inputData = {};
-          try {
-              inputData = JSON.parse(fs.readFileSync('data.json', 'utf8'));
-          } catch(e) {
-              inputData = { rates: {}, base: 'USD' };
-          }
-          
-          // Create markdown
-          let markdown = '# Exchange Rate Averages\\n\\n';
-          markdown += '**Last Updated:** ' + processedData.metadata.date + '\\n';
-          markdown += '**Base Currency:** ' + (inputData.base || 'USD') + '\\n';
-          markdown += '**Currencies Tracked:** ' + Object.keys(processedData.data || {}).length + '\\n\\n';
-          
-          markdown += '## Current Rates\\n\\n';
-          markdown += '| Currency | Rate |\\n';
-          markdown += '|----------|------|\\n';
-          
-          const majorCurrencies = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CNY', 'CHF'];
-          majorCurrencies.forEach(currency => {
-              const rate = inputData.rates[currency];
-              if (rate) {
-                  markdown += '| ' + currency + ' | ' + rate.toFixed(6) + ' |\\n';
-              }
-          });
-          
-          // Add rolling data info
-          markdown += '\\n## Rolling 30-day Data\\n\\n';
-          markdown += 'Data points collected per currency:\\n\\n';
-          
-          Object.keys(processedData.data || {}).forEach(currency => {
-              if (majorCurrencies.includes(currency)) {
-                  const count = processedData.data[currency].length;
-                  markdown += '- ' + currency + ': ' + count + '/30 days\\n';
-              }
-          });
-          
-          fs.writeFileSync('AVERAGES_SUMMARY.md', markdown);
-          console.log('Summary created: AVERAGES_SUMMARY.md');
+          createSummary();
           "
           
       - name: Commit processed data
@@ -320,18 +168,23 @@ jobs:
             ROLLING_POINTS="${{ steps.process.outputs.rolling_data_points }}"
             CURRENCY_COUNT="${{ steps.process.outputs.currency_count }}"
             
-            COMMIT_MSG="Update currency averages for $TODAY
+            COMMIT_MSG="📊 Update currency averages for $TODAY
             
-            - Rolling 30-day: $ROLLING_POINTS data points
-            - Currencies: $CURRENCY_COUNT
+            • Rolling 30-day data: $ROLLING_POINTS points
+            • Currencies tracked: $CURRENCY_COUNT
+            • Automated update
+            
             [skip ci]"
             
             git commit -m "$COMMIT_MSG"
             git push
+          else
+            echo "No changes to commit"
           fi
           
       - name: Handle missing data
         if: steps.check-data.outputs.data_valid != 'true'
         run: |
-          echo "No valid data found, skipping processing"
+          echo "⚠️ No valid data found, skipping processing"
+          echo "This is normal if the Update Currency Rates workflow hasn't run yet."
           exit 0
