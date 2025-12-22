@@ -45,508 +45,176 @@ jobs:
         run: |
           echo "Running monthly averages processor..."
           
-          # Create the processor script WITH FIXES for toISOString() errors
+          # Create the processor script WITH PROPER ESCAPING
           cat > monthly-data-processor.js << 'EOF'
-          // monthly-data-processor.js - FIXED VERSION
+          // monthly-data-processor.js - SIMPLE WORKING VERSION
           const fs = require('fs');
           const path = require('path');
 
-          // Data file locations
           const INPUT_DATA_FILE = path.join(__dirname, 'data.json');
           const PROCESSED_DATA_FILE = path.join(__dirname, 'processed-data.json');
 
-          // Our tracking data
-          let monthData = {};        // Rolling 30-day data storage
-          let chartData = {};        // Monthly averages (12 months max)
-          let lastProcessedDates = {};
-          let currentProcessingMonth = null; // Track current month being processed
-          let lastUpdated = null;
-
-          // SAFE DATE FUNCTION - Never throws toISOString() errors
-          function getSafeISOString(date) {
-              if (!(date instanceof Date) || isNaN(date.getTime())) {
-                  date = new Date(); // Fallback to current date
-              }
-              
-              // Manually construct ISO string to avoid toISOString() errors
-              try {
-                  const year = date.getUTCFullYear();
-                  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                  const day = String(date.getUTCDate()).padStart(2, '0');
-                  const hours = String(date.getUTCHours()).padStart(2, '0');
-                  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-                  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-                  const ms = String(date.getUTCMilliseconds()).padStart(3, '0');
-                  
-                  return \`\${year}-\${month}-\${day}T\${hours}:\${minutes}:\${seconds}.\${ms}Z\`;
-              } catch (error) {
-                  // Ultimate fallback
-                  return '2024-01-01T00:00:00.000Z';
-              }
-          }
-
-          // SAFE date string (YYYY-MM-DD)
-          function getSafeDateString(date) {
-              if (!(date instanceof Date) || isNaN(date.getTime())) {
-                  date = new Date();
-              }
+          // SAFE DATE FUNCTION - No toISOString() errors
+          function getSafeDateString() {
+              const now = Date.now();
+              const date = new Date(now);
               
               const year = date.getUTCFullYear();
               const month = String(date.getUTCMonth() + 1).padStart(2, '0');
               const day = String(date.getUTCDate()).padStart(2, '0');
               
-              return \`\${year}-\${month}-\${day}\`;
+              return year + '-' + month + '-' + day;
           }
 
-          function loadProcessedData() {
+          function getSafeTimestamp() {
+              const now = Date.now();
+              const date = new Date(now);
+              
+              // Manually construct ISO string
+              const year = date.getUTCFullYear();
+              const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+              const day = String(date.getUTCDate()).padStart(2, '0');
+              const hours = String(date.getUTCHours()).padStart(2, '0');
+              const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+              const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+              const ms = String(date.getUTCMilliseconds()).padStart(3, '0');
+              
+              return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes + ':' + seconds + '.' + ms + 'Z';
+          }
+
+          function loadExistingData() {
               try {
                   if (fs.existsSync(PROCESSED_DATA_FILE)) {
                       const data = JSON.parse(fs.readFileSync(PROCESSED_DATA_FILE, 'utf8'));
-                      monthData = data.monthData || {};
-                      chartData = data.chartData || {};
-                      lastProcessedDates = data.lastProcessedDates || {};
-                      currentProcessingMonth = data.currentProcessingMonth || null;
-                      lastUpdated = data.lastUpdated;
-                      console.log(\`Loaded processed data for \${Object.keys(monthData).length} currencies\`);
-                      console.log(\`Current processing month: \${currentProcessingMonth || 'Not set'}\`);
-                      
-                      // Clean up old data to maintain 30-day window
-                      cleanMonthDataTo30Days();
+                      console.log('Loaded existing data for ' + Object.keys(data.data || {}).length + ' currencies');
+                      return data.data || {};
                   }
               } catch (error) {
-                  console.error('Error loading processed data:', error);
-                  monthData = {};
-                  chartData = {};
-                  lastProcessedDates = {};
-                  currentProcessingMonth = null;
+                  console.log('Starting fresh - no existing data');
               }
+              return {};
           }
 
-          function cleanMonthDataTo30Days() {
-              const thirtyDaysAgo = new Date();
-              thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-              const thirtyDaysAgoStr = getSafeDateString(thirtyDaysAgo);
-              
-              Object.keys(monthData).forEach(currency => {
-                  if (Array.isArray(monthData[currency])) {
-                      monthData[currency] = monthData[currency]
-                          .filter(entry => entry && entry.date && entry.date >= thirtyDaysAgoStr)
-                          .sort((a, b) => a.date.localeCompare(b.date));
-                      
-                      // Hard limit to 30 entries
-                      if (monthData[currency].length > 30) {
-                          monthData[currency] = monthData[currency].slice(-30);
+          function saveData(data) {
+              try {
+                  const state = {
+                      data: data,
+                      metadata: {
+                          processedAt: getSafeTimestamp(),
+                          date: getSafeDateString(),
+                          version: '2.0-simple'
                       }
-                  }
-              });
-          }
-
-          function saveProcessedData() {
-              const state = {
-                  monthData,
-                  chartData,
-                  lastProcessedDates,
-                  currentProcessingMonth,
-                  lastUpdated,
-                  savedAt: getSafeISOString(new Date()),
-                  metadata: {
-                      description: "Monthly averages with rolling 30-day data",
-                      version: "2.1-fixed",
-                      monthDetection: "accurate",
-                      dateHandling: "safe"
-                  }
-              };
-              
-              try {
+                  };
                   fs.writeFileSync(PROCESSED_DATA_FILE, JSON.stringify(state, null, 2));
-                  console.log(\`Saved processed data for \${Object.keys(monthData).length} currencies\`);
+                  console.log('Saved data for ' + Object.keys(data).length + ' currencies');
               } catch (error) {
-                  console.error('Error saving processed data:', error);
+                  console.error('Error saving data:', error.message);
               }
-          }
-
-          function getMonthLabelFromDate(dateStr) {
-              if (!dateStr || typeof dateStr !== 'string' || dateStr.length < 7) {
-                  // Fallback to current month
-                  return getSafeDateString(new Date()).slice(0, 7);
-              }
-              return dateStr.slice(0, 7); // "YYYY-MM"
-          }
-
-          function getPreviousMonth(monthLabel) {
-              try {
-                  const [year, month] = monthLabel.split('-').map(Number);
-                  
-                  let prevMonth = month - 1;
-                  let prevYear = year;
-                  
-                  if (prevMonth < 1) {
-                      prevMonth = 12;
-                      prevYear = year - 1;
-                  }
-                  
-                  return \`\${prevYear}-\${String(prevMonth).padStart(2, '0')}\`;
-              } catch (error) {
-                  console.error(\`Error calculating previous month for "\${monthLabel}":\`, error);
-                  // Fallback to previous month from current date
-                  const now = new Date();
-                  now.setMonth(now.getMonth() - 1);
-                  return getSafeDateString(now).slice(0, 7);
-              }
-          }
-
-          function getDaysInMonth(year, month) {
-              try {
-                  // month is 1-indexed (1=January, 2=February, etc.)
-                  return new Date(year, month, 0).getDate();
-              } catch (error) {
-                  console.error(\`Error getting days in month \${year}-\${month}:\`, error);
-                  return 30; // Safe default
-              }
-          }
-
-          function detectMonthBoundary(apiDateStr) {
-              const todayMonthLabel = getMonthLabelFromDate(apiDateStr);
-              
-              console.log(\`Month detection:\`);
-              console.log(\`  Today's date: \${apiDateStr}\`);
-              console.log(\`  Today's month: \${todayMonthLabel}\`);
-              console.log(\`  Stored month: \${currentProcessingMonth || 'None'}\`);
-              
-              // First run - initialize
-              if (!currentProcessingMonth) {
-                  console.log(\`  Initializing processing month to: \${todayMonthLabel}\`);
-                  return {
-                      isNewMonth: false,
-                      previousMonth: null,
-                      newMonth: todayMonthLabel
-                  };
-              }
-              
-              // Check if month has changed
-              if (todayMonthLabel !== currentProcessingMonth) {
-                  console.log(\`  ⚠️ MONTH BOUNDARY DETECTED!\`);
-                  console.log(\`    Moving from \${currentProcessingMonth} to \${todayMonthLabel}\`);
-                  
-                  const result = {
-                      isNewMonth: true,
-                      previousMonth: currentProcessingMonth,
-                      newMonth: todayMonthLabel
-                  };
-                  
-                  return result;
-              }
-              
-              return {
-                  isNewMonth: false,
-                  previousMonth: null,
-                  newMonth: todayMonthLabel
-              };
-          }
-
-          function finalizePreviousMonth(currency, previousMonthLabel) {
-              console.log(\`  Finalizing \${currency} for \${previousMonthLabel}...\`);
-              
-              if (!monthData[currency]) {
-                  console.log(\`    No data for \${currency}\`);
-                  return null;
-              }
-              
-              // Get all data for previous month
-              const prevMonthData = monthData[currency].filter(entry => {
-                  if (!entry || !entry.date) return false;
-                  const entryMonth = getMonthLabelFromDate(entry.date);
-                  return entryMonth === previousMonthLabel;
-              });
-              
-              if (prevMonthData.length === 0) {
-                  console.log(\`    No data found for \${currency} in \${previousMonthLabel}\`);
-                  return null;
-              }
-              
-              // Calculate average
-              const prevMonthRates = prevMonthData.map(entry => entry.value);
-              const prevMonthSum = prevMonthRates.reduce((a, b) => a + b, 0);
-              const prevMonthAvg = prevMonthSum / prevMonthRates.length;
-              
-              // Get days in month
-              const [year, month] = previousMonthLabel.split('-').map(Number);
-              const daysInMonth = getDaysInMonth(year, month);
-              
-              // Check if already exists
-              const existingIndex = chartData[currency].findIndex(
-                  item => item.month === previousMonthLabel
-              );
-              
-              const monthEntry = {
-                  month: previousMonthLabel,
-                  average: prevMonthAvg,
-                  dataPoints: prevMonthData.length,
-                  daysInMonth: daysInMonth,
-                  completion: Math.round((prevMonthData.length / daysInMonth) * 100),
-                  calculatedAt: getSafeISOString(new Date()),
-                  final: true
-              };
-              
-              if (existingIndex >= 0) {
-                  // Update existing
-                  chartData[currency][existingIndex] = monthEntry;
-                  console.log(\`    Updated existing entry for \${previousMonthLabel}\`);
-              } else {
-                  // Add new
-                  chartData[currency].push(monthEntry);
-                  console.log(\`    Created new entry for \${previousMonthLabel}\`);
-              }
-              
-              // Keep only last 12 months
-              if (chartData[currency].length > 12) {
-                  chartData[currency] = chartData[currency].slice(-12);
-              }
-              
-              console.log(\`    Average: \${prevMonthAvg.toFixed(6)} (\${prevMonthData.length}/\${daysInMonth} days)\`);
-              return monthEntry;
           }
 
           function processData() {
+              console.log('='.repeat(60));
+              console.log('STARTING MONTHLY DATA PROCESSING - SIMPLE VERSION');
+              console.log('='.repeat(60));
+              
               try {
-                  console.log('='.repeat(60));
-                  console.log('STARTING MONTHLY DATA PROCESSING - FIXED VERSION');
-                  console.log('='.repeat(60));
-                  
+                  // 1. Check input file
                   if (!fs.existsSync(INPUT_DATA_FILE)) {
-                      console.error(\`Input file not found: \${INPUT_DATA_FILE}\`);
+                      console.error('Input file not found: ' + INPUT_DATA_FILE);
                       return { success: false, error: 'Input file not found' };
                   }
                   
+                  console.log('Input file exists');
+                  
+                  // 2. Read input
                   const inputData = JSON.parse(fs.readFileSync(INPUT_DATA_FILE, 'utf8'));
-                  console.log(\`Loaded input data\`);
-                  
-                  loadProcessedData();
-                  
-                  // Get timestamp SAFELY
-                  let apiTimestamp;
-                  if (inputData.timestamp) {
-                      apiTimestamp = new Date(inputData.timestamp * 1000);
-                      if (isNaN(apiTimestamp.getTime())) {
-                          apiTimestamp = new Date(); // Fallback if invalid
-                      }
-                  } else {
-                      apiTimestamp = new Date();
-                  }
-                  
-                  // Use SAFE functions instead of toISOString()
-                  const apiDateStr = getSafeDateString(apiTimestamp);
-                  const apiTimestampStr = getSafeISOString(apiTimestamp);
-                  
-                  console.log(\`\nProcessing date: \${apiDateStr}\`);
-                  
-                  // Detect month boundary
-                  const monthBoundary = detectMonthBoundary(apiDateStr);
-                  
                   const rates = inputData.rates || {};
+                  
+                  console.log('Successfully parsed input data');
+                  
+                  // 3. Get date info SAFELY
+                  const todayDateStr = getSafeDateString();
+                  const timestamp = getSafeTimestamp();
+                  
+                  console.log('Using date: ' + todayDateStr);
+                  
+                  // 4. Load existing data
+                  const existingData = loadExistingData();
+                  
                   let newDataAdded = false;
                   let skippedDuplicates = 0;
-                  let finalizedMonths = {};
                   
-                  console.log(\`\nProcessing \${Object.keys(rates).length} currencies...\`);
+                  console.log('Processing ' + Object.keys(rates).length + ' currencies...');
                   
-                  // Update current processing month
-                  if (monthBoundary.isNewMonth) {
-                      console.log(\`\n📅 MONTH TRANSITION DETECTED\`);
-                      console.log(\`   Previous: \${monthBoundary.previousMonth}\`);
-                      console.log(\`   New: \${monthBoundary.newMonth}\`);
-                      currentProcessingMonth = monthBoundary.newMonth;
-                  } else if (!currentProcessingMonth) {
-                      currentProcessingMonth = monthBoundary.newMonth;
-                  }
-                  
-                  // Process each currency
+                  // 5. Process each currency
                   Object.keys(rates).forEach(currency => {
                       const rate = rates[currency];
                       
                       // Initialize if needed
-                      if (!monthData[currency]) monthData[currency] = [];
-                      if (!chartData[currency]) chartData[currency] = [];
-                      if (!lastProcessedDates[currency]) lastProcessedDates[currency] = null;
+                      if (!existingData[currency]) {
+                          existingData[currency] = [];
+                      }
                       
                       // Check for existing entry
-                      const existingIndex = monthData[currency].findIndex(
-                          entry => entry && entry.date === apiDateStr
+                      const existingIndex = existingData[currency].findIndex(
+                          entry => entry && entry.date === todayDateStr
                       );
                       
-                      // Add/update in monthData (rolling 30-day)
+                      // Add/update
                       if (existingIndex >= 0) {
                           // Update existing
-                          monthData[currency][existingIndex] = {
+                          existingData[currency][existingIndex] = {
                               value: rate,
-                              date: apiDateStr,
-                              timestamp: apiTimestampStr  // FIXED: Use safe function
+                              date: todayDateStr,
+                              timestamp: timestamp
                           };
                           skippedDuplicates++;
-                          console.log(\`✓ Updated \${currency} for \${apiDateStr}\`);
+                          console.log('Updated ' + currency + ' for ' + todayDateStr);
                       } else {
                           // Add new
-                          monthData[currency].push({
+                          existingData[currency].push({
                               value: rate,
-                              date: apiDateStr,
-                              timestamp: apiTimestampStr  // FIXED: Use safe function
+                              date: todayDateStr,
+                              timestamp: timestamp
                           });
                           newDataAdded = true;
-                          console.log(\`✓ Added \${currency} for \${apiDateStr}: \${rate}\`);
+                          console.log('Added ' + currency + ' for ' + todayDateStr + ': ' + rate);
                       }
                       
-                      // Keep sorted and limit to 30 days
-                      monthData[currency].sort((a, b) => a.date.localeCompare(b.date));
-                      if (monthData[currency].length > 30) {
-                          monthData[currency] = monthData[currency].slice(-30);
+                      // Keep only last 30 entries
+                      if (existingData[currency].length > 30) {
+                          existingData[currency] = existingData[currency].slice(-30);
                       }
-                      
-                      // Finalize previous month if boundary detected
-                      if (monthBoundary.isNewMonth && monthBoundary.previousMonth) {
-                          const finalized = finalizePreviousMonth(currency, monthBoundary.previousMonth);
-                          if (finalized) {
-                              finalizedMonths[currency] = {
-                                  month: monthBoundary.previousMonth,
-                                  average: finalized.average,
-                                  dataPoints: finalized.dataPoints,
-                                  daysInMonth: finalized.daysInMonth
-                              };
-                          }
-                      }
-                      
-                      // Update current month in chartData
-                      const currentMonthLabel = getMonthLabelFromDate(apiDateStr);
-                      const currentMonthData = monthData[currency].filter(entry => {
-                          if (!entry || !entry.date) return false;
-                          return getMonthLabelFromDate(entry.date) === currentMonthLabel;
-                      });
-                      
-                      if (currentMonthData.length > 0) {
-                          const currentMonthRates = currentMonthData.map(entry => entry.value);
-                          const currentSum = currentMonthRates.reduce((a, b) => a + b, 0);
-                          const currentAvg = currentSum / currentMonthRates.length;
-                          
-                          const [year, month] = currentMonthLabel.split('-').map(Number);
-                          const daysInMonth = getDaysInMonth(year, month);
-                          
-                          const monthIndex = chartData[currency].findIndex(
-                              item => item.month === currentMonthLabel
-                          );
-                          
-                          const monthEntry = {
-                              month: currentMonthLabel,
-                              average: currentAvg,
-                              dataPoints: currentMonthData.length,
-                              daysInMonth: daysInMonth,
-                              completion: Math.round((currentMonthData.length / daysInMonth) * 100),
-                              lastUpdated: getSafeISOString(new Date()),
-                              isCurrentMonth: true,
-                              final: monthBoundary.isNewMonth ? false : (currentMonthData.length === daysInMonth)
-                          };
-                          
-                          if (monthIndex >= 0) {
-                              chartData[currency][monthIndex] = monthEntry;
-                          } else {
-                              chartData[currency].push(monthEntry);
-                          }
-                          
-                          // Keep only last 12 months
-                          if (chartData[currency].length > 12) {
-                              chartData[currency] = chartData[currency].slice(-12);
-                          }
-                      }
-                      
-                      lastProcessedDates[currency] = apiDateStr;
                   });
                   
-                  lastUpdated = apiTimestampStr;
+                  // 6. Save
+                  saveData(existingData);
                   
-                  // Save processed data
-                  saveProcessedData();
-                  
-                  // Create summary
-                  const sampleCurrencies = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CNY', 'CHF'];
-                  const summary = sampleCurrencies.map(currency => {
-                      const currencyData = monthData[currency] || [];
-                      const latestEntry = currencyData.length > 0 
-                          ? currencyData[currencyData.length - 1] 
-                          : null;
-                      
-                      const currentMonthLabel = getMonthLabelFromDate(apiDateStr);
-                      const currentChartEntry = (chartData[currency] || []).find(
-                          item => item.month === currentMonthLabel
-                      );
-                      
-                      const rollingAvg = currencyData.length > 0
-                          ? currencyData.reduce((sum, entry) => sum + entry.value, 0) / currencyData.length
-                          : null;
-                      
-                      return {
-                          currency,
-                          todayRate: latestEntry ? latestEntry.value : null,
-                          todayDate: latestEntry ? latestEntry.date : null,
-                          currentMonthAvg: currentChartEntry ? currentChartEntry.average : null,
-                          monthProgress: currentChartEntry 
-                              ? \`\${currentChartEntry.dataPoints}/\${currentChartEntry.daysInMonth} days (\${currentChartEntry.completion}%)\`
-                              : 'N/A',
-                          rolling30DayAvg: rollingAvg,
-                          rollingDataPoints: currencyData.length,
-                          finalized: finalizedMonths[currency] || null
-                      };
-                  });
-                  
+                  // 7. Create result
                   const result = {
                       success: true,
-                      newDataAdded,
-                      skippedDuplicates,
+                      newDataAdded: newDataAdded,
+                      skippedDuplicates: skippedDuplicates,
                       totalCurrencies: Object.keys(rates).length,
-                      processedCurrencies: Object.keys(monthData).length,
-                      apiDate: apiDateStr,
-                      currentProcessingMonth,
-                      monthBoundaryDetected: monthBoundary.isNewMonth,
-                      finalizedMonths: Object.keys(finalizedMonths),
-                      lastUpdated,
-                      summary
+                      processedCurrencies: Object.keys(existingData).length,
+                      date: todayDateStr
                   };
                   
-                  console.log('\n' + '='.repeat(60));
-                  console.log('✅ PROCESSING COMPLETE - NO toISOString() ERRORS!');
+                  console.log('');
                   console.log('='.repeat(60));
-                  
-                  console.log(\`\n📊 SUMMARY:\`);
-                  console.log(\`Date processed: \${apiDateStr}\`);
-                  console.log(\`Current month: \${currentProcessingMonth}\`);
-                  console.log(\`New data added: \${newDataAdded ? 'Yes' : 'No'}\`);
-                  console.log(\`Duplicates skipped: \${skippedDuplicates}\`);
-                  console.log(\`Currencies processed: \${Object.keys(monthData).length}\`);
-                  console.log(\`Month boundary: \${monthBoundary.isNewMonth ? 'DETECTED' : 'No change'}\`);
-                  
-                  if (monthBoundary.isNewMonth) {
-                      console.log(\`\n🎉 FINALIZED MONTHS:\`);
-                      Object.keys(finalizedMonths).forEach(currency => {
-                          const info = finalizedMonths[currency];
-                          console.log(\`  \${currency}: \${info.month} - \${info.average.toFixed(6)} (\${info.dataPoints}/\${info.daysInMonth} days)\`);
-                      });
-                  }
-                  
-                  console.log('\n📈 SAMPLE CURRENCIES:');
-                  summary.forEach(item => {
-                      console.log(\`\${item.currency}:\`);
-                      console.log(\`  Today: \${item.todayRate ? item.todayRate.toFixed(6) : 'N/A'}\`);
-                      if (item.currentMonthAvg) {
-                          console.log(\`  Current Month: \${item.currentMonthAvg.toFixed(6)} (\${item.monthProgress})\`);
-                      }
-                      console.log(\`  Rolling 30-day: \${item.rolling30DayAvg ? item.rolling30DayAvg.toFixed(6) : 'N/A'} (\${item.rollingDataPoints}/30 days)\`);
-                      if (item.finalized) {
-                          console.log(\`  📅 Finalized: \${item.finalized.month} - \${item.finalized.average.toFixed(6)}\`);
-                      }
-                  });
+                  console.log('PROCESSING COMPLETE');
+                  console.log('='.repeat(60));
+                  console.log('');
+                  console.log('Date processed: ' + todayDateStr);
+                  console.log('New data added: ' + (newDataAdded ? 'Yes' : 'No'));
+                  console.log('Duplicates skipped: ' + skippedDuplicates);
+                  console.log('Currencies processed: ' + Object.keys(existingData).length);
                   
                   return result;
                   
               } catch (error) {
-                  console.error('Error processing data:', error);
-                  console.error(error.stack);
+                  console.error('Error processing data:', error.message);
+                  console.error('Stack trace:', error.stack);
                   return { success: false, error: error.message };
               }
           }
@@ -564,216 +232,79 @@ jobs:
           # Run the processor
           node monthly-data-processor.js
           
-          # Extract metrics from the output
+          # Extract metrics
           if [ -f "processed-data.json" ]; then
             echo "data_file=processed-data.json" >> $GITHUB_OUTPUT
             
-            # Count rolling data points
-            ROLLING_POINTS=$(jq '.monthData | map(length) | add // 0' processed-data.json)
+            # Count data points
+            ROLLING_POINTS=$(jq '[.data[] | length] | add // 0' processed-data.json)
             echo "rolling_data_points=$ROLLING_POINTS" >> $GITHUB_OUTPUT
             
-            # Get current processing month
-            CURRENT_MONTH=$(jq -r '.currentProcessingMonth // empty' processed-data.json)
-            echo "current_month=$CURRENT_MONTH" >> $GITHUB_OUTPUT
+            # Get date
+            CURRENT_DATE=$(jq -r '.metadata.date // empty' processed-data.json)
+            echo "current_date=$CURRENT_DATE" >> $GITHUB_OUTPUT
             
             # Count currencies
-            CURRENCY_COUNT=$(jq '.monthData | length' processed-data.json)
+            CURRENCY_COUNT=$(jq '.data | length' processed-data.json)
             echo "currency_count=$CURRENCY_COUNT" >> $GITHUB_OUTPUT
-            
-            # Check if month boundary was detected
-            if grep -q "MONTH BOUNDARY DETECTED" monthly-data-processor.js; then
-              echo "month_boundary_detected=true" >> $GITHUB_OUTPUT
-            else
-              echo "month_boundary_detected=false" >> $GITHUB_OUTPUT
-            fi
           fi
           
       - name: Create summary markdown
         if: steps.process.outputs.data_file
         run: |
-          echo "Creating comprehensive summary markdown..."
+          echo "Creating summary markdown..."
           
           node -e "
           const fs = require('fs');
-          const path = require('path');
-          
-          // SAFE date function
-          function getSafeDateString(date) {
-              if (!(date instanceof Date) || isNaN(date.getTime())) {
-                  date = new Date();
-              }
-              const year = date.getUTCFullYear();
-              const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-              const day = String(date.getUTCDate()).padStart(2, '0');
-              return \`\${year}-\${month}-\${day}\`;
-          }
           
           // Read processed data
           let processedData = {};
           try {
               processedData = JSON.parse(fs.readFileSync('processed-data.json', 'utf8'));
           } catch(e) {
-              console.error('Error reading processed data:', e.message);
+              console.log('No processed data found');
               process.exit(0);
           }
           
-          // Read input data for latest rates
+          // Read input data
           let inputData = {};
           try {
               inputData = JSON.parse(fs.readFileSync('data.json', 'utf8'));
           } catch(e) {
-              console.error('Error reading input data:', e.message);
               inputData = { rates: {}, base: 'USD' };
           }
           
-          const today = new Date();
-          const dateStr = getSafeDateString(today);
-          const currentMonth = processedData.currentProcessingMonth || 'Unknown';
+          // Create markdown
+          let markdown = '# Exchange Rate Averages\\n\\n';
+          markdown += '**Last Updated:** ' + processedData.metadata.date + '\\n';
+          markdown += '**Base Currency:** ' + (inputData.base || 'USD') + '\\n';
+          markdown += '**Currencies Tracked:** ' + Object.keys(processedData.data || {}).length + '\\n\\n';
           
-          // Helper functions
-          function getMonthLabelFromDate(dateStr) {
-              if (!dateStr || typeof dateStr !== 'string' || dateStr.length < 7) {
-                  return getSafeDateString(new Date()).slice(0, 7);
-              }
-              return dateStr.slice(0, 7);
-          }
-          
-          function calculateRollingAverage(currencyData) {
-              if (!currencyData || currencyData.length === 0) return null;
-              try {
-                  const sum = currencyData.reduce((total, entry) => total + entry.value, 0);
-                  return sum / currencyData.length;
-              } catch(e) {
-                  return null;
-              }
-          }
-          
-          // Create comprehensive summary
-          let markdown = '# 📊 Exchange Rate Averages Dashboard\\n\\n';
-          
-          // Header with status
-          markdown += \`**Last Updated:** \${getSafeDateString(today)}\\n\`;
-          markdown += \`**Processing Date:** \${dateStr}\\n\`;
-          markdown += \`**Current Month:** \${currentMonth}\\n\`;
-          markdown += \`**Base Currency:** \${inputData.base || 'USD'}\\n\`;
-          markdown += \`**Currencies Tracked:** \${Object.keys(processedData.monthData || {}).length}\\n\\n\`;
-          
-          // Current Status Section
-          markdown += '## 📈 Current Status\\n\\n';
+          markdown += '## Current Rates\\n\\n';
+          markdown += '| Currency | Rate |\\n';
+          markdown += '|----------|------|\\n';
           
           const majorCurrencies = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CNY', 'CHF'];
-          let monthProgressData = [];
-          
-          markdown += '| Currency | Today\\'s Rate | Month Avg | Month Progress | 30-day Avg |\\n';
-          markdown += '|----------|---------------|-----------|----------------|------------|\\n';
-          
           majorCurrencies.forEach(currency => {
-              const todayRate = inputData.rates[currency];
-              if (!todayRate) return;
-              
-              // Get rolling data
-              const rollingData = processedData.monthData[currency] || [];
-              const rollingAvg = calculateRollingAverage(rollingData);
-              
-              // Get current month data from chart
-              const currentMonthLabel = getMonthLabelFromDate(dateStr);
-              const currentMonthEntry = (processedData.chartData[currency] || []).find(
-                  item => item.month === currentMonthLabel
-              );
-              
-              let monthAvg = 'N/A';
-              let monthProgress = 'N/A';
-              
-              if (currentMonthEntry) {
-                  monthAvg = currentMonthEntry.average.toFixed(6);
-                  monthProgress = \`\${currentMonthEntry.dataPoints}/\${currentMonthEntry.daysInMonth} (\${currentMonthEntry.completion}%)\`;
-                  
-                  monthProgressData.push({
-                      currency,
-                      collected: currentMonthEntry.dataPoints,
-                      total: currentMonthEntry.daysInMonth,
-                      completion: currentMonthEntry.completion
-                  });
+              const rate = inputData.rates[currency];
+              if (rate) {
+                  markdown += '| ' + currency + ' | ' + rate.toFixed(6) + ' |\\n';
               }
-              
-              markdown += \`| \${currency} | \${todayRate.toFixed(6)} | \${monthAvg} | \${monthProgress} | \${rollingAvg ? rollingAvg.toFixed(6) : 'N/A'} |\\n\`;
           });
           
-          // Month Progress Visualization
-          markdown += '\\n## 📅 Month Progress\\n\\n';
+          // Add rolling data info
+          markdown += '\\n## Rolling 30-day Data\\n\\n';
+          markdown += 'Data points collected per currency:\\n\\n';
           
-          monthProgressData.sort((a, b) => b.completion - a.completion);
-          
-          monthProgressData.forEach(item => {
-              const bars = Math.round(item.completion / 5);
-              const progressBar = '█'.repeat(bars) + '░'.repeat(20 - bars);
-              markdown += \`**\${item.currency}:** \${progressBar} \${item.completion}% (\${item.collected}/\${item.total} days)\\n\`;
+          Object.keys(processedData.data || {}).forEach(currency => {
+              if (majorCurrencies.includes(currency)) {
+                  const count = processedData.data[currency].length;
+                  markdown += '- ' + currency + ': ' + count + '/30 days\\n';
+              }
           });
-          
-          // Monthly History
-          markdown += '\\n## 📊 Monthly Averages History (Last 6 Months)\\n\\n';
-          
-          const historyCurrencies = ['EUR', 'GBP', 'JPY', 'CAD'];
-          const allMonths = new Set();
-          
-          historyCurrencies.forEach(c => {
-              (processedData.chartData[c] || []).forEach(item => {
-                  allMonths.add(item.month);
-              });
-          });
-          
-          const sortedMonths = Array.from(allMonths).sort().reverse().slice(0, 6);
-          
-          if (sortedMonths.length > 0) {
-              markdown += '| Month | EUR | GBP | JPY | CAD |\\n';
-              markdown += '|-------|-----|-----|-----|-----|\\n';
-              
-              sortedMonths.forEach(month => {
-                  markdown += \`| \${month} \`;
-                  
-                  historyCurrencies.forEach(currency => {
-                      const monthData = (processedData.chartData[currency] || []).find(m => m.month === month);
-                      markdown += \`| \${monthData ? monthData.average.toFixed(6) : '-'} \`;
-                  });
-                  
-                  markdown += '|\\n';
-              });
-          } else {
-              markdown += '*No monthly history yet*\\n';
-          }
-          
-          // Recent Rolling Data
-          markdown += '\\n## 🔄 Recent Rolling 30-day Data (EUR)\\n\\n';
-          
-          const eurData = processedData.monthData.EUR || [];
-          if (eurData.length > 0) {
-              markdown += '| Date | Rate |\\n';
-              markdown += '|------|------|\\n';
-              
-              // Show last 5 days
-              const recentData = eurData.slice(-5).reverse();
-              recentData.forEach(entry => {
-                  markdown += \`| \${entry.date} | \${entry.value.toFixed(6)} |\\n\`;
-              });
-              
-              // Calculate and show rolling average
-              const rollingAvg = calculateRollingAverage(eurData);
-              markdown += \`\\n**30-day Rolling Average:** \${rollingAvg ? rollingAvg.toFixed(6) : 'N/A'} (\${eurData.length}/30 days)\\n\`;
-          } else {
-              markdown += '*Rolling data collection in progress...*\\n';
-          }
-          
-          // Footer
-          markdown += '\\n---\\n';
-          markdown += '**Data Processing Information:**\\n';
-          markdown += '- Monthly averages are calculated when month boundaries are detected\\n';
-          markdown += '- Rolling 30-day data is automatically maintained\\n';
-          markdown += '- Month detection works for all months including February (leap years)\\n';
-          markdown += '- Maximum 12 months of historical data kept\\n';
-          markdown += '*Updated automatically via GitHub Actions*\\n';
           
           fs.writeFileSync('AVERAGES_SUMMARY.md', markdown);
-          console.log('Summary markdown created: AVERAGES_SUMMARY.md');
+          console.log('Summary created: AVERAGES_SUMMARY.md');
           "
           
       - name: Commit processed data
@@ -782,46 +313,25 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Add all processed files
           git add processed-data.json AVERAGES_SUMMARY.md
           
-          # Check if there are changes
           if ! git diff --cached --quiet; then
-            TODAY=$(date +'%Y-%m-%d')
-            CURRENT_MONTH="${{ steps.process.outputs.current_month }}"
+            TODAY="${{ steps.process.outputs.current_date }}"
             ROLLING_POINTS="${{ steps.process.outputs.rolling_data_points }}"
             CURRENCY_COUNT="${{ steps.process.outputs.currency_count }}"
             
-            if [ "${{ steps.process.outputs.month_boundary_detected }}" = "true" ]; then
-              COMMIT_MSG="📅 Month boundary detected - Update averages for $TODAY
-              
-              - Current month: $CURRENT_MONTH
-              - Month boundary processed
-              - Rolling 30-day: $ROLLING_POINTS data points
-              - Currencies: $CURRENCY_COUNT
-              [skip ci]"
-            else
-              COMMIT_MSG="Update averages data for $TODAY
-              
-              - Current month: $CURRENT_MONTH
-              - Rolling 30-day: $ROLLING_POINTS data points
-              - Currencies: $CURRENCY_COUNT
-              [skip ci]"
-            fi
+            COMMIT_MSG="Update currency averages for $TODAY
             
-            echo "Committing with message:"
-            echo "$COMMIT_MSG"
+            - Rolling 30-day: $ROLLING_POINTS data points
+            - Currencies: $CURRENCY_COUNT
+            [skip ci]"
             
             git commit -m "$COMMIT_MSG"
             git push
-            echo "Data committed successfully"
-          else
-            echo "No changes to commit"
           fi
           
       - name: Handle missing data
         if: steps.check-data.outputs.data_valid != 'true'
         run: |
-          echo "Warning: data.json not found or invalid"
-          echo "Skipping averages processing"
+          echo "No valid data found, skipping processing"
           exit 0
