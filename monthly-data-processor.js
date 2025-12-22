@@ -1,4 +1,4 @@
-// monthly-data-processor.js - SIMPLIFIED WORKING VERSION
+// monthly-data-processor.js - SIMPLIFIED WORKING VERSION WITH DATE FIXES
 const fs = require('fs');
 const path = require('path');
 
@@ -10,6 +10,41 @@ const PROCESSED_DATA_FILE = path.join(__dirname, 'processed-data.json');
 let monthData = {};        // Rolling 30-day data storage
 let chartData = {};        // Monthly averages (12 months max)
 let currentProcessingMonth = null; // Track current month being processed
+
+// Safe date utilities
+function getSafeDate() {
+    const now = new Date();
+    if (isNaN(now.getTime())) {
+        console.error('Invalid current date detected, creating new date object');
+        return new Date(); // Try again
+    }
+    return now;
+}
+
+function getSafeDateString(date) {
+    try {
+        if (!(date instanceof Date) || isNaN(date.getTime())) {
+            throw new Error('Invalid date object');
+        }
+        return date.toISOString();
+    } catch (error) {
+        console.error('Error converting date to string:', error.message);
+        return new Date().toISOString(); // Fallback
+    }
+}
+
+function safeDateFromString(dateStr) {
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+            throw new Error('Invalid date string');
+        }
+        return date;
+    } catch (error) {
+        console.error(`Invalid date string "${dateStr}", using current date`);
+        return new Date();
+    }
+}
 
 function loadProcessedData() {
     try {
@@ -24,7 +59,7 @@ function loadProcessedData() {
             cleanMonthDataTo30Days();
         }
     } catch (error) {
-        console.log('Starting fresh - no existing data or error loading');
+        console.log('Starting fresh - no existing data or error loading:', error.message);
         monthData = {};
         chartData = {};
         currentProcessingMonth = null;
@@ -32,15 +67,47 @@ function loadProcessedData() {
 }
 
 function cleanMonthDataTo30Days() {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+    let thirtyDaysAgoStr;
+    try {
+        const thirtyDaysAgo = getSafeDate();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        // Validate the date after modification
+        if (isNaN(thirtyDaysAgo.getTime())) {
+            throw new Error('Invalid date after subtracting 30 days');
+        }
+        
+        thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+        console.log(`✓ 30 days ago: ${thirtyDaysAgoStr}`);
+    } catch (error) {
+        console.error('Error calculating 30 days ago:', error.message);
+        // Fallback: use a safe default (30 days ago from now)
+        const now = getSafeDate();
+        const safeDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+        thirtyDaysAgoStr = safeDate.toISOString().split('T')[0];
+        console.log(`✓ Using safe fallback date: ${thirtyDaysAgoStr}`);
+    }
     
     Object.keys(monthData).forEach(currency => {
         if (Array.isArray(monthData[currency])) {
             monthData[currency] = monthData[currency]
-                .filter(entry => entry && entry.date && entry.date >= thirtyDaysAgoStr)
-                .sort((a, b) => a.date.localeCompare(b.date));
+                .filter(entry => {
+                    if (!entry || !entry.date) return false;
+                    try {
+                        return entry.date >= thirtyDaysAgoStr;
+                    } catch (error) {
+                        console.error(`Error comparing dates for ${currency}:`, error.message);
+                        return false; // Skip entry if date comparison fails
+                    }
+                })
+                .sort((a, b) => {
+                    try {
+                        return a.date.localeCompare(b.date);
+                    } catch (error) {
+                        console.error(`Error sorting dates for ${currency}:`, error.message);
+                        return 0;
+                    }
+                });
             
             // Hard limit to 30 entries
             if (monthData[currency].length > 30) {
@@ -55,11 +122,12 @@ function saveProcessedData() {
         monthData,
         chartData,
         currentProcessingMonth,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: getSafeDateString(new Date()),
         metadata: {
             description: "Monthly averages with rolling 30-day data",
-            version: "2.1",
-            monthDetection: "accurate"
+            version: "2.2",
+            monthDetection: "accurate",
+            dateHandling: "safe"
         }
     };
     
@@ -72,26 +140,48 @@ function saveProcessedData() {
 }
 
 function getMonthLabelFromDate(dateStr) {
-    return dateStr.slice(0, 7); // "YYYY-MM"
+    try {
+        if (!dateStr || typeof dateStr !== 'string' || dateStr.length < 7) {
+            throw new Error('Invalid date string format');
+        }
+        return dateStr.slice(0, 7); // "YYYY-MM"
+    } catch (error) {
+        console.error(`Error getting month label from "${dateStr}":`, error.message);
+        const today = getSafeDate();
+        return today.toISOString().slice(0, 7); // Fallback to current month
+    }
 }
 
 function getPreviousMonth(monthLabel) {
-    const [year, month] = monthLabel.split('-').map(Number);
-    
-    let prevMonth = month - 1;
-    let prevYear = year;
-    
-    if (prevMonth < 1) {
-        prevMonth = 12;
-        prevYear = year - 1;
+    try {
+        const [year, month] = monthLabel.split('-').map(Number);
+        
+        let prevMonth = month - 1;
+        let prevYear = year;
+        
+        if (prevMonth < 1) {
+            prevMonth = 12;
+            prevYear = year - 1;
+        }
+        
+        return `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+    } catch (error) {
+        console.error(`Error calculating previous month for "${monthLabel}":`, error.message);
+        // Fallback: return previous month from current date
+        const now = getSafeDate();
+        now.setMonth(now.getMonth() - 1);
+        return now.toISOString().slice(0, 7);
     }
-    
-    return `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
 }
 
 function getDaysInMonth(year, month) {
-    // month is 1-indexed (1=January, 2=February, etc.)
-    return new Date(year, month, 0).getDate();
+    try {
+        // month is 1-indexed (1=January, 2=February, etc.)
+        return new Date(year, month, 0).getDate();
+    } catch (error) {
+        console.error(`Error getting days in month ${year}-${month}:`, error.message);
+        return 30; // Safe default
+    }
 }
 
 function detectMonthBoundary(todayDateStr) {
@@ -142,8 +232,13 @@ function finalizePreviousMonth(currency, previousMonthLabel) {
     // Get all data for previous month
     const prevMonthData = monthData[currency].filter(entry => {
         if (!entry || !entry.date) return false;
-        const entryMonth = getMonthLabelFromDate(entry.date);
-        return entryMonth === previousMonthLabel;
+        try {
+            const entryMonth = getMonthLabelFromDate(entry.date);
+            return entryMonth === previousMonthLabel;
+        } catch (error) {
+            console.error(`Error filtering month data for ${currency}:`, error.message);
+            return false;
+        }
     });
     
     if (prevMonthData.length === 0) {
@@ -152,46 +247,51 @@ function finalizePreviousMonth(currency, previousMonthLabel) {
     }
     
     // Calculate average
-    const prevMonthRates = prevMonthData.map(entry => entry.value);
-    const prevMonthSum = prevMonthRates.reduce((a, b) => a + b, 0);
-    const prevMonthAvg = prevMonthSum / prevMonthRates.length;
-    
-    // Get days in month
-    const [year, month] = previousMonthLabel.split('-').map(Number);
-    const daysInMonth = getDaysInMonth(year, month);
-    
-    // Check if already exists
-    const existingIndex = chartData[currency].findIndex(
-        item => item.month === previousMonthLabel
-    );
-    
-    const monthEntry = {
-        month: previousMonthLabel,
-        average: prevMonthAvg,
-        dataPoints: prevMonthData.length,
-        daysInMonth: daysInMonth,
-        completion: Math.round((prevMonthData.length / daysInMonth) * 100),
-        calculatedAt: new Date().toISOString(),
-        final: true
-    };
-    
-    if (existingIndex >= 0) {
-        // Update existing
-        chartData[currency][existingIndex] = monthEntry;
-        console.log(`    Updated existing entry for ${previousMonthLabel}`);
-    } else {
-        // Add new
-        chartData[currency].push(monthEntry);
-        console.log(`    Created new entry for ${previousMonthLabel}`);
+    try {
+        const prevMonthRates = prevMonthData.map(entry => entry.value);
+        const prevMonthSum = prevMonthRates.reduce((a, b) => a + b, 0);
+        const prevMonthAvg = prevMonthSum / prevMonthRates.length;
+        
+        // Get days in month
+        const [year, month] = previousMonthLabel.split('-').map(Number);
+        const daysInMonth = getDaysInMonth(year, month);
+        
+        // Check if already exists
+        const existingIndex = chartData[currency].findIndex(
+            item => item.month === previousMonthLabel
+        );
+        
+        const monthEntry = {
+            month: previousMonthLabel,
+            average: prevMonthAvg,
+            dataPoints: prevMonthData.length,
+            daysInMonth: daysInMonth,
+            completion: Math.round((prevMonthData.length / daysInMonth) * 100),
+            calculatedAt: getSafeDateString(new Date()),
+            final: true
+        };
+        
+        if (existingIndex >= 0) {
+            // Update existing
+            chartData[currency][existingIndex] = monthEntry;
+            console.log(`    Updated existing entry for ${previousMonthLabel}`);
+        } else {
+            // Add new
+            chartData[currency].push(monthEntry);
+            console.log(`    Created new entry for ${previousMonthLabel}`);
+        }
+        
+        // Keep only last 12 months
+        if (chartData[currency].length > 12) {
+            chartData[currency] = chartData[currency].slice(-12);
+        }
+        
+        console.log(`    Average: ${prevMonthAvg.toFixed(6)} (${prevMonthData.length}/${daysInMonth} days)`);
+        return monthEntry;
+    } catch (error) {
+        console.error(`Error finalizing month for ${currency}:`, error.message);
+        return null;
     }
-    
-    // Keep only last 12 months
-    if (chartData[currency].length > 12) {
-        chartData[currency] = chartData[currency].slice(-12);
-    }
-    
-    console.log(`    Average: ${prevMonthAvg.toFixed(6)} (${prevMonthData.length}/${daysInMonth} days)`);
-    return monthEntry;
 }
 
 function processData() {
@@ -208,7 +308,7 @@ function processData() {
         
         console.log(`✓ Input file exists`);
         
-        // Read and parse input data - SIMPLIFIED
+        // Read and parse input data
         let inputData;
         try {
             inputData = JSON.parse(fs.readFileSync(INPUT_DATA_FILE, 'utf8'));
@@ -218,10 +318,18 @@ function processData() {
             return { success: false, error: `Parse error: ${parseError.message}` };
         }
         
-        // CRITICAL FIX: Use CURRENT DATE instead of parsing timestamp
-        const today = new Date();
-        const apiDateStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        console.log(`✓ Using current date: ${apiDateStr}`);
+        // Use safe date functions
+        const today = getSafeDate();
+        let apiDateStr;
+        try {
+            apiDateStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            console.log(`✓ Using current date: ${apiDateStr}`);
+        } catch (error) {
+            console.error(`Error getting date string: ${error.message}`);
+            // Fallback to a known valid date format
+            apiDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            console.log(`✓ Using fallback date: ${apiDateStr}`);
+        }
         
         // Load existing processed data
         loadProcessedData();
@@ -254,6 +362,15 @@ function processData() {
             if (!monthData[currency]) monthData[currency] = [];
             if (!chartData[currency]) chartData[currency] = [];
             
+            // Safely create timestamp
+            let timestamp;
+            try {
+                timestamp = getSafeDateString(today);
+            } catch (error) {
+                console.error(`Error creating timestamp for ${currency}:`, error.message);
+                timestamp = getSafeDateString(new Date()); // Fallback
+            }
+            
             // Check for existing entry
             const existingIndex = monthData[currency].findIndex(
                 entry => entry && entry.date === apiDateStr
@@ -265,7 +382,7 @@ function processData() {
                 monthData[currency][existingIndex] = {
                     value: rate,
                     date: apiDateStr,
-                    timestamp: today.toISOString()
+                    timestamp: timestamp
                 };
                 skippedDuplicates++;
                 console.log(`✓ Updated ${currency} for ${apiDateStr}`);
@@ -274,14 +391,19 @@ function processData() {
                 monthData[currency].push({
                     value: rate,
                     date: apiDateStr,
-                    timestamp: today.toISOString()
+                    timestamp: timestamp
                 });
                 newDataAdded = true;
                 console.log(`✓ Added ${currency} for ${apiDateStr}: ${rate}`);
             }
             
             // Keep sorted and limit to 30 days
-            monthData[currency].sort((a, b) => a.date.localeCompare(b.date));
+            try {
+                monthData[currency].sort((a, b) => a.date.localeCompare(b.date));
+            } catch (error) {
+                console.error(`Error sorting data for ${currency}:`, error.message);
+            }
+            
             if (monthData[currency].length > 30) {
                 monthData[currency] = monthData[currency].slice(-30);
             }
@@ -303,41 +425,50 @@ function processData() {
             const currentMonthLabel = getMonthLabelFromDate(apiDateStr);
             const currentMonthData = monthData[currency].filter(entry => {
                 if (!entry || !entry.date) return false;
-                return getMonthLabelFromDate(entry.date) === currentMonthLabel;
+                try {
+                    return getMonthLabelFromDate(entry.date) === currentMonthLabel;
+                } catch (error) {
+                    console.error(`Error filtering current month data for ${currency}:`, error.message);
+                    return false;
+                }
             });
             
             if (currentMonthData.length > 0) {
-                const currentMonthRates = currentMonthData.map(entry => entry.value);
-                const currentSum = currentMonthRates.reduce((a, b) => a + b, 0);
-                const currentAvg = currentSum / currentMonthRates.length;
-                
-                const [year, month] = currentMonthLabel.split('-').map(Number);
-                const daysInMonth = getDaysInMonth(year, month);
-                
-                const monthIndex = chartData[currency].findIndex(
-                    item => item.month === currentMonthLabel
-                );
-                
-                const monthEntry = {
-                    month: currentMonthLabel,
-                    average: currentAvg,
-                    dataPoints: currentMonthData.length,
-                    daysInMonth: daysInMonth,
-                    completion: Math.round((currentMonthData.length / daysInMonth) * 100),
-                    lastUpdated: new Date().toISOString(),
-                    isCurrentMonth: true,
-                    final: monthBoundary.isNewMonth ? false : (currentMonthData.length === daysInMonth)
-                };
-                
-                if (monthIndex >= 0) {
-                    chartData[currency][monthIndex] = monthEntry;
-                } else {
-                    chartData[currency].push(monthEntry);
-                }
-                
-                // Keep only last 12 months
-                if (chartData[currency].length > 12) {
-                    chartData[currency] = chartData[currency].slice(-12);
+                try {
+                    const currentMonthRates = currentMonthData.map(entry => entry.value);
+                    const currentSum = currentMonthRates.reduce((a, b) => a + b, 0);
+                    const currentAvg = currentSum / currentMonthRates.length;
+                    
+                    const [year, month] = currentMonthLabel.split('-').map(Number);
+                    const daysInMonth = getDaysInMonth(year, month);
+                    
+                    const monthIndex = chartData[currency].findIndex(
+                        item => item.month === currentMonthLabel
+                    );
+                    
+                    const monthEntry = {
+                        month: currentMonthLabel,
+                        average: currentAvg,
+                        dataPoints: currentMonthData.length,
+                        daysInMonth: daysInMonth,
+                        completion: Math.round((currentMonthData.length / daysInMonth) * 100),
+                        lastUpdated: getSafeDateString(new Date()),
+                        isCurrentMonth: true,
+                        final: monthBoundary.isNewMonth ? false : (currentMonthData.length === daysInMonth)
+                    };
+                    
+                    if (monthIndex >= 0) {
+                        chartData[currency][monthIndex] = monthEntry;
+                    } else {
+                        chartData[currency].push(monthEntry);
+                    }
+                    
+                    // Keep only last 12 months
+                    if (chartData[currency].length > 12) {
+                        chartData[currency] = chartData[currency].slice(-12);
+                    }
+                } catch (error) {
+                    console.error(`Error updating chart data for ${currency}:`, error.message);
                 }
             }
         });
@@ -358,9 +489,14 @@ function processData() {
                 item => item.month === currentMonthLabel
             );
             
-            const rollingAvg = currencyData.length > 0
-                ? currencyData.reduce((sum, entry) => sum + entry.value, 0) / currencyData.length
-                : null;
+            let rollingAvg = null;
+            try {
+                if (currencyData.length > 0) {
+                    rollingAvg = currencyData.reduce((sum, entry) => sum + entry.value, 0) / currencyData.length;
+                }
+            } catch (error) {
+                console.error(`Error calculating rolling avg for ${currency}:`, error.message);
+            }
             
             return {
                 currency,
