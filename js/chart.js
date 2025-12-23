@@ -102,18 +102,30 @@ function formatScientific(value, isHTML = false) {
   if (value === 0) return "0.0";
   let exp = Math.floor(Math.log10(value));
   let base = value / Math.pow(10, exp);
-  
+
   if (isHTML) {
     return `${base.toFixed(1)}x10<sup>${exp}</sup>`;
   }
-  
+
   // Unicode superscripts for Canvas
   const superscripts = {
-    '0': '\u2070', '1': '\u00B9', '2': '\u00B2', '3': '\u00B3', '4': '\u2074',
-    '5': '\u2075', '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079',
-    '-': '\u207B'
+    0: "\u2070",
+    1: "\u00B9",
+    2: "\u00B2",
+    3: "\u00B3",
+    4: "\u2074",
+    5: "\u2075",
+    6: "\u2076",
+    7: "\u2077",
+    8: "\u2078",
+    9: "\u2079",
+    "-": "\u207B",
   };
-  const expStr = exp.toString().split('').map(char => superscripts[char] || char).join('');
+  const expStr = exp
+    .toString()
+    .split("")
+    .map((char) => superscripts[char] || char)
+    .join("");
   return `${base.toFixed(1)}x10${expStr}`;
 }
 
@@ -499,7 +511,7 @@ async function updateChartWithData(newData) {
 }
 window.updateChartWithData = updateChartWithData;
 
-// Timer to show when the chart data will be updated (Daily at 00:30 UTC)
+// Timer to show when the chart data will be updated (Daily at 1:47am UTC)
 function startChartUpdateTimer() {
   const timerHm = document.getElementById("timer-hm");
   const timerS = document.getElementById("timer-s");
@@ -508,12 +520,12 @@ function startChartUpdateTimer() {
 
   function update() {
     const now = new Date();
-    // Target is today at 00:30 UTC
-    let target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 30, 0));
+    // Target is today at 1:47am UTC
+    let target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 1, 47, 0));
 
-    // If we've passed 00:30 UTC today, target is tomorrow at 00:30 UTC
+    // If we've passed 1:47am UTC today, target is tomorrow at 1:47am UTC
     if (now >= target) {
-      target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 30, 0));
+      target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 1, 47, 0));
     }
 
     const diff = target - now;
@@ -521,12 +533,13 @@ function startChartUpdateTimer() {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    // Format as HH:MM and :SS
-    const hStr = hours > 0 ? `${hours}:` : "";
+    // Format all values to always have 2 digits
+    const hStr = hours.toString().padStart(2, "0");
     const mStr = minutes.toString().padStart(2, "0");
     const sStr = seconds.toString().padStart(2, "0");
 
-    timerHm.textContent = `${hStr}${mStr}`;
+    // Display in HH:MM format and :SS separately
+    timerHm.textContent = `${hStr}:${mStr}`;
     timerS.textContent = `:${sStr}`;
   }
 
