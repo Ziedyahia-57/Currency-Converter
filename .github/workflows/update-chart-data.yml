@@ -1,16 +1,15 @@
-name: Process Monthly Exchange Rate Averages
+name: Process Exchange Rate Averages
 on:
   schedule:
-    # Run at 21:30 UTC daily (after data fetch job)
-    - cron: '30 21 * * *'
+    - cron: '30 00 * * *'  # 00:30 AM UTC daily
   workflow_dispatch:
   workflow_run:
-    workflows: ["Your-Existing-Data-Fetch-Workflow"]  # Trigger after data fetch
+    workflows: [Update Currency Rates]
     types:
       - completed
 
 jobs:
-  process-monthly-averages:
+  process-averages:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     
@@ -30,7 +29,6 @@ jobs:
         run: |
           if [ -f "data.json" ]; then
             echo "data.json found"
-            # Check if it has valid data
             if jq empty data.json 2>/dev/null; then
               echo "data_valid=true" >> $GITHUB_OUTPUT
               echo "timestamp=$(jq -r '.timestamp // empty' data.json)" >> $GITHUB_OUTPUT
@@ -41,119 +39,145 @@ jobs:
             echo "data_valid=false" >> $GITHUB_OUTPUT
           fi
           
-      - name: Process monthly averages
-        id: process
+      - name: Run processor
         if: steps.check-data.outputs.data_valid == 'true'
+        id: process
         run: |
-          echo "Processing monthly averages from data.json..."
-          echo "API timestamp: ${{ steps.check-data.outputs.timestamp }}"
+          echo "Running monthly averages processor..."
           
-          # Run the processor
+          # Run the processor (using the separate file)
           node monthly-data-processor.js
           
-          # Check the results
+          # Check if processed data was created
           if [ -f "processed-data.json" ]; then
-            echo "processed_data_file=processed-data.json" >> $GITHUB_OUTPUT
-            echo "currencies_processed=$(jq '.monthData | length' processed-data.json)" >> $GITHUB_OUTPUT
+            echo "data_file=processed-data.json" >> $GITHUB_OUTPUT
+            
+            # Get processed data info
+            PROCESSED_DATE=$(node -e "console.log(require('./processed-data.json').metadata.date || '')")
+            CURRENCY_COUNT=$(node -e "console.log(Object.keys(require('./processed-data.json').data || {}).length || 0)")
+            
+            # Count total data points
+            ROLLING_POINTS=$(node -e "
+              const data = require('./processed-data.json').data || {};
+              const total = Object.values(data).reduce((sum, arr) => sum + arr.length, 0);
+              console.log(total);
+            ")
+            
+            echo "rolling_data_points=$ROLLING_POINTS" >> $GITHUB_OUTPUT
+            echo "current_date=$PROCESSED_DATE" >> $GITHUB_OUTPUT
+            echo "currency_count=$CURRENCY_COUNT" >> $GITHUB_OUTPUT
+            
+            echo "✓ Data processing successful"
+            echo "  Date: $PROCESSED_DATE"
+            echo "  Currencies: $CURRENCY_COUNT"
+            echo "  Data points: $ROLLING_POINTS"
+          else
+            echo "❌ processed-data.json was not created"
+            exit 1
           fi
           
       - name: Create summary markdown
-        if: steps.process.outputs.processed_data_file
+        if: steps.process.outputs.data_file
         run: |
           echo "Creating summary markdown..."
           
+          # Simple Node script for summary
           node -e "
           const fs = require('fs');
           
-          // Read processed data
-          const processedData = JSON.parse(fs.readFileSync('processed-data.json', 'utf8'));
+          function createSummary() {
+              try {
+                  // Read processed data
+                  const processedData = JSON.parse(fs.readFileSync('processed-data.json', 'utf8'));
+                  
+                  // Read input data
+                  let inputData = {};
+                  try {
+                      inputData = JSON.parse(fs.readFileSync('data.json', 'utf8'));
+                  } catch(e) {
+                      console.log('Note: Could not read data.json');
+                  }
+                  
+                  // Create markdown
+                  let markdown = '# Exchange Rate Averages\\n\\n';
+                  markdown += '**Last Updated:** ' + (processedData.metadata.date || 'Unknown') + '\\n';
+                  markdown += '**Base Currency:** ' + (inputData.base || 'USD') + '\\n';
+                  markdown += '**Currencies Tracked:** ' + Object.keys(processedData.data || {}).length + '\\n';
+                  
+                  // Count total data points
+                  const totalPoints = Object.values(processedData.data || {}).reduce((sum, arr) => sum + arr.length, 0);
+                  markdown += '**Total Data Points:** ' + totalPoints + '\\n\\n';
+                  
+                  markdown += '## Current Rates (Today)\\n\\n';
+                  markdown += '| Currency | Rate |\\n';
+                  markdown += '|----------|------|\\n';
+                  
+                  const majorCurrencies = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CNY', 'CHF', 'INR', 'BRL', 'MXN'];
+                  
+                  // Get today's date
+                  const today = processedData.metadata.date || '';
+                  
+                  majorCurrencies.forEach(currency => {
+                      if (processedData.data[currency]) {
+                          // Find today's rate
+                          const todayEntry = processedData.data[currency].find(entry => entry.date === today);
+                          if (todayEntry) {
+                              markdown += '| ' + currency + ' | ' + todayEntry.value.toFixed(6) + ' |\\n';
+                          } else {
+                              // Use latest if today not found
+                              const latest = processedData.data[currency][processedData.data[currency].length - 1];
+                              if (latest) {
+                                  markdown += '| ' + currency + ' | ' + latest.value.toFixed(6) + ' (latest) |\\n';
+                              }
+                          }
+                      }
+                  });
+                  
+                  markdown += '\\n## Data Collection Status\\n\\n';
+                  markdown += 'Rolling 30-day coverage:\\n\\n';
+                  
+                  majorCurrencies.forEach(currency => {
+                      if (processedData.data[currency]) {
+                          const count = processedData.data[currency].length;
+                          const coverage = Math.round((count / 30) * 100);
+                          markdown += '- ' + currency + ': ' + count + '/30 days (' + coverage + '% coverage)\\n';
+                      }
+                  });
+                  
+                  fs.writeFileSync('AVERAGES_SUMMARY.md', markdown);
+                  console.log('Summary created: AVERAGES_SUMMARY.md');
+                  
+              } catch (error) {
+                  console.error('Error creating summary:', error.message);
+              }
+          }
           
-          // Read input data for latest rates
-          const inputData = JSON.parse(fs.readFileSync('data.json', 'utf8'));
-          
-          const today = new Date();
-          const dateStr = today.toISOString().split('T')[0];
-          
-          // Create summary
-          let markdown = '# Monthly Exchange Rate Averages\\n\\n';
-          markdown += \`**Last Updated:** \${new Date(processedData.lastUpdated).toLocaleString('en-US', {timeZone: 'UTC'})} UTC\\n\`;
-          markdown += \`**Processing Date:** \${dateStr}\\n\`;
-          markdown += \`**Currencies Tracked:** \${Object.keys(processedData.monthData).length}\\n\\n\`;
-          
-          // Current month summary
-          markdown += '## Current Month Progress\\n\\n';
-          markdown += '| Currency | Today\\'s Rate | Month Avg | Days Collected | Status |\\n';
-          markdown += '|----------|---------------|-----------|----------------|--------|\\n';
-          
-          const majorCurrencies = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CNY', 'CHF', 'INR', 'BRL', 'MXN'];
-          
-          majorCurrencies.forEach(currency => {
-            const monthData = processedData.monthData[currency] || [];
-            const chartData = processedData.chartData[currency] || [];
-            const latestMonth = chartData.length > 0 ? chartData[chartData.length - 1] : null;
-            
-            const todayRate = inputData.rates[currency] || 'N/A';
-            const monthAvg = latestMonth ? latestMonth.average.toFixed(6) : 'N/A';
-            const days = monthData.length;
-            const expectedDays = today.getDate(); // Days so far this month
-            const status = days === expectedDays ? '✅ Up to date' : \`⏳ \${days}/\${expectedDays}\`;
-            
-            markdown += \`| \${currency} | \${todayRate} | \${monthAvg} | \${days} | \${status} |\\n\`;
-          });
-          
-          // Monthly history
-          markdown += '\\n## Monthly Averages History\\n\\n';
-          markdown += '| Month | EUR | GBP | JPY | CAD |\\n';
-          markdown += '|-------|-----|-----|-----|-----|\\n';
-          
-          // Get last 6 months
-          const currencies = ['EUR', 'GBP', 'JPY', 'CAD'];
-          const allMonths = new Set();
-          
-          currencies.forEach(c => {
-            (processedData.chartData[c] || []).forEach(item => {
-              allMonths.add(item.month);
-            });
-          });
-          
-          const sortedMonths = Array.from(allMonths).sort().reverse().slice(0, 6);
-          
-          sortedMonths.forEach(month => {
-            markdown += \`| \${month} \`;
-            
-            currencies.forEach(currency => {
-              const monthData = (processedData.chartData[currency] || []).find(m => m.month === month);
-              markdown += \`| \${monthData ? monthData.average.toFixed(6) : '-'} \`;
-            });
-            
-            markdown += '|\\n';
-          });
-          
-          markdown += '\\n---\\n';
-          markdown += '*Data processed daily at 00:30 AM GMT*\\n';
-          markdown += '*Source: exchangerate.host*\\n';
-          
-          fs.writeFileSync('MONTHLY_AVERAGES.md', markdown);
-          console.log('Summary markdown created');
+          createSummary();
           "
           
       - name: Commit processed data
-        if: steps.process.outputs.processed_data_file
+        if: steps.process.outputs.data_file
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Check what files changed
-          git status
+          git add processed-data.json AVERAGES_SUMMARY.md
           
-          # Add processed files
-          git add processed-data.json MONTHLY_AVERAGES.md
-          
-          # Check if there are changes
           if ! git diff --cached --quiet; then
-            git commit -m "Update monthly averages for $(date +'%Y-%m-%d') [skip ci]"
+            TODAY="${{ steps.process.outputs.current_date }}"
+            ROLLING_POINTS="${{ steps.process.outputs.rolling_data_points }}"
+            CURRENCY_COUNT="${{ steps.process.outputs.currency_count }}"
+            
+            COMMIT_MSG="📊 Update currency averages for $TODAY
+            
+            • Rolling 30-day data: $ROLLING_POINTS points
+            • Currencies tracked: $CURRENCY_COUNT
+            • Automated update
+            
+            [skip ci]"
+            
+            git commit -m "$COMMIT_MSG"
             git push
-            echo "Processed data committed"
           else
             echo "No changes to commit"
           fi
@@ -161,6 +185,6 @@ jobs:
       - name: Handle missing data
         if: steps.check-data.outputs.data_valid != 'true'
         run: |
-          echo "Warning: data.json not found or invalid"
-          echo "Skipping monthly averages processing"
+          echo "⚠️ No valid data found, skipping processing"
+          echo "This is normal if the Update Currency Rates workflow hasn't run yet."
           exit 0
