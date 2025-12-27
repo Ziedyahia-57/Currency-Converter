@@ -208,9 +208,10 @@
   user-select: none;
 }
 .currency-flag-img,
-.icon {
+.flag-icon {
   margin: 0 !important;
 }
+/*!!!!! was: .icon*/
 /*Fix for reddit img having margin*/
 
 #currency-converter-ex-currency-item {

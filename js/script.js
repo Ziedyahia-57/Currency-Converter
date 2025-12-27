@@ -47,6 +47,8 @@ const customPageConvert = document.getElementById("custom-page-convert");
 const customConvertTarget = document.getElementById("custom-convert-target");
 const lastUpdateElement = document.querySelector(".last-update");
 const darkModeBtn = document.getElementById("dark-mode-btn");
+const currencySearch = document.getElementById("currency-search");
+const clearCurrencySearch = document.getElementById("clear-currency-search");
 const root = document.documentElement;
 
 const CURRENCY_DATA_KEY = "currencyData";
@@ -996,6 +998,11 @@ function openChartsTab() {
   void chartsTab.offsetHeight;
   chartsTab.classList.add("show");
   chartsTab.classList.remove("hidden");
+  
+  // Initialize chart only when tab is opened
+  if (typeof window.initChartsTab === "function") {
+    window.initChartsTab();
+  }
 }
 chartBtn.addEventListener("click", () => {
   openChartsTab();
@@ -1544,6 +1551,9 @@ function closeCurrencyTab() {
   currentIndex = 0;
   matchingCurrencies = [];
   highlightedCurrency = null;
+  // Reset search
+  if (currencySearch) currencySearch.value = "";
+  if (clearCurrencySearch) clearCurrencySearch.classList.add("hidden");
 }
 hideCurrencyTab.addEventListener("click", () => {
   closeCurrencyTab();
@@ -2263,27 +2273,30 @@ if (numToTextElement) {
 //⚪------------------------------------------------------------*/
 //⚪                         ??????????                         */
 //⚪------------------------------------------------------------*/
-addCurrencyBtn.addEventListener("click", async () => {
+async function renderCurrencyList(filterText = "") {
   currencyList.innerHTML = "";
-  openCurrencyTab();
 
-  // Try to get fresh rates if online, otherwise use cached
-  if (navigator.onLine) {
+  // Try to get fresh rates if online and not already fetched
+  if (navigator.onLine && (!exchangeRates || Object.keys(exchangeRates).length === 0)) {
     try {
-      exchangeRates = await fetchExchangeRates("USD");
+      exchangeRates = await fetchExchangeRates();
     } catch (error) {
       console.log("Using cached rates after online fetch error:", error);
     }
   }
 
   if (!exchangeRates) {
-    exchangeRates = await fetchExchangeRates("USD");
+    exchangeRates = await fetchExchangeRates();
   }
 
+  const filter = filterText.toUpperCase();
   // Sort currencies alphabetically
   const sortedCurrencies = Object.keys(exchangeRates).sort((a, b) => a.localeCompare(b));
+  
+  let foundCount = 0;
   sortedCurrencies.forEach((currency) => {
-    if (!currencies.includes(currency)) {
+    if (!currencies.includes(currency) && (currency.toUpperCase().includes(filter))) {
+      foundCount++;
       const option = document.createElement("div");
       option.classList.add("currency-option");
 
@@ -2291,7 +2304,6 @@ addCurrencyBtn.addEventListener("click", async () => {
       const countryCode = currencyToCountry[currency] || "??"; // "??" is a fallback for unknown currencies
 
       // Add the flag and currency code to the option
-      // <span class="fi fi-${countryCode}"></span>
       option.innerHTML = `
                     <img class="country-flag" src="icons/flags/${countryCode}.svg">
                     <span>${currency}</span>
@@ -2300,12 +2312,49 @@ addCurrencyBtn.addEventListener("click", async () => {
       option.addEventListener("click", () => {
         addCurrency(currency);
         closeCurrencyTab();
+        updateAddButtonVisibility();
       });
 
       currencyList.appendChild(option);
     }
   });
+
+  if (foundCount === 0) {
+    const noResults = document.createElement("div");
+    noResults.classList.add("not-found");
+    noResults.textContent = "Not Found";
+    currencyList.appendChild(noResults);
+  }
+}
+
+addCurrencyBtn.addEventListener("click", async () => {
+  if (currencySearch) {
+    currencySearch.value = "";
+    clearCurrencySearch.classList.add("hidden");
+  }
+  openCurrencyTab();
+  renderCurrencyList();
+  if (currencySearch) {
+    setTimeout(() => currencySearch.focus(), 350);
+  }
 });
+
+if (currencySearch) {
+  currencySearch.addEventListener("input", (e) => {
+    const value = e.target.value;
+    clearCurrencySearch.classList.toggle("hidden", value === "");
+    renderCurrencyList(value);
+  });
+}
+
+if (clearCurrencySearch) {
+  clearCurrencySearch.addEventListener("click", () => {
+    currencySearch.value = "";
+    clearCurrencySearch.classList.add("hidden");
+    renderCurrencyList();
+    currencySearch.focus();
+  });
+}
 
 //⚪------------------------------------------------------------*/
 //⚪                         ??????????                         */
@@ -2313,7 +2362,7 @@ addCurrencyBtn.addEventListener("click", async () => {
 document.getElementById("donation-content").innerHTML = updateDonationContent();
 
 currencyTab.addEventListener("click", async (event) => {
-  if (!(event.target instanceof HTMLInputElement)) return; // Ignore clicks on non-input elements
+  if (!(event.target instanceof HTMLInputElement) || event.target.id === "currency-search") return; // Ignore clicks on non-input elements or search
   if (!event.target.value) return; // Ignore empty values
 
   let rawValue = event.target.value.replace(/,/g, ""); // Remove commas from the input value
@@ -2520,6 +2569,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     await resetInputsWithNewFormat();
     numToTextElement.textContent = "ABC..."; // Clear if input is invalid
+
+    // Update chart separators if they were already initialized
+    if (typeof getNumberFormatSeparators === "function") {
+      window.chartSeparators = await getNumberFormatSeparators();
+      // If charts are initialized, re-render the current data to apply new formatting
+      if (typeof window.updateChartWithData === "function" && window.initChartsTab) {
+         window.updateChartWithData();
+      }
+    }
   });
 
   fiatDecimalSelector.addEventListener("change", async function () {
@@ -2803,6 +2861,7 @@ async function updateAllCurrencyDecimals() {
 //////////////////////////
 //////////////////////////
 
+window.getNumberFormatSeparators = getNumberFormatSeparators;
 async function getNumberFormatSeparators() {
   try {
     // Get the numberFormat from chrome.storage.local
@@ -3483,55 +3542,68 @@ function initChartDropdowns() {
   let highlightedIndex = -1;
 
   window.populateDropdown = function populateDropdown(dropdown) {
-    const list = dropdown.id === "chart-base-dropdown" ? baseList : quoteList;
-    const searchVal = dropdown.querySelector(".dropdown-search").value.toLowerCase();
-    const otherCurrency = dropdown.id === "chart-base-dropdown" ? currentQuote : currentBase;
-    const selectedCurrency = dropdown.id === "chart-base-dropdown" ? currentBase : currentQuote;
-    
-    list.innerHTML = "";
-    highlightedIndex = -1; // Reset highlighting on search
+  const list = dropdown.id === "chart-base-dropdown" ? baseList : quoteList;
+  const searchVal = dropdown.querySelector(".dropdown-search").value.toLowerCase();
+  const otherCurrency = dropdown.id === "chart-base-dropdown" ? currentQuote : currentBase;
+  const selectedCurrency = dropdown.id === "chart-base-dropdown" ? currentBase : currentQuote;
+  
+  list.innerHTML = "";
+  highlightedIndex = -1; // Reset highlighting on search
 
-    // Check if exchangeRates is available
-    if (!exchangeRates || Object.keys(exchangeRates).length === 0) {
-      const loading = document.createElement("div");
-      loading.classList.add("dropdown-item");
-      loading.textContent = "Loading...";
-      list.appendChild(loading);
-      return;
-    }
-    
-    const sortedCurrencies = Object.keys(exchangeRates).sort();
-    
-    sortedCurrencies.forEach(currency => {
-      // Mutual exclusion: don't show the currency selected in the other dropdown
-      if (currency === otherCurrency) return;
-      
-      if (currency.toLowerCase().includes(searchVal)) {
-        const item = document.createElement("div");
-        item.classList.add("dropdown-item");
-        if (currency === selectedCurrency) {
-          item.classList.add("selected");
-        }
-        
-        const countryCode = currencyToCountry[currency] || "??";
-        item.innerHTML = `
-          <img src="icons/flags/${countryCode}.svg" onerror="this.src='./icons/website.png'">
-          <span>${currency}</span>
-        `;
-        
-        item.addEventListener("click", (e) => {
-          e.stopPropagation();
-          selectCurrency(dropdown, currency);
-        });
-        
-        list.appendChild(item);
-      }
-    });
-
-    if (searchVal && list.children.length > 0) {
-      highlightItem(list, 0);
-    }
+  // Check if exchangeRates is available
+  if (!exchangeRates || Object.keys(exchangeRates).length === 0) {
+    const loading = document.createElement("div");
+    loading.classList.add("dropdown-item");
+    loading.textContent = "Loading...";
+    list.appendChild(loading);
+    return;
   }
+  
+  const sortedCurrencies = Object.keys(exchangeRates).sort();
+  
+  let foundCount = 0;
+  sortedCurrencies.forEach(currency => {
+    // Mutual exclusion: don't show the currency selected in the other dropdown
+    if (currency === otherCurrency) return;
+    
+    if (currency.toLowerCase().includes(searchVal)) {
+      foundCount++;
+      const item = document.createElement("div");
+      item.classList.add("dropdown-item");
+      if (currency === selectedCurrency) {
+        item.classList.add("selected");
+      }
+      
+      const countryCode = currencyToCountry[currency] || "??";
+      item.innerHTML = `
+        <img src="icons/flags/${countryCode}.svg" onerror="this.src='./icons/website.png'">
+        <span>${currency}</span>
+      `;
+      
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectCurrency(dropdown, currency);
+      });
+      
+      list.appendChild(item);
+    }
+  });
+
+  if (foundCount === 0) {
+    const noResults = document.createElement("div");
+    noResults.classList.add("dropdown-item");
+    noResults.classList.add("not-found");
+    noResults.textContent = "Not Found";
+    list.appendChild(noResults);
+  }
+
+  // Only highlight if we have results AND there's a search term
+  if (searchVal && foundCount > 0) {
+    highlightItem(list, 0);
+  } else {
+    highlightedIndex = -1; // Make sure highlightedIndex is reset when no valid items
+  }
+}
 
   function highlightItem(list, index) {
     const items = list.querySelectorAll(".dropdown-item");

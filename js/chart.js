@@ -8,8 +8,21 @@ const today = new Date();
 testDateInput.value = today.toISOString().split("T")[0];
 testDateInput.disabled = true; // Disable the input so it can't be changed
 
+// Function to get the effective today based on the 01:47 UTC update time
+function getEffectiveToday() {
+  const now = new Date();
+  const updateTimeToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 1, 47, 0));
+  
+  if (now < updateTimeToday) {
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    return yesterday;
+  }
+  return now;
+}
+
 // Expose to window for access from script.js
-window.today = today;
+window.today = getEffectiveToday();
 testDateInput.style.opacity = "0.7"; // Visual cue that it's disabled
 
 // Create gradient contexts for different trends
@@ -19,6 +32,7 @@ function createGradient(ctx, color) {
     green: { start: "rgba(16, 185, 129, 0.45)", end: "rgba(16, 185, 129, 0)" },
     red: { start: "rgba(239, 68, 68, 0.45)", end: "rgba(239, 68, 68, 0)" },
     gray: { start: "rgba(156, 163, 175, 0.45)", end: "rgba(156, 163, 175, 0)" },
+    orange: { start: "rgba(255, 152, 0, 0.45)", end: "rgba(255, 152, 0, 0)" },
   };
 
   const colors = colorMap[color] || colorMap.gray;
@@ -97,6 +111,29 @@ function formatMonth(date) {
   return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
+// Custom number formatting that respects user preferences
+function formatChartNumber(value, minDec, maxDec) {
+  const separators = window.chartSeparators || { thousand: ",", decimal: "." };
+  
+  if (value === 0) return "0" + (minDec > 0 ? separators.decimal + "0".repeat(minDec) : "");
+  
+  // Use toFixed to get the desired precision
+  let formatted = value.toFixed(maxDec);
+  let [intPart, decPart] = formatted.split(".");
+  
+  // Re-apply thousand separators
+  intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, separators.thousand);
+  
+  // Trim or pad decimal part to meet minDec
+  if (decPart === undefined) decPart = "";
+  decPart = decPart.replace(/0+$/, "");
+  if (decPart.length < minDec) {
+    decPart = decPart.padEnd(minDec, "0");
+  }
+
+  return intPart + (decPart ? separators.decimal + decPart : "");
+}
+
 // Helper to format scientific notation for BTC
 function formatScientific(value, isHTML = false) {
   if (value === 0) return "0.0";
@@ -104,7 +141,7 @@ function formatScientific(value, isHTML = false) {
   let base = value / Math.pow(10, exp);
 
   if (isHTML) {
-    return `${base.toFixed(1)}x10<sup>${exp}</sup>`;
+    return (base.toFixed(1)).replace(".", (window.chartSeparators?.decimal || ".")) + `x10<sup>${exp}</sup>`;
   }
 
   // Unicode superscripts for Canvas
@@ -131,7 +168,7 @@ function formatScientific(value, isHTML = false) {
 
 // Determine trend color based on last two data points
 function getTrendColor(data, isMissing = false) {
-  if (isMissing) return "gray";
+  if (isMissing) return "orange";
   if (data.length < 2) return "gray";
 
   const lastValue = data[data.length - 1];
@@ -200,7 +237,7 @@ async function getChartData(range) {
   if (range === "week" || range === "month") {
     const points = range === "week" ? 7 : 30;
     const masterTimeline = [];
-    const end = window.today || new Date();
+    const end = getEffectiveToday();
 
     // Generate the last N days (sorted old to new)
     for (let i = points - 1; i >= 0; i--) {
@@ -295,15 +332,16 @@ async function getChartData(range) {
   const lastValue = result.data.length > 0 ? result.data[result.data.length - 1] : 0;
 
   if (range === "year") {
-    infoText.innerHTML = `${formatMonth(result.startDate)} - ${formatMonth(result.endDate)}`;
+    infoText.innerHTML = `${formatMonth(result.startDate)} - ${formatMonth(result.endDate)} (Monthly Avg.)`;
   } else {
     infoText.innerHTML = `${formatDate(result.startDate)} - ${formatDate(result.endDate)}`;
   }
 
-  const displayValue = lastValue.toLocaleString(undefined, {
-    minimumFractionDigits: quote === "BTC" ? 8 : 5,
-    maximumFractionDigits: quote === "BTC" ? 8 : 5,
-  });
+  const displayValue = formatChartNumber(
+    lastValue,
+    quote === "BTC" ? 8 : 5,
+    quote === "BTC" ? 8 : 5
+  );
 
   if (result.isMissing) {
     valueText.innerHTML = `${displayValue} ${trendIndicator}`;
@@ -354,11 +392,26 @@ function updateXAxisGrid(range) {
     if (quote === "BTC" && value > 0 && value < 0.0001) {
       return formatScientific(value, false);
     }
-    if (this.max - this.min < 0.1) {
-      return value.toFixed(quote === "BTC" ? 8 : 5);
+    
+    // Determine consistent decimal places
+    const maxDec = quote === "BTC" ? 8 : 5;
+    let minDec = 0;
+    
+    // If the range is small, use more decimals for consistency
+    const range = this.max - this.min;
+    if (range < 0.1) {
+      minDec = maxDec;
+    } else {
+      // Calculate precision based on step size
+      const step = range / (this.ticks.length - 1 || 1);
+      minDec = Math.max(0, Math.min(maxDec, Math.ceil(-Math.log10(step))));
     }
-    if (value >= 1000) return (value / 1000).toFixed(1) + "K";
-    return value.toLocaleString(undefined, { maximumFractionDigits: quote === "BTC" ? 8 : 5 });
+
+    if (value >= 1e9) return (value / 1e9).toFixed(1) + "B";
+    if (value >= 1e6) return (value / 1e6).toFixed(1) + "M";
+    if (value >= 1e3) return (value / 1e3).toFixed(1) + "K";
+    
+    return formatChartNumber(value, minDec, maxDec);
   };
 }
 
@@ -396,7 +449,7 @@ const chart = new Chart(ctx, {
         bodyColor: "#e5e7eb",
         borderColor: function (context) {
           const trendColor = getTrendColor(context.chart.data.datasets[0].data, currentData?.isMissing);
-          return trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : "#9ca3af";
+          return trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : trendColor === "orange" ? "#ff9800" : "#9ca3af";
         },
         borderWidth: 1,
         displayColors: false,
@@ -406,10 +459,7 @@ const chart = new Chart(ctx, {
             if (val === 0) return "No Data";
             // Popup should have 5 or 8 decimal digits
             const { quote } = getSelectedCurrencies();
-            return val.toLocaleString(undefined, {
-              minimumFractionDigits: quote === "BTC" ? 8 : 5,
-              maximumFractionDigits: quote === "BTC" ? 8 : 5,
-            });
+            return formatChartNumber(val, quote === "BTC" ? 8 : 5, quote === "BTC" ? 8 : 5);
           },
           label: function (context) {
             return currentData?.fullLabels[context.dataIndex] || "";
@@ -439,14 +489,26 @@ const chart = new Chart(ctx, {
             if (quote === "BTC" && value > 0 && value < 0.0001) {
               return formatScientific(value, false);
             }
-            if (currentRange === "year" && value >= 1000) {
-              return (value / 1000).toFixed(1) + "K";
+
+            // Determine consistent decimal places
+            const maxDec = quote === "BTC" ? 8 : 5;
+            let minDec = 0;
+            
+            // If the range is small, use more decimals for consistency
+            const range = this.max - this.min;
+            if (range < 0.1) {
+              minDec = maxDec;
+            } else {
+              // Calculate precision based on step size
+              const step = range / (this.ticks.length - 1 || 1);
+              minDec = Math.max(0, Math.min(maxDec, Math.ceil(-Math.log10(step))));
             }
-            // Simplified Y-axis: max 5 or 8 decimals
-            return value.toLocaleString(undefined, {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: quote === "BTC" ? 8 : 5,
-            });
+
+            if (value >= 1e9) return (value / 1e9).toFixed(1) + "B";
+            if (value >= 1e6) return (value / 1e6).toFixed(1) + "M";
+            if (value >= 1e3) return (value / 1e3).toFixed(1) + "K";
+
+            return formatChartNumber(value, minDec, maxDec);
           },
         },
       },
@@ -486,9 +548,9 @@ async function updateChartWithData(newData) {
   chart.data.datasets[0].data = newData.data;
   chart.data.datasets[0].backgroundColor = newData.isMissing ? "transparent" : createGradient(ctx, trendColor);
   chart.data.datasets[0].borderColor =
-    trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : "#9ca3af";
+    trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : trendColor === "orange" ? "#ff9800" : "#9ca3af";
   chart.data.datasets[0].pointHoverBackgroundColor =
-    trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : "#9ca3af";
+    trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : trendColor === "orange" ? "#ff9800" : "#9ca3af";
 
   // Handle missing data: dashed line and NO fill
   if (newData.isMissing) {
@@ -548,7 +610,18 @@ function startChartUpdateTimer() {
 }
 
 // Initial fetch and render
-(async () => {
+let isChartInitialized = false;
+window.initChartsTab = async function() {
+  if (isChartInitialized) return;
+  isChartInitialized = true;
+
+  // Load formatting separators once
+  if (typeof window.getNumberFormatSeparators === "function") {
+    window.chartSeparators = await window.getNumberFormatSeparators();
+  } else {
+    window.chartSeparators = { thousand: ",", decimal: "." };
+  }
+
   await fetchHistoricalData();
   const initialData = await getChartData(currentRange);
   updateXAxisGrid(currentRange);
@@ -558,4 +631,4 @@ function startChartUpdateTimer() {
   // Set initial focused button
   const weekBtn = document.querySelector('[data-range="week"]');
   if (weekBtn) weekBtn.classList.add("focused-btn");
-})();
+};

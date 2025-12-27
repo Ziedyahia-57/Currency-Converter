@@ -282,9 +282,8 @@ body {
 
 .currency-converter-ex #currency-list {
   overflow-y: overlay;
-  /* Enable scrolling for the currency options */
-  height: calc(100% - 70px);
-  /* Adjust height to account for the sticky title */
+  height: calc(100% - 114px);
+  padding-top: 1px;
   position: relative;
   scrollbar-color: #6e6e6e73 transparent;
   scrollbar-width: thin;
@@ -1207,7 +1206,7 @@ body {
   display: inline-block;
   margin-left: 6px;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .trend-up {
@@ -1249,7 +1248,7 @@ button.chart-btn.btn3 {
   opacity: 0;
 }
 #valueText {
-  font-size: 24px;
+  font-size: 23px;
   justify-self: left;
   color: var(--font-color2);
 }
@@ -1389,8 +1388,10 @@ button.chart-btn.btn3 {
   bottom: 0px;
   display: flex;
   align-items: center;
-  width: 100%;
   box-sizing: border-box;
+  max-width: 330px;
+  width: auto;
+  height: 44px;
 }
 
 .clear-search {
@@ -1502,4 +1503,30 @@ button.chart-btn.btn3 {
   color: #94a3b8;
   position: relative; 
   left: -3px;
+}
+
+#currency-search-container {
+  position: relative;
+  bottom: auto;
+  background: var(--light-gray);
+  border-bottom: 1px solid var(--border-dark);
+  box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
+  z-index: 2;
+}
+
+#currency-search-container .clear-search {
+  top: 50%;
+  transform: translateY(-50%);
+  right: 12px;
+}
+
+.not-found {
+  padding: 7px;
+  text-align: center;
+  color: var(--font-color2);
+  font-size: 0.9rem;
+  opacity: 0.8;
+  pointer-events: none;
+  max-width: 330px;
+  justify-content: center;
 }

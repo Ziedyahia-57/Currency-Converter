@@ -51,10 +51,23 @@
               </svg>
             </button>
             <button id="chart-btn" title="Charts">
-              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" data-locator-target="webstorm" class="currency-converter-ex-dark-mode">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                version="1.1"
+                id="Layer_1"
+                x="0px"
+                y="0px"
+                viewBox="0 0 512 512"
+                style="enable-background: new 0 0 512 512"
+                xml:space="preserve"
+                data-locator-target="webstorm"
+                class="currency-converter-ex-dark-mode">
                 <g>
-                  <path d="M347.59,195.56c9.71-12.12,27.35-14.21,39.62-4.69l2.67,2.36L503.67,307c4.42,4.42,7.26,10.18,8.08,16.38l0.26,3.73v142.22   c0,14.42-10.79,26.56-25.12,28.25l-3.33,0.2H27.82l-3.13-0.26l-3.13-0.57l-3.04-0.97l-2.99-1.31L12.69,493l-2.67-1.99l-1.71-1.56   l-2.05-2.33l-1.82-2.53l-1.54-2.73l-0.46-1l-1.14-2.93l-0.77-3.02l-0.43-3.07L0,468.71l0.26-3.13l0.54-2.99l1-3.19l1.31-2.99   l1.68-2.84l113.78-170.67c7.2-10.85,20.85-15.42,33.14-11.09l3.24,1.42l93.21,46.59l99.41-124.27L347.59,195.56z"/>
-                  <path d="M347.93,24.47c9.81-11.79,27.2-13.67,39.31-4.27l2.65,2.36l113.78,113.78c11.09,11.13,11.06,29.14-0.07,40.23   c-10.13,10.09-26.17,11.1-37.48,2.35l-2.67-2.36l-91.76-91.73L249.4,231.54c-7.61,9.12-20.08,12.56-31.29,8.62l-3.27-1.39   l-92.56-46.25L51.2,287.29c-8.6,11.47-24.38,14.74-36.84,7.65l-2.99-1.96c-11.47-8.6-14.74-24.38-7.65-36.84l1.96-2.99   l85.33-113.78c7.49-9.97,20.6-13.91,32.34-9.7l3.13,1.34l93.61,46.79L347.93,24.47z"/>
+                  <path
+                    d="M347.59,195.56c9.71-12.12,27.35-14.21,39.62-4.69l2.67,2.36L503.67,307c4.42,4.42,7.26,10.18,8.08,16.38l0.26,3.73v142.22   c0,14.42-10.79,26.56-25.12,28.25l-3.33,0.2H27.82l-3.13-0.26l-3.13-0.57l-3.04-0.97l-2.99-1.31L12.69,493l-2.67-1.99l-1.71-1.56   l-2.05-2.33l-1.82-2.53l-1.54-2.73l-0.46-1l-1.14-2.93l-0.77-3.02l-0.43-3.07L0,468.71l0.26-3.13l0.54-2.99l1-3.19l1.31-2.99   l1.68-2.84l113.78-170.67c7.2-10.85,20.85-15.42,33.14-11.09l3.24,1.42l93.21,46.59l99.41-124.27L347.59,195.56z" />
+                  <path
+                    d="M347.93,24.47c9.81-11.79,27.2-13.67,39.31-4.27l2.65,2.36l113.78,113.78c11.09,11.13,11.06,29.14-0.07,40.23   c-10.13,10.09-26.17,11.1-37.48,2.35l-2.67-2.36l-91.76-91.73L249.4,231.54c-7.61,9.12-20.08,12.56-31.29,8.62l-3.27-1.39   l-92.56-46.25L51.2,287.29c-8.6,11.47-24.38,14.74-36.84,7.65l-2.99-1.96c-11.47-8.6-14.74-24.38-7.65-36.84l1.96-2.99   l85.33-113.78c7.49-9.97,20.6-13.91,32.34-9.7l3.13,1.34l93.61,46.79L347.93,24.47z" />
                 </g>
               </svg>
             </button>
@@ -106,6 +119,15 @@
             </button>
             Select a Currency
           </h3>
+          <div class="search-container" id="currency-search-container">
+            <input type="text" id="currency-search" class="dropdown-search" placeholder="Search..." />
+            <button id="clear-currency-search" class="clear-search hidden" title="Clear search">
+              <svg viewBox="0 0 384 512">
+                <path
+                  d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
+              </svg>
+            </button>
+          </div>
           <div id="currency-list" class="currency-list"></div>
         </div>
 
@@ -294,12 +316,16 @@
               </div>
 
               <div class="row">
-                <p class="option-name" id="editBlacklist">Blacklisted Websites<span id="blacklist-status"> • Selected</span></p>
+                <p class="option-name" id="editBlacklist">
+                  Blacklisted Websites<span id="blacklist-status"> • Selected</span>
+                </p>
                 <button id="edit-blacklist-btn">Edit List</button>
               </div>
 
               <div class="row">
-                <p class="option-name" id="editWhitelist">Whitelisted Websites<span id="whitelist-status"> • Selected</span></p>
+                <p class="option-name" id="editWhitelist">
+                  Whitelisted Websites<span id="whitelist-status"> • Selected</span>
+                </p>
                 <button id="edit-whitelist-btn">Edit List</button>
               </div>
             </div>
@@ -386,14 +412,15 @@
             <button class="hide-tab" id="hide-whitelist-tab" title="Back (Esc)">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 321 513">
                 <!--Font Awesome Free 7.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
-                <path d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"></path>
+                <path
+                  d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"></path>
               </svg>
             </button>
             Whitelist
           </h3>
           <div class="link-content" id="whitelist-content">
             <div class="add-whitelist-link">
-              <input type="text" placeholder="Add Link" id="add-whitelist-link">
+              <input type="text" placeholder="Add Link" id="add-whitelist-link" />
               <button id="add-whitelist-link-btn" title="Add Link">Add</button>
             </div>
           </div>
@@ -404,14 +431,15 @@
             <button class="hide-tab" id="hide-blacklist-tab" title="Back (Esc)">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 321 513">
                 <!--Font Awesome Free 7.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
-                <path d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"></path>
+                <path
+                  d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"></path>
               </svg>
             </button>
             Blacklist
           </h3>
           <div class="link-content" id="blacklist-content">
             <div class="add-whitelist-link">
-              <input type="text" placeholder="Add Link" id="add-blacklist-link">
+              <input type="text" placeholder="Add Link" id="add-blacklist-link" />
               <button id="add-blacklist-link-btn" title="Add Link">Add</button>
             </div>
           </div>
@@ -422,65 +450,71 @@
             <button class="hide-tab" id="hide-charts-tab" title="Back (Esc)">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 321 513">
                 <!--Font Awesome Free 7.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
-                <path d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"></path>
+                <path
+                  d="M42.4 234.4c-12.5 12.5-12.5 32.8 0 45.3l161 161c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L110.3 257 247.6 119.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-161 161z"></path>
               </svg>
             </button>
             Charts
           </h3>
 
           <div class="chart-zone">
-
             <div class="controls">
               <button class="chart-btn btn1 active" data-range="week">7 Days</button>
               <button class="chart-btn btn2" data-range="month">30 Days</button>
               <button class="chart-btn btn3" data-range="year">YTD</button>
-              <span class="timer"><svg
-                    role="presentation"
-                    viewBox="0 0 24 24"
-                    style="cursor: help; height: 12px; width: 12px; margin: 0px 0 -2px 0">
-                    <title>
-                      Chart data update timer
-                    </title>
-                    <path
-                      d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"
-                      style="fill: currentcolor"></path>
-                  </svg> <span id="timer-hm">10:50</span>
+              <span class="timer"
+                ><svg
+                  role="presentation"
+                  viewBox="0 0 24 24"
+                  style="cursor: help; height: 12px; width: 12px; margin: 0px 0 -2px 0">
+                  <title>Chart data update timer</title>
+                  <path
+                    d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"
+                    style="fill: currentcolor"></path>
+                </svg>
+                <span id="timer-hm">10:50</span>
                 <span class="seconds" id="timer-s">:42</span>
               </span>
-          </div>
+            </div>
 
-          <div id="valueText"></div>
-          <div class="row" style="width: 100%; height: fit-content;">
-            <div class="info" id="infoText"></div>
-            <span class="warning" title="All data and information is provided “as is” for informational purposes only, and is not intended for trading purposes or financial, investment, tax, legal, accounting or other advice.">⚠ Disclaimer</span>
-          </div>
-          <div class="chart-container">
-            <canvas id="chart" width="300" height="170"></canvas>
-          </div>
-          
+            <div id="valueText"></div>
+            <div class="row" style="width: 100%; height: fit-content">
+              <div class="info" id="infoText"></div>
+              <span
+                class="warning"
+                title="All data and information is provided “as is” for informational purposes only, and is not intended for trading purposes or financial, investment, tax, legal, accounting or other advice."
+                >⚠ Disclaimer</span
+              >
+            </div>
+            <div class="chart-container">
+              <canvas id="chart" width="300" height="170"></canvas>
+            </div>
 
-          <div class="calendar-container" style="display: none;">
-            <span class="calendar-label">Test Date:</span>
-            <input type="date" id="testDate" value="">
+            <div class="calendar-container" style="display: none">
+              <span class="calendar-label">Test Date:</span>
+              <input type="date" id="testDate" value="" />
+            </div>
+
+            <script src="js/chart.js"></script>
           </div>
-          
-          <script src="js/chart.js"></script>
-          </div>
-          <div class="chart-zone dropdown-controls" style="display: flex; padding: 8px 24px;">
+          <div class="chart-zone dropdown-controls" style="display: flex; padding: 8px 24px">
             <div class="dropdown-wrapper">
               <p class="option-name">Base:</p>
               <div class="custom-dropdown" id="chart-base-dropdown">
                 <div class="dropdown-selected" id="chart-base-selected">
                   <div class="selected-inner">
-                    <img src="icons/flags/jp.svg" class="selected-flag" onerror="this.src='./icons/website.png'">
+                    <img src="icons/flags/jp.svg" class="selected-flag" onerror="this.src='./icons/website.png'" />
                     <span>JPY</span>
                   </div>
                 </div>
                 <div class="dropdown-content hidden" style="display: none">
                   <div class="search-container">
-                    <input type="text" class="dropdown-search" placeholder="Search...">
+                    <input type="text" class="dropdown-search" placeholder="Search..." />
                     <button class="clear-search hidden" title="Clear search">
-                      <svg viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
+                      <svg viewBox="0 0 384 512">
+                        <path
+                          d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
+                      </svg>
                     </button>
                   </div>
                   <div class="dropdown-list" id="chart-base-list"></div>
@@ -489,7 +523,8 @@
             </div>
             <button class="swap-currencies-btn" id="swap-charts-btn" title="Swap Currencies">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                <path d="M0 168v-16c0-13.255 10.745-24 24-24h360V80c0-21.367 25.899-32.042 41-17l95 95c9.373 9.373 9.373 24.569 0 33.941l-95 95c-15.015 15.011-41 4.381-41-17v-48H24c-13.255 0-24-10.745-24-24zm512 192v-16c0-13.255-10.745-24-24-24H128v-48c0-21.371-25.897-32.047-41-17L31 351.059c-9.373 9.373-9.373 24.569 0 33.941l87 87c15.015 15.011 41 4.381 41-17v-48h329c13.255 0 24-10.745 24-24z"/>
+                <path
+                  d="M0 168v-16c0-13.255 10.745-24 24-24h360V80c0-21.367 25.899-32.042 41-17l95 95c9.373 9.373 9.373 24.569 0 33.941l-95 95c-15.015 15.011-41 4.381-41-17v-48H24c-13.255 0-24-10.745-24-24zm512 192v-16c0-13.255-10.745-24-24-24H128v-48c0-21.371-25.897-32.047-41-17L31 351.059c-9.373 9.373-9.373 24.569 0 33.941l87 87c15.015 15.011 41 4.381 41-17v-48h329c13.255 0 24-10.745 24-24z" />
               </svg>
             </button>
             <div class="dropdown-wrapper">
@@ -497,15 +532,18 @@
               <div class="custom-dropdown" id="chart-quote-dropdown">
                 <div class="dropdown-selected" id="chart-quote-selected">
                   <div class="selected-inner">
-                    <img src="icons/flags/us.svg" class="selected-flag" onerror="this.src='./icons/website.png'">
+                    <img src="icons/flags/us.svg" class="selected-flag" onerror="this.src='./icons/website.png'" />
                     <span>USD</span>
                   </div>
                 </div>
                 <div class="dropdown-content hidden" style="display: none">
                   <div class="search-container">
-                    <input type="text" class="dropdown-search" placeholder="Search...">
+                    <input type="text" class="dropdown-search" placeholder="Search..." />
                     <button class="clear-search hidden" title="Clear search">
-                      <svg viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
+                      <svg viewBox="0 0 384 512">
+                        <path
+                          d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
+                      </svg>
                     </button>
                   </div>
                   <div class="dropdown-list" id="chart-quote-list"></div>
@@ -514,7 +552,6 @@
             </div>
           </div>
         </div>
-
       </div>
 
       <script src="js/script.js" type="module"></script>
