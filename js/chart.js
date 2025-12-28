@@ -175,9 +175,9 @@ function getTrendColor(data, isMissing = false) {
   const prevValue = data[data.length - 2];
   const difference = lastValue - prevValue;
 
-  // Use a smaller epsilon for BTC (8 decimals) vs others (5 decimals)
+  // Use a smaller epsilon for BTC (10 decimals) vs others (5 decimals)
   const { quote } = getSelectedCurrencies();
-  const epsilon = quote === "BTC" ? 0.00000001 : 0.00001;
+  const epsilon = quote === "BTC" ? 0.0000000001 : 0.00001;
 
   if (Math.abs(difference) < epsilon) {
     return "gray";
@@ -203,7 +203,7 @@ function getTrendIndicator(data, isMissing = false) {
     return `<span class="trend-indicator trend-orange">No Data</span>`;
   }
   
-  if (data.length < 2) return `<span class="trend-indicator trend-neutral">0.0%</span>`;
+  if (data.length < 2) return `<span class="trend-indicator trend-neutral">0.00%</span>`;
 
   const lastValue = data[data.length - 1];
   const prevValue = data[data.length - 2];
@@ -214,7 +214,7 @@ function getTrendIndicator(data, isMissing = false) {
   const epsilon = quote === "BTC" ? 0.00000001 : 0.00001;
 
   if (Math.abs(difference) < epsilon) {
-    return `<span class="trend-indicator trend-neutral">0.0%</span>`;
+    return `<span class="trend-indicator trend-neutral">0.00%</span>`;
   } else if (difference > 0) {
     return `<span class="trend-indicator trend-up">▲ ${percentage}%</span>`;
   } else {
@@ -277,7 +277,7 @@ async function getChartData(range) {
 
         let rate = bVal > 0 ? qVal / bVal : 0;
         // If quote is BTC, use 8 decimals, otherwise 5
-        rate = Number(rate.toFixed(quote === "BTC" ? 8 : 5));
+        rate = Number(rate.toFixed(quote === "BTC" ? 10 : 5));
         result.data.push(rate);
 
         const date = new Date(dateStr);
@@ -321,7 +321,7 @@ async function getChartData(range) {
 
         let rate = bVal > 0 ? qVal / bVal : 0;
         // If quote is BTC, use 8 decimals, otherwise 5
-        rate = Number(rate.toFixed(quote === "BTC" ? 8 : 5));
+        rate = Number(rate.toFixed(quote === "BTC" ? 10 : 5));
         result.data.push(rate);
 
         const [year, month] = monthStr.split("-");
@@ -352,8 +352,8 @@ async function getChartData(range) {
 
   const displayValue = formatChartNumber(
     lastValue,
-    quote === "BTC" ? 8 : 5,
-    quote === "BTC" ? 8 : 5
+    quote === "BTC" ? 10 : 5,
+    quote === "BTC" ? 10 : 5
   );
 
   if (result.isMissing) {
@@ -407,7 +407,7 @@ function updateXAxisGrid(range) {
     }
     
     // Determine consistent decimal places
-    const maxDec = quote === "BTC" ? 8 : 5;
+    const maxDec = quote === "BTC" ? 10 : 5;
     let minDec = 0;
     
     // If the range is small, use more decimals for consistency
@@ -475,9 +475,9 @@ const chart = new Chart(ctx, {
           title: function (context) {
             const val = context[0].parsed.y;
             if (val === 0) return "No Data";
-            // Popup should have 5 or 8 decimal digits
+            // Popup should have 5 or 10 decimal digits
             const { quote } = getSelectedCurrencies();
-            return formatChartNumber(val, quote === "BTC" ? 8 : 5, quote === "BTC" ? 8 : 5);
+            return formatChartNumber(val, quote === "BTC" ? 10 : 5, quote === "BTC" ? 10 : 5);
           },
           label: function (context) {
             return currentData?.fullLabels[context.dataIndex] || "";
@@ -509,7 +509,7 @@ const chart = new Chart(ctx, {
             }
 
             // Determine consistent decimal places
-            const maxDec = quote === "BTC" ? 8 : 5;
+            const maxDec = quote === "BTC" ? 10 : 5;
             let minDec = 0;
             
             // If the range is small, use more decimals for consistency
@@ -526,7 +526,7 @@ const chart = new Chart(ctx, {
             if (value >= 1e6) return (value / 1e6).toFixed(1) + "M";
             if (value >= 1e3) return (value / 1e3).toFixed(1) + "K";
 
-            if (value === 0) return "0.00";
+            if (value === 0) return "0";
 
             return formatChartNumber(value, minDec, maxDec);
           },
