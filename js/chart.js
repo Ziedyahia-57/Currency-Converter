@@ -188,9 +188,22 @@ function getTrendColor(data, isMissing = false) {
   }
 }
 
+// Check if today's data is missing
+function isTodayMissing(data) {
+  if (!data || data.length === 0) return true;
+  return data[data.length - 1] === 0;
+}
+
 // Get trend indicator HTML
 function getTrendIndicator(data, isMissing = false) {
-  if (isMissing || data.length < 2) return `<span class="trend-indicator trend-neutral">0.0%</span>`;
+  const isLastPointMissing = isTodayMissing(data);
+  const effectiveMissing = isMissing || isLastPointMissing;
+
+  if (effectiveMissing) {
+    return `<span class="trend-indicator trend-orange">No Data</span>`;
+  }
+  
+  if (data.length < 2) return `<span class="trend-indicator trend-neutral">0.0%</span>`;
 
   const lastValue = data[data.length - 1];
   const prevValue = data[data.length - 2];
@@ -410,6 +423,7 @@ function updateXAxisGrid(range) {
     if (value >= 1e9) return (value / 1e9).toFixed(1) + "B";
     if (value >= 1e6) return (value / 1e6).toFixed(1) + "M";
     if (value >= 1e3) return (value / 1e3).toFixed(1) + "K";
+    if (value === 0) return "0.00";
     
     return formatChartNumber(value, minDec, maxDec);
   };
@@ -448,7 +462,11 @@ const chart = new Chart(ctx, {
         titleColor: "#e5e7eb",
         bodyColor: "#e5e7eb",
         borderColor: function (context) {
-          const trendColor = getTrendColor(context.chart.data.datasets[0].data, currentData?.isMissing);
+          const val = context.chart.data.datasets[0].data[context.dataIndex];
+          const isLastPointMissing = isTodayMissing(context.chart.data.datasets[0].data);
+          const effectiveMissing = currentData?.isMissing || isLastPointMissing || val === 0;
+          
+          const trendColor = getTrendColor(context.chart.data.datasets[0].data, effectiveMissing);
           return trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : trendColor === "orange" ? "#ff9800" : "#9ca3af";
         },
         borderWidth: 1,
@@ -508,6 +526,8 @@ const chart = new Chart(ctx, {
             if (value >= 1e6) return (value / 1e6).toFixed(1) + "M";
             if (value >= 1e3) return (value / 1e3).toFixed(1) + "K";
 
+            if (value === 0) return "0.00";
+
             return formatChartNumber(value, minDec, maxDec);
           },
         },
@@ -542,28 +562,28 @@ async function updateChartWithData(newData) {
 
   if (!newData) return;
 
-  const trendColor = getTrendColor(newData.data, newData.isMissing);
+  const isLastPointMissing = isTodayMissing(newData.data);
+  const effectiveMissing = newData.isMissing || isLastPointMissing;
+  const trendColor = getTrendColor(newData.data, effectiveMissing);
 
   chart.data.labels = newData.labels;
   chart.data.datasets[0].data = newData.data;
-  chart.data.datasets[0].backgroundColor = newData.isMissing ? "transparent" : createGradient(ctx, trendColor);
+  chart.data.datasets[0].backgroundColor = createGradient(ctx, trendColor);
   chart.data.datasets[0].borderColor =
     trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : trendColor === "orange" ? "#ff9800" : "#9ca3af";
   chart.data.datasets[0].pointHoverBackgroundColor =
     trendColor === "green" ? "#10b981" : trendColor === "red" ? "#ef4444" : trendColor === "orange" ? "#ff9800" : "#9ca3af";
 
-  // Handle missing data: dashed line and NO fill
+  chart.data.datasets[0].borderDash = [];
+  chart.data.datasets[0].fill = "start";
+  chart.data.datasets[0].pointRadius = 0;
+
+  // Handle missing data: Only set fixed range if ALL data is missing
   if (newData.isMissing) {
-    chart.data.datasets[0].borderDash = [5, 5];
-    chart.data.datasets[0].fill = false;
-    chart.data.datasets[0].pointRadius = 0;
-    // Set a neutral Y-axis range for missing data to ensure the line is visible
+    // Set a neutral Y-axis range for missing data to ensure the line is visible at bottom
     chart.options.scales.y.min = 0;
     chart.options.scales.y.max = 2;
   } else {
-    chart.data.datasets[0].borderDash = []; // Reset dash
-    chart.data.datasets[0].fill = "start"; // Fill to the bottom of the axis
-    chart.data.datasets[0].pointRadius = 0; // Keep points hidden but show on hover
     // Reset Y-axis to auto-scale
     chart.options.scales.y.min = undefined;
     chart.options.scales.y.max = undefined;
@@ -591,6 +611,18 @@ function startChartUpdateTimer() {
     }
 
     const diff = target - now;
+
+    if (diff <= 0) {
+      // Timer hit zero, refresh the chart data
+      console.log("Timer hit zero, refreshing chart...");
+      historicalData = null; // Force Refetch
+      if (typeof window.initChartsTab === "function") {
+        isChartInitialized = false; // Allow re-initialization
+        window.initChartsTab();
+      }
+      return; // Exit current interval loop as it will be restarted by initChartsTab
+    }
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);

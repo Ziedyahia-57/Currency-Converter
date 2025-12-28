@@ -1224,6 +1224,11 @@ body {
   color: #9ca3af;
 }
 
+.trend-orange {
+  background: rgba(255, 152, 0, 0.169);
+  color: #ff9800;
+}
+
 button.chart-btn {
   margin: 0 !important;
 }
