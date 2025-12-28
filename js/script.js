@@ -2419,6 +2419,7 @@ async function initializeApp() {
 
     // Initialize currency list
     try {
+      currencyContainer.innerHTML = "";
       const loadedSuccessfully = loadCurrencyOrder();
       if (!loadedSuccessfully) {
         addCurrency("USD", false);
