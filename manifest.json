@@ -2,12 +2,25 @@
   "manifest_version": 3,
   "name": "Currency Converter",
   "version": "2.1.0.0",
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+C",
+        "mac": "Alt+C"
+      },
+      "description": "Open extension popup"
+    }
+  },
   "description": "Convert currencies dynamically and on text selection",
   "permissions": ["activeTab", "contextMenus", "storage", "scripting", "favicon"],
-  "host_permissions": ["https://v6.exchangerate-api.com/*", "https://www.google.com/s2/favicons/*",
+  "host_permissions": [
+    "https://v6.exchangerate-api.com/*",
+    "https://www.google.com/s2/favicons/*",
     "https://icons.duckduckgo.com/*",
     "http://*/*",
-    "https://*/*", "<all_urls>"],
+    "https://*/*",
+    "<all_urls>"
+  ],
 
   "background": {
     "service_worker": "js/background.js"
