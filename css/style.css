@@ -858,7 +858,8 @@ body {
 .currency-converter-ex button#edit-whitelist-btn:hover,
 .currency-converter-ex button#edit-link-btn:hover,
 .currency-converter-ex button#add-whitelist-link-btn:hover,
-.currency-converter-ex button#add-blacklist-link-btn:hover {
+.currency-converter-ex button#add-blacklist-link-btn:hover,
+.currency-converter-ex button.chart-btn:hover{
   cursor: pointer;
   background: #03ffc02b;
   color: var(--primary-color);
@@ -1343,7 +1344,7 @@ button.chart-btn.btn3 {
 
 .selected-flag {
   width: 18px;
-  height: 12px;
+  height: 100%;
   border-radius: 2px;
   object-fit: cover;
 }
