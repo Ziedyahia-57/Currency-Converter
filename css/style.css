@@ -859,10 +859,10 @@ body {
 .currency-converter-ex button#edit-link-btn:hover,
 .currency-converter-ex button#add-whitelist-link-btn:hover,
 .currency-converter-ex button#add-blacklist-link-btn:hover,
-.currency-converter-ex button.chart-btn:hover{
+.currency-converter-ex button.chart-btn:not(.active):hover{
   cursor: pointer;
-  background: #03ffc02b;
-  color: var(--primary-color);
+      background: #1b2f34;
+    color: #bfbfbf;
   transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
