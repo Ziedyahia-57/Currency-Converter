@@ -72,12 +72,13 @@
   margin: 0 4px;
   cursor: pointer;
   color: var(--currency-converter-ex-text);
+  border-radius: 4px;
+  transition: background .3s ease, box-shadow .3s ease;
 }
 
 .currency-converter-ex-symbol-switcher:hover {
   background: rgba(0, 255, 204, 0.18);
   color: var(--primary-color);
-  border-radius: 4px;
   box-shadow: inset 0 1px 2px #ffffff0f, 0 1px 2px #00000030, 0 2px 4px #00000015;
 }
 

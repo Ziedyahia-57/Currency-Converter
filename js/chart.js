@@ -61,7 +61,7 @@ async function fetchHistoricalData() {
     }
   }
 
-  if (!navigator.onLine) {
+  if (!window.connectivityManager || !window.connectivityManager.isOnline) {
     if (historicalData) {
       console.warn("User is offline. Using cached data.");
       return historicalData;
@@ -200,7 +200,7 @@ function getTrendIndicator(data, isMissing = false) {
   const effectiveMissing = isMissing || isLastPointMissing;
 
   if (effectiveMissing) {
-    return `<span class="trend-indicator trend-orange">No Data</span>`;
+    return `<span class="trend-indicator trend-orange">⚠ No Data</span>`;
   }
   
   if (data.length < 2) return `<span class="trend-indicator trend-neutral">0.00%</span>`;
@@ -474,7 +474,7 @@ const chart = new Chart(ctx, {
         callbacks: {
           title: function (context) {
             const val = context[0].parsed.y;
-            if (val === 0) return "No Data";
+            if (val === 0) return "⚠ No Data";
             // Popup should have 5 or 10 decimal digits
             const { quote } = getSelectedCurrencies();
             return formatChartNumber(val, quote === "BTC" ? 10 : 5, quote === "BTC" ? 10 : 5);

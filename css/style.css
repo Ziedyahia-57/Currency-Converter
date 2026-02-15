@@ -1,7 +1,7 @@
 /* General Styles */
 :root {
   --primary-color: #00be98;
-  --primary-hover: #00b892;
+  --primary-hover: #00b89312;
   --fill-color: #c1c6cb;
   --font-color: #6d777e;
   --gray: #fff;
@@ -16,7 +16,7 @@
   --primary-light: #00d4aa52;
   --drag-border: #00d4aa80;
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --dark-bg: hsl(0 0% 90% / 1);
+  --dark-bg: hsl(157.5deg 44.44% 96.47%);
   --settings-content: hsl(0 0% 98% / 1);
 }
 
@@ -861,8 +861,8 @@ body {
 .currency-converter-ex button#add-blacklist-link-btn:hover,
 .currency-converter-ex button.chart-btn:not(.focused-btn):hover{
   cursor: pointer;
-      background: #1b2f34;
-    color: #bfbfbf;
+  background: #1b2f34;
+  background: var(--primary-hover);
   transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

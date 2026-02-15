@@ -1,5 +1,6 @@
 import { currencyToCountry } from "./currencyToCountry.js";
 import { donationContent } from "./messages.js";
+import { connectivityManager } from "./connectivity.js";
 
 // When donation tab is opened:
 const currencyTab = document.getElementById("currency-tab");
@@ -462,7 +463,7 @@ restoreBtn.addEventListener("click", async () => {
   }
 
   // Update last updated time
-  updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
+  updateLastUpdateElement(connectivityManager.isOnline, localStorage.getItem(LAST_UPDATED_KEY));
 
   // Manually update UI for immediate effect
   customTheme.classList.add("custom-hidden");
@@ -810,10 +811,17 @@ darkModeBtn.addEventListener("click", () => {
 //🟠                         DATE FETCH                         */
 //🟠------------------------------------------------------------*/
 function formatDateTime(dateString) {
-  if (!dateString) return { dateText: "--/--/----", timeText: "--:--" };
+  if (!dateString || dateString === "null" || dateString === "undefined") {
+    return { dateText: "--/--/----", timeText: "--:--" };
+  }
 
   try {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      console.warn("Invalid date provided to formatDateTime:", dateString);
+      return { dateText: "--/--/----", timeText: "--:--" };
+    }
+
     const dateFormat = localStorage.getItem("date") || "dd/mm/yyyy";
     const timeFormat = localStorage.getItem("time") || "ampm";
 
@@ -864,6 +872,11 @@ function updateLastUpdateElement(isOnline, lastUpdated) {
     lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
   }
 
+  // Handle problematic values before formatting
+  if (!lastUpdated || lastUpdated === "null" || lastUpdated === "undefined") {
+    lastUpdated = null; 
+  }
+
   const { dateText, timeText } = formatDateTime(lastUpdated);
 
   lastUpdateElement.innerHTML = `
@@ -895,7 +908,7 @@ function removeOfflineMessage() {
     offlineMessage.remove();
 
     // Reinitialize the app if we're coming back online
-    if (navigator.onLine) {
+    if (connectivityManager.isOnline) {
       initializeApp();
     }
   }
@@ -905,64 +918,63 @@ function removeOfflineMessage() {
 //⚪+                                                 ONLINE/OFFLINE EVENTS                                                +*/
 //⚪++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 //🟠------------------------------------------------------------*/
-//🟠                           ONLINE                           */
+//🟠                      CONNECTION STATUS                     */
 //🟠------------------------------------------------------------*/
-window.addEventListener("online", async () => {
-  console.log("App is online. Fetching latest exchange rates...");
-  try {
-    exchangeRates = await fetchExchangeRates("USD");
-    if (exchangeRates) {
-      saveExchangeRates(exchangeRates);
-      updateLastUpdateElement(true);
-      updateCurrencyValues(); // Update displayed values with fresh rates
+connectivityManager.onStatusChange(async (isOnline) => {
+  if (isOnline) {
+    console.log("App is online. Fetching latest exchange rates...");
+    try {
+      exchangeRates = await fetchExchangeRates("USD");
+      if (exchangeRates) {
+        // fetchExchangeRates already handles saveExchangeRates with the correct API timestamp
+        updateLastUpdateElement(true);
+        updateCurrencyValues(); // Update displayed values with fresh rates
+      }
+    } catch (error) {
+      console.error("Failed to fetch exchange rates:", error);
+      loadData(); // Try to load cached data
     }
-  } catch (error) {
-    console.error("Failed to fetch exchange rates:", error);
-    loadData(); // Try to load cached data
-  }
 
-  // Retry fetching missing favicons for whitelist
-  let whitelistUpdated = false;
-  for (let i = 0; i < whitelist.length; i++) {
-    if (!whitelist[i].favicon) {
-      const favicon = await getFaviconAsBase64(whitelist[i].url);
-      if (favicon) {
-        whitelist[i].favicon = favicon;
-        whitelistUpdated = true;
+    // Retry fetching missing favicons for whitelist
+    let whitelistUpdated = false;
+    for (let i = 0; i < whitelist.length; i++) {
+      if (!whitelist[i].favicon) {
+        const favicon = await getFaviconAsBase64(whitelist[i].url);
+        if (favicon) {
+          whitelist[i].favicon = favicon;
+          whitelistUpdated = true;
+        }
       }
     }
-  }
-  if (whitelistUpdated) {
-    saveWhitelist();
-    renderWhitelist();
-  }
+    if (whitelistUpdated) {
+      saveWhitelist();
+      renderWhitelist();
+    }
 
-  // Retry fetching missing favicons for blacklist
-  let blacklistUpdated = false;
-  for (let i = 0; i < blacklist.length; i++) {
-    if (!blacklist[i].favicon) {
-      const favicon = await getFaviconAsBase64(blacklist[i].url);
-      if (favicon) {
-        blacklist[i].favicon = favicon;
-        blacklistUpdated = true;
+    // Retry fetching missing favicons for blacklist
+    let blacklistUpdated = false;
+    for (let i = 0; i < blacklist.length; i++) {
+      if (!blacklist[i].favicon) {
+        const favicon = await getFaviconAsBase64(blacklist[i].url);
+        if (favicon) {
+          blacklist[i].favicon = favicon;
+          blacklistUpdated = true;
+        }
       }
     }
-  }
-  if (blacklistUpdated) {
-    saveBlacklist();
-    renderBlacklist();
-  }
-});
+    if (blacklistUpdated) {
+      saveBlacklist();
+      renderBlacklist();
+    }
 
-//🟠------------------------------------------------------------*/
-//🟠                           OFFLINE                          */
-//🟠------------------------------------------------------------*/
-window.addEventListener("offline", () => {
-  console.log("App is offline. Loading saved exchange rates...");
-  loadData();
-  // Only show offline message if we have no cached data
-  if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
-    showOfflineMessage();
+    removeOfflineMessage();
+  } else {
+    console.log("App is offline. Loading saved exchange rates...");
+    loadData();
+    // Only show offline message if we have no cached data
+    if (!localStorage.getItem(CURRENCY_DATA_KEY)) {
+      showOfflineMessage();
+    }
   }
 });
 
@@ -1065,7 +1077,7 @@ async function getFaviconAsBase64(url) {
   if (!domain) return null;
 
   // Don't attempt to fetch favicons when offline
-  if (!navigator.onLine) {
+  if (!connectivityManager.isOnline) {
     console.log('Offline: skipping favicon fetch for:', domain);
     return null;
   }
@@ -1233,7 +1245,7 @@ async function loadWhitelist() {
       }
 
       // Fetch missing favicons if online
-      if (navigator.onLine) {
+      if (connectivityManager.isOnline) {
         let updated = false;
         for (let i = 0; i < whitelist.length; i++) {
           if (!whitelist[i].favicon) {
@@ -1305,7 +1317,7 @@ async function addLink(url) {
 
   if (!whitelist.some(item => item.url === url)) {
     // Fetch favicon only if online, otherwise add with null favicon
-    const favicon = navigator.onLine ? await getFaviconAsBase64(url) : null;
+    const favicon = connectivityManager.isOnline ? await getFaviconAsBase64(url) : null;
     whitelist.push({ url: url, favicon: favicon });
     await saveWhitelist();
     renderWhitelist();
@@ -1420,7 +1432,7 @@ async function loadBlacklist() {
       }
 
       // Fetch missing favicons if online
-      if (navigator.onLine) {
+      if (connectivityManager.isOnline) {
         let updated = false;
         for (let i = 0; i < blacklist.length; i++) {
           if (!blacklist[i].favicon) {
@@ -1492,7 +1504,7 @@ async function addBlacklistLink(url) {
 
   if (!blacklist.some(item => item.url === url)) {
     // Fetch favicon only if online, otherwise add with null favicon
-    const favicon = navigator.onLine ? await getFaviconAsBase64(url) : null;
+    const favicon = connectivityManager.isOnline ? await getFaviconAsBase64(url) : null;
     blacklist.push({ url: url, favicon: favicon });
     await saveBlacklist();
     renderBlacklist();
@@ -2057,13 +2069,13 @@ currencyContainer.addEventListener("drop", (event) => {
 //⚪------------------------------------------------------------*/
 //⚪                        LOAD AND SAVE                       */
 //⚪------------------------------------------------------------*/
-function saveExchangeRates(rates) {
+function saveExchangeRates(rates, timestamp) {
   if (rates) {
-    const now = new Date().toISOString(); // ISO format avoids parsing issues
-    localStorage.setItem(LAST_UPDATED_KEY, now);
+    const timeToSave = timestamp || new Date().toISOString(); 
+    localStorage.setItem(LAST_UPDATED_KEY, timeToSave);
     localStorage.setItem(CURRENCY_DATA_KEY, JSON.stringify(rates));
     chrome.storage.local.set({
-      [LAST_UPDATED_KEY]: now,
+      [LAST_UPDATED_KEY]: timeToSave,
       [CURRENCY_DATA_KEY]: rates,
     });
   }
@@ -2073,19 +2085,8 @@ function loadExchangeRates() {
   const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
   if (savedRates && lastUpdated) {
     exchangeRates = JSON.parse(savedRates);
-
-    // Ensure the date is in dd/mm/yyyy format
-    const dateParts = lastUpdated.split(/[/-]/); // Split by '/' or '-'
-    let formattedDate = lastUpdated;
-
-    if (dateParts.length === 3) {
-      // Reformat to dd/mm/yyyy
-      const [day, month, year] = dateParts.map((part) => part.padStart(2, "0")); // Ensure two digits
-      formattedDate = `${day}/${month}/${year}`;
-    }
-
     console.log("Exchange rates loaded from localStorage:", exchangeRates);
-    return { rates: exchangeRates, lastUpdated: formattedDate };
+    return { rates: exchangeRates, lastUpdated: lastUpdated };
   }
 
   // Log the error only if it hasn't been logged before
@@ -2127,7 +2128,7 @@ async function fetchExchangeRates() {
     }
 
     // Save and return the rates
-    saveExchangeRates(data.rates);
+    saveExchangeRates(data.rates, data.timestamp);
     removeOfflineMessage(); // Remove offline message on successful fetch
     return data.rates;
   } catch (error) {
@@ -2277,7 +2278,7 @@ async function renderCurrencyList(filterText = "") {
   currencyList.innerHTML = "";
 
   // Try to get fresh rates if online and not already fetched
-  if (navigator.onLine && (!exchangeRates || Object.keys(exchangeRates).length === 0)) {
+  if (connectivityManager.isOnline && (!exchangeRates || Object.keys(exchangeRates).length === 0)) {
     try {
       exchangeRates = await fetchExchangeRates();
     } catch (error) {
@@ -2435,7 +2436,7 @@ async function initializeApp() {
     }
 
     // Update UI
-    updateLastUpdateElement(navigator.onLine);
+    updateLastUpdateElement(connectivityManager.isOnline);
     updateAddButtonVisibility();
     checkCurrencyCount();
   } catch (mainError) {
@@ -2482,19 +2483,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkCustomSettings();
 
   // Initial check with proper online status
-  const isOnline = navigator.onLine;
+  const isOnline = connectivityManager.isOnline;
   const lastUpdated = localStorage.getItem(LAST_UPDATED_KEY);
 
   updateLastUpdateElement(isOnline, lastUpdated);
 
-  // Listen for network changes
-  window.addEventListener("online", () => {
-    updateLastUpdateElement(true, localStorage.getItem(LAST_UPDATED_KEY));
-  });
-
-  window.addEventListener("offline", () => {
-    updateLastUpdateElement(false, localStorage.getItem(LAST_UPDATED_KEY));
-  });
+  // Connectivity status is handled by connectivityManager.onStatusChange
 
   loadThemePreference().then((theme) => {
     // Always set up listener for system theme changes, regardless of current theme
@@ -2535,7 +2529,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   saveCheckboxState();
 
   // Initial check
-  updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
+  updateLastUpdateElement(connectivityManager.isOnline, localStorage.getItem(LAST_UPDATED_KEY));
 
   // Initialize Chart Dropdowns
   initChartDropdowns();
@@ -2609,7 +2603,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   dateSelector.addEventListener("change", function () {
     saveDateFormat();
-    updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
+    updateLastUpdateElement(connectivityManager.isOnline, localStorage.getItem(LAST_UPDATED_KEY));
 
     if (dateSelector.value !== "dd/mm/yyyy") {
       customDate.classList.remove("custom-hidden");
@@ -2620,7 +2614,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   timeSelector.addEventListener("change", function () {
     saveTimeFormat();
-    updateLastUpdateElement(navigator.onLine, localStorage.getItem(LAST_UPDATED_KEY));
+    updateLastUpdateElement(connectivityManager.isOnline, localStorage.getItem(LAST_UPDATED_KEY));
 
     if (timeSelector.value !== "ampm") {
       customTime.classList.remove("custom-hidden");
