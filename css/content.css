@@ -221,6 +221,7 @@
 /* Fix for deepseek padding */
 
 #detected-price {
+  display: inline-flex !important;
   border-radius: 4px !important;
   white-space: nowrap !important;
   width: fit-content !important;
@@ -236,7 +237,6 @@
   align-items: center !important;
   line-height: 18px !important;
   vertical-align: middle !important;
-  display: flex !important;
 }
 
 .currency-converter-ex-price {
