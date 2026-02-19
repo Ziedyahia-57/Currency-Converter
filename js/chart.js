@@ -8,10 +8,10 @@ const today = new Date();
 testDateInput.value = today.toISOString().split("T")[0];
 testDateInput.disabled = true; // Disable the input so it can't be changed
 
-// Function to get the effective today based on the 01:47 UTC update time
+// Function to get the effective today based on the 03:00 UTC update time
 function getEffectiveToday() {
   const now = new Date();
-  const updateTimeToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 1, 47, 0));
+  const updateTimeToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 3, 0, 0));
   
   if (now < updateTimeToday) {
     const yesterday = new Date(now);
@@ -593,7 +593,7 @@ async function updateChartWithData(newData) {
 }
 window.updateChartWithData = updateChartWithData;
 
-// Timer to show when the chart data will be updated (Daily at 1:47am UTC)
+// Timer to show when the chart data will be updated (Daily at 03:00am UTC)
 function startChartUpdateTimer() {
   const timerHm = document.getElementById("timer-hm");
   const timerS = document.getElementById("timer-s");
@@ -602,12 +602,12 @@ function startChartUpdateTimer() {
 
   function update() {
     const now = new Date();
-    // Target is today at 1:47am UTC
-    let target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 1, 47, 0));
+    // Target is today at 03:00am UTC
+    let target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 3, 0, 0));
 
-    // If we've passed 1:47am UTC today, target is tomorrow at 1:47am UTC
+    // If we've passed 03:00am UTC today, target is tomorrow at 03:00am UTC
     if (now >= target) {
-      target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 1, 47, 0));
+      target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 3, 0, 0));
     }
 
     const diff = target - now;
