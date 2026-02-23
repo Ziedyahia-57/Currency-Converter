@@ -353,8 +353,8 @@ async function getChartData(range) {
 
   const displayValue = formatChartNumber(
     lastValue,
-    quote === "BTC" ? 15 : 6,
-    quote === "BTC" ? 15 : 6
+    quote === "BTC" ? 15 : 5,
+    quote === "BTC" ? 15 : 5
   );// display decimal number
 
   if (result.isMissing) {
@@ -408,7 +408,7 @@ function updateXAxisGrid(range) {
     }
     
     // Determine consistent decimal places
-    const maxDec = quote === "BTC" ? 15 : 6;// Y axis decimal number
+    const maxDec = quote === "BTC" ? 15 : 5;// Y axis decimal number
     let minDec = 0;
     
     // If the range is small, use more decimals for consistency
