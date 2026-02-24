@@ -376,6 +376,8 @@ body {
   padding: 5px 5px 5px 0px;
   font-size: 14px;
   overflow-y: auto;
+  max-height: 28px;
+  min-height: 28px;
   white-space: nowrap;
   border-radius: 8px;
   width: 268px;

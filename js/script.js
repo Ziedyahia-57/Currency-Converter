@@ -3340,7 +3340,7 @@ async function updateCurrencyValues(changedCurrency) {
     }
 
     // Format the final value
-    let formattedValue = convertedValue.toFixed(decimalPlaces);
+    let formattedValue = convertedValue.toFixed(decimalPlaces).replace(".", separators.decimal);
     
     // Update tax difference display
     if (taxDiff) {
@@ -3405,66 +3405,98 @@ async function findBaseInput() {
 /*Paste formatting*/
 async function processPastedValue(pastedText, inputField) {
   const separators = await getNumberFormatSeparators();
-  const decimalPlaces = await getDecimalPlaces(inputField.dataset.currency);
+  const currency = inputField.dataset.currency;
+  const standardDecimalPlaces = await getDecimalPlaces(currency);
 
-  // Remove all thousand separators (both comma and dot initially)
-  let cleanedValue = pastedText.replace(/[,.]/g, (match) => {
-    // Decimal separator replacement will be handled separately
-    return match;
-  });
+  // 1. Initial cleanup: strip everything except digits, dots, and commas
+  let cleaned = pastedText.trim().replace(/[^0-9.,]/g, "");
+  if (!cleaned) return { raw: "0", formatted: "0", cursorPos: 1 };
 
-  // Now find the rightmost separator that could be a decimal
-  const lastCommaPos = cleanedValue.lastIndexOf(",");
-  const lastDotPos = cleanedValue.lastIndexOf(".");
+  const dotCount = (cleaned.match(/\./g) || []).length;
+  const commaCount = (cleaned.match(/,/g) || []).length;
+  const lastDot = cleaned.lastIndexOf(".");
+  const lastComma = cleaned.lastIndexOf(",");
 
-  // Determine which separator to treat as decimal
-  let decimalSeparatorPos = -1;
+  let dotIsDecimal = false;
+  let commaIsDecimal = false;
 
-  // Check if there's only one separator and exactly three digits after it
-  const separatorsCount = (cleanedValue.match(/[,.]/g) || []).length;
-  const digitsAfterLastSeparator = cleanedValue
-    .substring(Math.max(lastCommaPos, lastDotPos) + 1)
-    .replace(/[^0-9]/g, "").length;
-
-  if (separatorsCount === 1 && digitsAfterLastSeparator === 3) {
-    // Single separator with exactly three digits after it - treat as thousand separator
-    decimalSeparatorPos = -1;
-  } else if (lastCommaPos > lastDotPos) {
-    decimalSeparatorPos = lastCommaPos;
-  } else if (lastDotPos > lastCommaPos) {
-    decimalSeparatorPos = lastDotPos;
+  // Rule 1: Invalid Mixed Formatting (both repeat)
+  if (dotCount > 1 && commaCount > 1) {
+    return { raw: "0", formatted: "0", cursorPos: 1 };
   }
 
-  // Process the number
-  if (decimalSeparatorPos >= 0) {
-    // Decimal separator found - split the number
-    const beforeDecimal = cleanedValue.substring(0, decimalSeparatorPos).replace(/[^0-9]/g, ""); // Remove any remaining non-digits
-    const afterDecimal = cleanedValue.substring(decimalSeparatorPos + 1).replace(/[^0-9]/g, ""); // Remove any remaining non-digits
+  // Rule 2 & 4: Mixed separators
+  if (dotCount > 0 && commaCount > 0) {
+    if (dotCount > 1) {
+      // Dots repeat, comma must be unique and after dots
+      if (commaCount === 1 && lastComma > lastDot) commaIsDecimal = true;
+      else return { raw: "0", formatted: "0", cursorPos: 1 };
+    } else if (commaCount > 1) {
+      // Commas repeat, dot must be unique and after commas
+      if (dotCount === 1 && lastDot > lastComma) dotIsDecimal = true;
+      else return { raw: "0", formatted: "0", cursorPos: 1 };
+    } else {
+      // Both are unique (count == 1)
+      if (lastDot > lastComma) dotIsDecimal = true;
+      else commaIsDecimal = true;
+    }
+  } 
+  // Rule 3: Single separator type
+  else if (dotCount > 0 && commaCount === 0) {
+    if (dotCount > 1) {
+      dotIsDecimal = false; // Repeating dots are thousands
+    } else {
+      // Unique dot
+      const parts = cleaned.split(".");
+      const digitsBefore = parts[0].length;
+      const digitsAfter = parts[1].length;
 
-    // Reconstruct with proper decimal separator
-    cleanedValue = beforeDecimal + separators.decimal + afterDecimal;
+      if (digitsAfter !== 3 || digitsBefore === 0 || digitsBefore > 3) {
+        dotIsDecimal = true;
+      } else {
+        // digitsAfter == 3 AND digitsBefore between 1-3
+        dotIsDecimal = (standardDecimalPlaces === 3);
+      }
+    }
+  } else if (commaCount > 0 && dotCount === 0) {
+    if (commaCount > 1) {
+      commaIsDecimal = false; // Repeating commas are thousands
+    } else {
+      // Unique comma
+      const parts = cleaned.split(",");
+      const digitsBefore = parts[0].length;
+      const digitsAfter = parts[1].length;
+
+      if (digitsAfter !== 3 || digitsBefore === 0 || digitsBefore > 3) {
+        commaIsDecimal = true;
+      } else {
+        commaIsDecimal = (standardDecimalPlaces === 3);
+      }
+    }
+  }
+
+  // 3. Final normalization to float string (using '.' as decimal internally)
+  let rawValue = "";
+  if (dotIsDecimal) {
+    rawValue = cleaned.replace(/,/g, "").replace(/\./g, ".");
+  } else if (commaIsDecimal) {
+    rawValue = cleaned.replace(/\./g, "").replace(/,/g, ".");
   } else {
-    // No decimal separator found - just clean all non-digits
-    cleanedValue = cleanedValue.replace(/[^0-9]/g, "");
+    // No decimal detected, treat all as thousands/integers
+    rawValue = cleaned.replace(/[.,]/g, "");
   }
 
-  // Ensure proper decimal places
-  const parts = cleanedValue.split(separators.decimal);
-  if (parts.length > 1) {
-    // parts[1] = parts[1].slice(0, decimalPlaces); //REVISION REQUIRED: remove decimal limit for pasted values
-    cleanedValue = parts[0] + separators.decimal + parts[1];
-  }
+  // Validate the resulting number
+  const floatVal = parseFloat(rawValue);
+  if (isNaN(floatVal)) return { raw: "0", formatted: "0", cursorPos: 1 };
 
-  // Format with thousand separators
-  const formattedValue = await formatNumberWithCommas(cleanedValue, inputField);
-
-  // Calculate cursor position
-  const cursorPos = formattedValue.length;
+  // Re-format using user preferences for UI
+  const formattedValue = await formatNumberWithCommas(rawValue.replace(".", separators.decimal), inputField);
 
   return {
-    raw: cleanedValue,
+    raw: rawValue,
     formatted: formattedValue,
-    cursorPos: cursorPos,
+    cursorPos: formattedValue.length
   };
 }
 
