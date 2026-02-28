@@ -84,7 +84,7 @@ const CURRENCY_REPRESENTATIONS = {
 
   PLN: ["PLN", "Polish Złoty", "Polish Złote"],
   CZK: ["CZK", "Kč", "Czech Koruna", "Czech Koruny"],
-  HUF: ["HUF", "Ft", "Hungarian Forint", "Hungarian Forints"],
+  HUF: ["HUF", "Hungarian Forint", "Hungarian Forints"],
 
   ARS: ["ARS", "ARS$", "$ARS", "$AR", "AR$", "Argentine Peso", "Argentine Pesos"],
   CLP: ["CLP", "CLP$", "$CLP", "Chilean Peso", "Chilean Pesos"],
