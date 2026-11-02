@@ -67,12 +67,12 @@ jobs:
             echo "current_date=$PROCESSED_DATE" >> $GITHUB_OUTPUT
             echo "currency_count=$CURRENCY_COUNT" >> $GITHUB_OUTPUT
             
-            echo "✓ Data processing successful"
+            echo "  Data processing successful"
             echo "  Date: $PROCESSED_DATE"
             echo "  Currencies: $CURRENCY_COUNT"
             echo "  Data points: $ROLLING_POINTS"
           else
-            echo "❌ processed-data.json was not created"
+            echo "  processed-data.json was not created"
             exit 1
           fi
           
@@ -168,7 +168,7 @@ jobs:
             ROLLING_POINTS="${{ steps.process.outputs.rolling_data_points }}"
             CURRENCY_COUNT="${{ steps.process.outputs.currency_count }}"
             
-            COMMIT_MSG="📊 Update currency averages for $TODAY
+            COMMIT_MSG="Update currency averages for $TODAY
             
             • Rolling 30-day data: $ROLLING_POINTS points
             • Currencies tracked: $CURRENCY_COUNT
